@@ -158,7 +158,7 @@ function handlePhoto(input){var f=input.files&&input.files[0];if(!f)return;var r
 
 // attraction lookup
 const ATTR={}; SEED.attractions.forEach(a=>ATTR[a.name]=a);
-function catalog(){if(!GENERIC)return SEED.attractions;var seen={},o=[];state.rides.forEach(function(r){if(r.attraction&&!seen[r.attraction]){seen[r.attraction]=1;o.push({name:r.attraction,park:r.park||'',land:'',status:isExtinct(r.attraction)?'Extinct':'Active'});}});return o;}
+function catalog(){if(!GENERIC)return SEED.attractions;var seen={},o=[];(state.catalogAttr||[]).forEach(function(a){if(a&&a.name&&!seen[a.name]){seen[a.name]=1;o.push({name:a.name,park:a.park||'',land:'',status:isExtinct(a.name)?'Extinct':'Active'});}});state.rides.forEach(function(r){if(r.attraction&&!seen[r.attraction]){seen[r.attraction]=1;o.push({name:r.attraction,park:r.park||'',land:'',status:isExtinct(r.attraction)?'Extinct':'Active'});}});return o;}
 function parkMap(){var m={};state.rides.forEach(function(r){if(r.attraction&&r.park&&!m[r.attraction])m[r.attraction]=r.park;});return m;}
 function pOf(n){if(GENERIC)return parkMap()[n]||'?';return (ATTR[n]||{}).park||'?';}
 function lOf(n){if(GENERIC)return '';return (ATTR[n]||{}).land||'?';}
@@ -254,6 +254,7 @@ function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attrac
 function showByPark(pk){var cnt={};state.rides.filter(function(r){return pOf(r.attraction)===pk;}).forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});var body=arr.length?('<div class="muted" style="margin:0 4px 10px">'+arr.length+' attractions, '+arr.reduce(function(a,b){return a+b.c;},0)+' experiences.</div><div class="card">'+arr.map(function(x){return '<div class="checkitem"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>'):'<div class="muted">Nothing logged at '+pk+' yet.</div>';statSheet(pk,body);}
 function showByParkDL(){showByPark(SEED.lists.parks[0]);}
 function showByParkCA(){showByPark(SEED.lists.parks[1]);}
+function showWaitByDay(){var by={};state.rides.forEach(function(r){var m=(r.line!=null)?r.line:((r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null);if(m==null||!r.date)return;(by[r.date]=by[r.date]||[]).push(m);});var ds=Object.keys(by).sort().reverse();if(!ds.length){statSheet('Average wait by day','<div class="muted">No wait times logged yet.</div>');return;}var body='<div class="muted" style="margin:0 4px 10px">Days without logged waits are left out. Tap a day to see it.</div><div class="card">'+ds.map(function(d){var a=by[d];var avg=Math.round(a.reduce(function(x,y){return x+y;},0)/a.length);return '<div class="checkitem" style="cursor:pointer" onclick="closeSheet();openVisit(&#39;'+d+'&#39;)"><div class="nm">'+fmt(d)+'</div><div class="cnt">'+avg+' min avg &middot; '+a.length+' wait'+(a.length===1?'':'s')+'</div></div>';}).join('')+'</div>';statSheet('Average wait by day',body);}
 function showYears(){var by={};state.rides.forEach(function(r){var y=(r.date||'').slice(0,4);if(y)by[y]=(by[y]||0)+1;});var ys=Object.keys(by).sort();if(!ys.length){statSheet('By year','<div class="muted">No visits logged yet.</div>');return;}var body='<div class="card">'+ys.map(function(y){return '<div class="checkitem"><div class="nm">'+y+'</div><div class="cnt">'+by[y]+' experience'+(by[y]===1?'':'s')+'</div></div>';}).join('')+'</div>';statSheet('By year',body);}
 var IC={
  rides:'<svg class="statico" viewBox="0 0 24 24"><ellipse cx="13" cy="19.6" rx="8" ry="2.3" fill="#8E96D6"/><g transform="rotate(-6 12 12)"><rect x="3.2" y="7.2" width="17.6" height="10" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.2 8.6v7.2" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-dasharray="1.6 2" stroke-linecap="round"/><circle cx="9" cy="12.2" r="1.6" fill="#1B1A17"/></g></svg>',
@@ -268,7 +269,7 @@ function viewStats(s){
  var years='-', yrsN=0;
  if(s.firstDate){var y0=+s.firstDate.slice(0,4), y1=+s.lastDate.slice(0,4); yrsN=y1-y0+1; years=(y0===y1?(''+y0):y0+'-'+y1);}
  var out='';
- if(GENERIC){out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}
+ if(GENERIC){if(s.attrTot>s.attr){out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">'+pct+'% explored &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></div><div class="prog"><div style="width:'+pct+'%"></div></div></div>';}else{out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}}
  else{out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+
    '<div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">'+pct+'% explored &rsaquo;</span></div>'+
    '<div class="hbig"><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></div>'+
@@ -286,7 +287,7 @@ function viewStats(s){
   out+='<div class="splitlbl">'+_pon.map(function(pk,i){return '<span onclick="showByPark(&#39;'+pk+'&#39;)" style="cursor:pointer"><span class="pdot" style="background:'+PCOL[i%PCOL.length]+'"></span>'+(pk==='California Adventure'?'Calif. Adv.':pk)+' <span class="num" style="font-size:15px">'+_cnt[pk]+'</span> &rsaquo;</span>';}).join('')+'</div>';
   if(_pon.length>1){out+='<div class="split">'+_pon.map(function(pk,i){return '<div style="background:'+PCOL[i%PCOL.length]+';width:'+Math.max(2,Math.round(_cnt[pk]/_sum*100))+'%"></div>';}).join('')+'</div>';}
   out+='</div>';}
- if(waitsOn()){var wr=state.rides.filter(function(r){return r.line!=null;});if(wr.length){var totLine=wr.reduce(function(a,r){return a+r.line;},0);out+='<h2 class="sec">Wait times</h2><div class="grid">'+numTile(Math.round(totLine/wr.length)+'m','Avg time in line')+numTile((Math.round(totLine/60*10)/10)+'h','Total in line')+'</div>';}}
+ if(waitsOn()){var wr=state.rides.filter(function(r){return r.line!=null;});if(wr.length){var totLine=wr.reduce(function(a,r){return a+r.line;},0);out+='<h2 class="sec">Wait times</h2><div class="grid">'+numTile(Math.round(totLine/wr.length)+'m','Avg time in line',"showWaitByDay()")+numTile((Math.round(totLine/60*10)/10)+'h','Total in line')+'</div>';}}
  var _pp=getPasses();var _pk=Object.keys(_pp);if(_pk.length){var _show=(actPark()?(_pp[actPark()]?[actPark()]:[]):_pk).filter(function(p){return !(_pp[p]&&_pp[p].off);});if(_show.length){out+='<h2 class="sec">Annual pass</h2>'+_show.map(passCard).join('');}}
  out+='<h2 class="sec">Milestones</h2>';
  out+='<div class="stat mile" onclick="showFrequency()" style="cursor:pointer">'+IC.rides+'<div><div class="se">'+(s.top?shortRide(s.top):'No rides yet')+'</div><div class="lbl" style="margin-top:2px">'+(s.top?'Most experienced &middot; '+s.topN+' times':'Log an experience to start')+'</div></div></div>';
@@ -433,7 +434,7 @@ function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div
 function viewCheck(){
  const cnt={}; state.rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  const active=attractionsOn().filter(a=>a.status==='Active');
- if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride and your attractions show up here, grouped by park.');var oG='<div class="card"><div class="muted">'+go2.length+' attraction'+(go2.length===1?'':'s')+' logged</div></div>';parksOn().forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem done"><div class="ck">&#10003;</div><div class="nm">'+a.name+'</div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});oG+='</div>';});return oG;}
+ if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+'</div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});oG+='</div>';});return oG;}
  const done=active.filter(a=>cnt[a.name]).length;
  const pct=Math.round(done/active.length*100);
  let out='<div class="card">'+
@@ -911,14 +912,19 @@ function viewVariants(){
  if(GENERIC){
   var byRide={},firstv={};
   fRides().forEach(function(r){if(r.variant&&r.variant!=='Standard'){byRide[r.attraction]=byRide[r.attraction]||{};byRide[r.attraction][r.variant]=(byRide[r.attraction][r.variant]||0)+1;var k=r.attraction+'|'+r.variant;if(!firstv[k]||r.date<firstv[k])firstv[k]=r.date;}});
-  var rnames=Object.keys(byRide),total=0;rnames.forEach(function(rn){total+=Object.keys(byRide[rn]).length;});
+  var catV=state.catalogVars||{};
+  var rset={};Object.keys(byRide).forEach(function(k){rset[k]=1;});Object.keys(catV).forEach(function(k){if((catV[k]||[]).length)rset[k]=1;});
+  var rnames=Object.keys(rset),total=0,doneV=0;
+  rnames.forEach(function(rn){var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});Object.keys(vs).forEach(function(v){total++;if(byRide[rn]&&byRide[rn][v])doneV++;});});
   var gout='<h2 class="sec" style="margin-top:2px">Variants &amp; special versions</h2>';
-  if(!total){gout+=emptyState(IC.rides,'No variants yet','Tap the + button and choose "Add a variant" to log a special or seasonal version of an experience.');gout+='<div class="linkrow"><button onclick="formVariant()">+ Add a variant</button></div>';return gout;}
-  gout+='<div class="card"><div class="t">Special versions logged</div><div class="row" style="border:none;padding:8px 0 0"><div class="main"><div class="num" style="font-size:24px">'+total+'</div><div class="s">across '+rnames.length+' ride'+(rnames.length===1?'':'s')+'</div></div></div></div>';
+  if(!total){gout+=emptyState(IC.rides,'No variants yet','Tap the + button and choose "Add a variant", or import a park catalog CSV with the variants for each ride.');gout+='<div class="linkrow"><button onclick="formVariant()">+ Add a variant</button></div>';return gout;}
+  if(doneV<total){gout+='<div class="card"><div class="t">Special versions experienced</div><div class="prog"><div style="width:'+Math.round(doneV/total*100)+'%"></div></div><div class="muted">'+doneV+' of '+total+' &middot; '+pct(doneV,total)+'%</div></div>';}
+  else{gout+='<div class="card"><div class="t">Special versions logged</div><div class="row" style="border:none;padding:8px 0 0"><div class="main"><div class="num" style="font-size:24px">'+total+'</div><div class="s">across '+rnames.length+' ride'+(rnames.length===1?'':'s')+'</div></div></div></div>';}
   rnames.sort(function(a,b){return a.localeCompare(b);}).forEach(function(rn){
+   var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});
    gout+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--accent);margin-bottom:4px">'+esc(rn)+extinctPill(rn)+'</div>';
-   Object.keys(byRide[rn]).sort().forEach(function(v){var c=byRide[rn][v];var fk=rn+'|'+v;
-    gout+='<div class="checkitem done" style="cursor:pointer" title="Tap to mark or unmark extinct" onclick="toggleExtinct('+jsarg(v)+')"><div class="ck">&#10003;</div><div class="nm">'+esc(v)+extinctPill(v)+' <span class="cnt">first '+fmt(firstv[fk])+'</span></div><div class="cnt">&times;'+c+'</div></div>';});
+   Object.keys(vs).sort().forEach(function(v){var c=(byRide[rn]&&byRide[rn][v])||0;var fk=rn+'|'+v;
+    gout+='<div class="checkitem '+(c?'done':'')+'" style="cursor:pointer" title="Tap to mark or unmark extinct" onclick="toggleExtinct('+jsarg(v)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(v)+extinctPill(v)+(c?' <span class="cnt">first '+fmt(firstv[fk])+'</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});
    gout+='</div>';
   });
   gout+='<div class="linkrow"><button onclick="formVariant()">+ Add a variant</button></div>';
@@ -1037,12 +1043,23 @@ function resetData(){if(confirm('Reset to the originally imported history? Anyth
 
 function openImport(){
  sheet('<h3>Import from CSV</h3>'+
-  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Upload a spreadsheet of your visits, saved as a CSV. Each row is one experience, character meet, or score. The first row must be the column headers. Not sure of the layout? Download the template, fill it in, and upload it back.</p>'+
-  '<div class="btnrow" style="margin-bottom:14px"><button class="btn ghost" onclick="downloadTemplate()">Download template</button></div>'+
+  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Upload a spreadsheet saved as a CSV. Rows with a date log your history (one experience, meet, or score per row). Rows with Type \"Catalog\" and no date add rides and their variants to your checklists without marking them experienced, so you can track what you still want to do.</p>'+
+  '<div class="btnrow" style="margin-bottom:14px"><button class="btn ghost" onclick="downloadTemplate()">Log template</button><button class="btn ghost" onclick="downloadCatalogTemplate()">Catalog template</button></div>'+
   '<label>Choose your CSV file</label><input type="file" accept=".csv,text/csv" id="f_csv" onchange="handleCSV(this)">'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
 }
 function csvCell(v){v=String(v==null?'':v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function downloadCatalogTemplate(){
+ var head=['Type','Date','Name','Variant','Access','Score','Player','Who with','Park','Where','Notes'];
+ var rows=[head,
+  ['Catalog','','Sunshine Coaster','','','','','','Sunshine Park','',''],
+  ['Catalog','','Sunshine Coaster','Holiday overlay','','','','','Sunshine Park','',''],
+  ['Catalog','','Sunshine Coaster','Anniversary edition','','','','','Sunshine Park','',''],
+  ['Catalog','','River Rapids','','','','','','Sunshine Park','','']];
+ var csv=rows.map(function(r){return r.map(csvCell).join(',');}).join('\r\n');
+ var blob=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='park-catalog-template.csv';a.click();
+}
 function downloadTemplate(){
  var head=['Type','Date','Name','Variant','Access','Score','Player','Who with','Park','Where','Notes'];
  var rows=[head].concat(SEED.templateRows||[]);
@@ -1126,7 +1143,7 @@ function doImport(text){
  state.meets.forEach(function(x){_inc(existing,kM(x.date,x.character,x.park));});
  state.scores.forEach(function(x){_inc(existing,kS(x.date,x.attraction,x.score));});
  (state.academy||[]).forEach(function(x){_inc(existing,kD(x.date,x.character));});
- var cands=[],skip=0;
+ var cands=[],skip=0,nC=0;
  for(var k=1;k<rows.length;k++){var r=rows[k];
   var date=normDate(get(r,iDate));var nm=get(r,iName);
   var type=get(r,iType).toLowerCase();var scoreVal=get(r,iScore);
@@ -1134,10 +1151,22 @@ function doImport(text){
   else if(type.indexOf('meet')>=0||type.indexOf('character')>=0)type='meet';
   else if(type.indexOf('draw')>=0||type.indexOf('academy')>=0)type='draw';
   else if(type.indexOf('score')>=0)type='score';
+  else if(type.indexOf('catalog')>=0)type='catalog';
   else type='ride';
-  if(!date||!nm){skip++;continue;}
-  var park=get(r,iPark)||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland'));var notes=get(r,iNotes)||null;
+  if(!nm){skip++;continue;}
+  var park=get(r,iPark)||((GENERIC||type==='catalog')?null:(SEED.lists.parks[0]||'Disneyland'));var notes=get(r,iNotes)||null;
   if(park&&park!=='Both Parks'&&!_exP[park]){_exP[park]=1;if(state.userParks.indexOf(park)<0){state.userParks.push(park);assignParkIcon(park);}}
+  if(type==='catalog'||(type==='ride'&&!date)){
+   if(!GENERIC){skip++;continue;}
+   state.catalogAttr=state.catalogAttr||[];state.catalogVars=state.catalogVars||{};
+   var _ex2=state.catalogAttr.find(function(a){return a.name===nm;});
+   if(!_ex2){state.catalogAttr.push({name:nm,park:park||''});nC++;}
+   else if(park&&!_ex2.park){_ex2.park=park;}
+   var cvr=get(r,iVar);
+   if(cvr&&cvr!=='Standard'){var arr=state.catalogVars[nm]=state.catalogVars[nm]||[];if(arr.indexOf(cvr)<0){arr.push(cvr);nC++;}}
+   continue;
+  }
+  if(!date){skip++;continue;}
   var entry,key;
   if(type==='ride'){
    var attr=matchName(nm,attrL,attrO)||nm;
@@ -1173,6 +1202,7 @@ function doImport(text){
  save();closeSheet();go('stats');
  var msg='Imported '+nR+' experience'+(nR===1?'':'s')+', '+nM+' meet'+(nM===1?'':'s')+', and '+nS+' score'+(nS===1?'':'s')+'.';
  if(nD)msg+=' Plus '+nD+' drawing'+(nD===1?'':'s')+'.';
+ if(nC)msg+=' Added '+nC+' catalog item'+(nC===1?'':'s')+' to your checklists.';
  if(nDup)msg+='\n'+nDup+' duplicate'+(nDup===1?'':'s')+' skipped.';
  if(skip)msg+='\n'+skip+' row'+(skip===1?'':'s')+' skipped (missing date or name).';
  alert(msg);
