@@ -175,7 +175,7 @@ function rideIcon(n){var u=(SEED.rideIcons||{})[n];return u?'<img class="ricon" 
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmt(d){if(!d)return '';const p=d.split('-');return MONTHS[+p[1]-1]+' '+(+p[2])+', '+p[0];}
 function today(){const d=new Date();return d.toISOString().slice(0,10);}
-function parkPill(p){var ab=(SEED.parkAbbr||{});var c=(p==='Both Parks'?'both':(ab[p]==='DCA'?'cca':''));return '<span class="pill '+c+'">'+(ab[p]||p)+'</span>';}
+function parkPill(p){var ab=(SEED.parkAbbr||{});var c=(p==='Both Parks'?'both':(ab[p]==='DCA'?'cca':''));var dn=(p==='Both Parks'?'Multiple parks':(ab[p]||p));return '<span class="pill '+c+'">'+dn+'</span>';}
 
 function allParks(){var s={},o=[];(GENERIC?catalog():SEED.attractions).forEach(function(a){if(a.park&&!s[a.park]){s[a.park]=1;o.push(a.park);}});(state.userParks||[]).forEach(function(p){if(p&&!s[p]){s[p]=1;o.push(p);}});return o;}
 function parkOn(p){var pk=(state.settings&&state.settings.parks)||{};return pk[p]!==false;}
@@ -541,7 +541,7 @@ function saveVariant(){var a=val('f_attr');if(!a){alert('Pick or write in an exp
  state.rides.push({date:val('f_date'),attraction:a,park:val('f_park')||null,variant:v,with_:val('f_with')||null,access:null,notes:null,photo:null,posted:null,lineStart:null,lineEnd:null,line:null});
  var _ex=document.getElementById('f_vext');if(_ex&&_ex.checked)setExtinct(v,true);
  save();closeSheet();go('variants');}
-function opts(arr,sel){return '<option value=""></option>'+arr.map(o=>'<option '+(o===sel?'selected':'')+'>'+o+'</option>').join('');}
+function opts(arr,sel){return '<option value=""></option>'+arr.map(o=>'<option value="'+esc(o)+'" '+(o===sel?'selected':'')+'>'+(o==='Both Parks'?'Multiple parks':o)+'</option>').join('');}
 function attrOpts(sel){sel=sel||'';
  let s='<option value=""></option>';
  parksOn().forEach(pk=>{
