@@ -29,7 +29,7 @@ main{padding:14px 14px 92px;}
 .stat .num{font-size:27px;font-weight:900;line-height:1;color:inherit;}
 .stat .lbl{font-size:13px;color:var(--muted);margin-top:7px;text-transform:capitalize;letter-spacing:.5px;font-weight:800;}
 .stat.wide{grid-column:1/3;}
-.stat.wide .num{font-size:20px;}.statico{width:30px;height:30px;display:block;margin:2px auto 7px;}.lbl{font-size:13px;color:var(--muted);text-transform:capitalize;letter-spacing:.5px;font-weight:800;}.hero{background:var(--lemon);color:#1B1A17;border-radius:18px;padding:15px 16px 17px;margin-bottom:4px;}.hero .num,.hero .hbig .num{color:#1B1A17;}.hero .lbl{color:rgba(27,26,23,.65);}.hero .htop{display:flex;justify-content:space-between;align-items:baseline;}.hbig{margin:7px 0 11px;}.hbig .num{font-size:30px;}.hfrac{font-weight:900;color:#1B1A17;font-size:20px;}.hsub{font-weight:700;font-size:12px;color:rgba(27,26,23,.65);}.split{height:13px;border-radius:7px;overflow:hidden;display:flex;background:rgba(27,26,23,.12);margin-top:2px;}.split>div{height:100%;}.split .dl{background:#1B1A17;}.split .ca{background:#3E5A3E;}.splitlbl{display:flex;justify-content:space-between;margin-bottom:9px;font-weight:800;font-size:14px;color:var(--ink);}.mile{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 15px;margin-bottom:10px;}.mile .statico{margin:0;flex:none;}.mile .se{font-weight:800;font-size:15px;color:var(--ink);}
+.stat.wide .num{font-size:20px;}.statico{width:30px;height:30px;display:block;margin:2px auto 7px;}.lbl{font-size:13px;color:var(--muted);text-transform:capitalize;letter-spacing:.5px;font-weight:800;}.hero{background:var(--lemon);color:#1B1A17;border-radius:18px;padding:15px 16px 17px;margin-bottom:4px;}.hero .num,.hero .hbig .num{color:#1B1A17;}.hero .lbl{color:rgba(27,26,23,.65);}.hero .htop{display:flex;justify-content:space-between;align-items:baseline;}.hbig{margin:7px 0 11px;}.hbig .num{font-size:30px;}.hfrac{font-weight:900;color:#1B1A17;font-size:20px;}.hsub{font-weight:700;font-size:12px;color:rgba(27,26,23,.65);}.split{height:13px;border-radius:7px;overflow:hidden;display:flex;background:rgba(27,26,23,.12);margin-top:2px;}.split>div{height:100%;}.split .dl{background:#1B1A17;}.split .ca{background:#3E5A3E;}.splitlbl{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:9px;font-weight:800;font-size:14px;color:var(--ink);}.splitlbl>span{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.pdot{display:inline-block;width:10px;height:10px;border-radius:4px;flex:none;}.mile{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 15px;margin-bottom:10px;}.mile .statico{margin:0;flex:none;}.mile .se{font-weight:800;font-size:15px;color:var(--ink);}
 h2.sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:20px 4px 8px;font-weight:800;}
 .row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
 .row:last-child{border-bottom:none;}
@@ -281,8 +281,9 @@ function viewStats(s){
  var _pon=parksOn();
  if(_pon.length&&!actPark()){var _cnt={};_pon.forEach(function(pk){_cnt[pk]=state.rides.filter(function(r){return pOf(r.attraction)===pk;}).length;});var _sum=_pon.reduce(function(a,pk){return a+_cnt[pk];},0)||1;
   out+='<h2 class="sec">By park</h2><div class="stat" style="text-align:left;padding:15px 16px">';
-  out+='<div class="splitlbl">'+_pon.map(function(pk){return '<span onclick="showByPark(&#39;'+pk+'&#39;)" style="cursor:pointer">'+(pk==='California Adventure'?'Calif. Adv.':pk)+' <span class="num" style="font-size:15px">'+_cnt[pk]+'</span> &rsaquo;</span>';}).join('')+'</div>';
-  if(_pon.length>1){out+='<div class="split">'+_pon.map(function(pk,i){return '<div class="'+(i===0?'dl':'ca')+'" style="width:'+Math.round(_cnt[pk]/_sum*100)+'%"></div>';}).join('')+'</div>';}
+  var PCOL=['#3E5A3E','#8E96D6','#B388E6','#D9CF3F','#8F3F7D','#57554C','#D9A3D4','#7FA57F'];
+  out+='<div class="splitlbl">'+_pon.map(function(pk,i){return '<span onclick="showByPark(&#39;'+pk+'&#39;)" style="cursor:pointer"><span class="pdot" style="background:'+PCOL[i%PCOL.length]+'"></span>'+(pk==='California Adventure'?'Calif. Adv.':pk)+' <span class="num" style="font-size:15px">'+_cnt[pk]+'</span> &rsaquo;</span>';}).join('')+'</div>';
+  if(_pon.length>1){out+='<div class="split">'+_pon.map(function(pk,i){return '<div style="background:'+PCOL[i%PCOL.length]+';width:'+Math.max(2,Math.round(_cnt[pk]/_sum*100))+'%"></div>';}).join('')+'</div>';}
   out+='</div>';}
  if(waitsOn()){var wr=state.rides.filter(function(r){return r.line!=null;});if(wr.length){var totLine=wr.reduce(function(a,r){return a+r.line;},0);out+='<h2 class="sec">Wait times</h2><div class="grid">'+numTile(Math.round(totLine/wr.length)+'m','Avg time in line')+numTile((Math.round(totLine/60*10)/10)+'h','Total in line')+'</div>';}}
  var _pp=getPasses();var _pk=Object.keys(_pp);if(_pk.length){var _show=actPark()?(_pp[actPark()]?[actPark()]:[]):_pk;if(_show.length){out+='<h2 class="sec">Annual pass</h2>'+_show.map(passCard).join('');}}
@@ -862,6 +863,7 @@ function openMenu(){
   '<button onclick="exportData()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#8E96D6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 13.6v3a2 2 0 0 0 2 2h10.8a2 2 0 0 0 2-2v-3" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg></span><b>Export backup</b></button>'+
   '<button onclick="exportCSV()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#D9CF3F"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 7.4v7M12 14.4l-2.6-2.6M12 14.4l2.6-2.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Export to CSV</b></button>'+
   '<button onclick="openImport()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B9B3E8"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 14.4v-7M12 7.4L9.4 10M12 7.4l2.6 2.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Import from CSV</b></button>'+
+  '<button onclick="openRestore()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#A9AFE2"/><rect x="5.4" y="6" width="13.2" height="12.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 16.4V9.8M9.3 12.5 12 9.8l2.7 2.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Restore from backup</b></button>'+
   '<button onclick="downloadTemplate()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B5D0B5"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M8.4 8h7.2M8.4 11.4h7.2M8.4 14.8h4.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg></span><b>Download CSV template</b></button>'+
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="resetData()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Reset to imported</b></button>'+
@@ -980,6 +982,28 @@ function viewVariants(){
  return out;
 }
 function pct(a,b){return b?Math.round(a/b*100):0;}
+function openRestore(){
+ sheet('<h3>Restore from backup</h3>'+
+  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Load a Park Passport backup file (.json) that you saved with "Export backup". This replaces everything currently in the app with the contents of that file, so only use a backup you trust.</p>'+
+  '<label>Choose your backup file</label><input type="file" accept=".json,application/json" id="f_bak" onchange="handleRestore(this)">'+
+  '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
+}
+function handleRestore(input){var f=input.files&&input.files[0];if(!f)return;
+ var rd=new FileReader();
+ rd.onload=function(){var d;
+  try{d=JSON.parse(rd.result);}catch(e){alert('That file is not valid JSON. Make sure it is a Park Passport backup exported from this app.');return;}
+  if(!d||typeof d!=='object'||!('rides' in d)||!('visits' in d)){alert('That does not look like a Park Passport backup.');return;}
+  if(!confirm('Restore this backup? It replaces everything currently in the app.'))return;
+  state=d;
+  ['rides','visits','meets','scores','people','groups','academy','starTours','userParks','templateRows'].forEach(function(k){if(!Array.isArray(state[k]))state[k]=[];});
+  if(!state.extinct||typeof state.extinct!=='object'||Array.isArray(state.extinct))state.extinct={};
+  if(!state.passes||typeof state.passes!=='object'||Array.isArray(state.passes))state.passes={};
+  state.settings=state.settings||{};
+  state.lists=(state.lists&&typeof state.lists==='object')?state.lists:clone(SEED.lists);
+  save();closeSheet();renderAll();alert('Backup restored.');
+ };
+ rd.readAsText(f);
+}
 function exportData(){
  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -1086,7 +1110,16 @@ function doImport(text){
  var _sn=SEED.shortNames||{};Object.keys(_sn).forEach(function(_f){attrL.push(String(_sn[_f]).toLowerCase());attrO.push(_f);});
  var get=function(r,i){return i>=0&&i<r.length?String(r[i]||'').trim():'';};
  state.userParks=state.userParks||[];var _exP={};allParks().forEach(function(p){_exP[p]=1;});
- var nR=0,nM=0,nS=0,nD=0,skip=0;
+ function kR(d,a,p,v){return 'R|'+d+'|'+String(a||'').toLowerCase()+'|'+String(p||'').toLowerCase()+'|'+String(v||'').toLowerCase();}
+ function kM(d,c,p){return 'M|'+d+'|'+String(c||'').toLowerCase()+'|'+String(p||'').toLowerCase();}
+ function kS(d,a,s){return 'S|'+d+'|'+String(a||'').toLowerCase()+'|'+s;}
+ function kD(d,c){return 'D|'+d+'|'+String(c||'').toLowerCase();}
+ var existing={};function _inc(o,k){o[k]=(o[k]||0)+1;}
+ state.rides.forEach(function(x){_inc(existing,kR(x.date,x.attraction,x.park,x.variant));});
+ state.meets.forEach(function(x){_inc(existing,kM(x.date,x.character,x.park));});
+ state.scores.forEach(function(x){_inc(existing,kS(x.date,x.attraction,x.score));});
+ (state.academy||[]).forEach(function(x){_inc(existing,kD(x.date,x.character));});
+ var cands=[],skip=0;
  for(var k=1;k<rows.length;k++){var r=rows[k];
   var date=normDate(get(r,iDate));var nm=get(r,iName);
   var type=get(r,iType).toLowerCase();var scoreVal=get(r,iScore);
@@ -1098,27 +1131,42 @@ function doImport(text){
   if(!date||!nm){skip++;continue;}
   var park=get(r,iPark)||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland'));var notes=get(r,iNotes)||null;
   if(park&&park!=='Both Parks'&&!_exP[park]){_exP[park]=1;if(state.userParks.indexOf(park)<0)state.userParks.push(park);}
+  var entry,key;
   if(type==='ride'){
    var attr=matchName(nm,attrL,attrO)||nm;
    var vr=get(r,iVar);if(vr){var mv=matchName(vr,varL,varO);vr=(mv&&mv!=='Standard')?mv:vr;}else{vr=null;}
    var ac=get(r,iAcc);ac=ac?(matchName(ac,accL,accO)||ac):null;
-   state.rides.push({date:date,attraction:attr,park:park,variant:vr,with_:get(r,iWith)||null,access:ac,notes:notes,photos:null});
-   ensureVisit(date,park);nR++;
+   entry={date:date,attraction:attr,park:park,variant:vr,with_:get(r,iWith)||null,access:ac,notes:notes,photos:null};
+   key=kR(date,attr,park,vr);
   }else if(type==='meet'){
-   state.meets.push({date:date,character:nm,park:park,where:get(r,iWhere)||null,notes:notes});
-   ensureVisit(date,park);nM++;
+   entry={date:date,character:nm,park:park,where:get(r,iWhere)||null,notes:notes};
+   key=kM(date,nm,park);
   }else if(type==='draw'){
-   state.academy.push({date:date,character:nm});ensureVisit(date,park);nD++;
+   entry={date:date,character:nm};key=kD(date,nm);
   }else{
    var sa=matchName(nm,scoreL,scoreO)||nm;
-   var sc=Number(String(scoreVal).replace(/[^0-9.\-]/g,''));
-   state.scores.push({date:date,attraction:sa,score:isNaN(sc)?0:sc,with_:get(r,iPlayer)||null,party:get(r,iWith)||null,rank:null,notes:notes,photo:null});
-   ensureVisit(date,park);nS++;
+   var sc=Number(String(scoreVal).replace(/[^0-9.\-]/g,''));sc=isNaN(sc)?0:sc;
+   entry={date:date,attraction:sa,score:sc,with_:get(r,iPlayer)||null,party:get(r,iWith)||null,rank:null,notes:notes,photo:null};
+   key=kS(date,sa,sc);
   }
+  cands.push({type:type,entry:entry,key:key,park:park,date:date});
  }
+ var seen={},dup=0;
+ cands.forEach(function(c){var have=existing[c.key]||0,s=seen[c.key]||0;if(s<have){c.dup=true;dup++;}seen[c.key]=s+1;});
+ var skipDups=false;
+ if(dup>0){skipDups=confirm(dup+' row'+(dup===1?' is':'s are')+' already in your log. Skip '+(dup===1?'it':'them')+' so nothing is added twice?\n\nOK = skip the duplicate'+(dup===1?'':'s')+'.   Cancel = import everything anyway.');}
+ var nR=0,nM=0,nS=0,nD=0,nDup=0;
+ cands.forEach(function(c){
+  if(c.dup&&skipDups){nDup++;return;}
+  if(c.type==='ride'){state.rides.push(c.entry);ensureVisit(c.date,c.park);nR++;}
+  else if(c.type==='meet'){state.meets.push(c.entry);ensureVisit(c.date,c.park);nM++;}
+  else if(c.type==='draw'){state.academy.push(c.entry);ensureVisit(c.date,c.park);nD++;}
+  else{state.scores.push(c.entry);ensureVisit(c.date,c.park);nS++;}
+ });
  save();closeSheet();go('stats');
  var msg='Imported '+nR+' experience'+(nR===1?'':'s')+', '+nM+' meet'+(nM===1?'':'s')+', and '+nS+' score'+(nS===1?'':'s')+'.';
  if(nD)msg+=' Plus '+nD+' drawing'+(nD===1?'':'s')+'.';
+ if(nDup)msg+='\n'+nDup+' duplicate'+(nDup===1?'':'s')+' skipped.';
  if(skip)msg+='\n'+skip+' row'+(skip===1?'':'s')+' skipped (missing date or name).';
  alert(msg);
 }
