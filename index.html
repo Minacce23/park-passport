@@ -267,9 +267,9 @@ function viewStats(s){
  var years='-', yrsN=0;
  if(s.firstDate){var y0=+s.firstDate.slice(0,4), y1=+s.lastDate.slice(0,4); yrsN=y1-y0+1; years=(y0===y1?(''+y0):y0+'-'+y1);}
  var out='';
- if(GENERIC){out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}
+ if(GENERIC){out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}
  else{out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+
-   '<div class="htop"><span class="lbl">Attractions experienced</span><span class="hsub">'+pct+'% explored &rsaquo;</span></div>'+
+   '<div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">'+pct+'% explored &rsaquo;</span></div>'+
    '<div class="hbig"><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></div>'+
    '<div class="prog"><div style="width:'+pct+'%"></div></div></div>';}
  out+='<h2 class="sec">Overview</h2><div class="grid">'+
