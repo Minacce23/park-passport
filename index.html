@@ -1159,11 +1159,21 @@ function doImport(text){
   if(type==='catalog'||(type==='ride'&&!date)){
    if(!GENERIC){skip++;continue;}
    state.catalogAttr=state.catalogAttr||[];state.catalogVars=state.catalogVars||{};
-   var _ex2=state.catalogAttr.find(function(a){return a.name===nm;});
-   if(!_ex2){state.catalogAttr.push({name:nm,park:park||''});nC++;}
+   var nmL=nm.toLowerCase();
+   var canon=nm;catalog().some(function(a){if(a.name.toLowerCase()===nmL){canon=a.name;return true;}return false;});
+   var _known=catalog().some(function(a){return a.name.toLowerCase()===nmL;});
+   var _ex2=state.catalogAttr.find(function(a){return a.name.toLowerCase()===nmL;});
+   if(!_ex2){state.catalogAttr.push({name:canon,park:park||''});if(!_known)nC++;}
    else if(park&&!_ex2.park){_ex2.park=park;}
    var cvr=get(r,iVar);
-   if(cvr&&cvr!=='Standard'){var arr=state.catalogVars[nm]=state.catalogVars[nm]||[];if(arr.indexOf(cvr)<0){arr.push(cvr);nC++;}}
+   if(cvr&&cvr!=='Standard'){
+    var arr=state.catalogVars[canon]=state.catalogVars[canon]||[];
+    var cvrL=cvr.toLowerCase();
+    if(!arr.some(function(v){return v.toLowerCase()===cvrL;})){
+     var lv=null;state.rides.some(function(r2){if(r2.attraction===canon&&r2.variant&&r2.variant.toLowerCase()===cvrL){lv=r2.variant;return true;}return false;});
+     if(lv){arr.push(lv);}else{arr.push(cvr);nC++;}
+    }
+   }
    continue;
   }
   if(!date){skip++;continue;}
