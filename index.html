@@ -857,6 +857,34 @@ function parkIconSVG(p){return PARKICONS[parkIconKey(p)];}
 function assignParkIcon(p){state.parkIcons=state.parkIcons||{};if(!state.parkIcons[p]){var keys=Object.keys(PARKICONS);state.parkIcons[p]=keys[Math.floor(Math.random()*keys.length)];}}
 function openParkIconPicker(p){var cur=parkIconKey(p);sheet('<h3>Pick an icon</h3><p class="muted" style="margin:0 0 10px">'+esc(p)+'</p><div class="iconpick">'+Object.keys(PARKICONS).map(function(k){return '<button type="button" class="'+(k===cur?'on':'')+'" onclick="setParkIcon('+jsarg(p)+','+jsarg(k)+')">'+PARKICONS[k]+'</button>';}).join('')+'</div><div class="btnrow"><button class="btn ghost" onclick="openMenu()">Back</button></div>');}
 function setParkIcon(p,k){state.parkIcons=state.parkIcons||{};state.parkIcons[p]=k;save();openMenu();}
+var _dupes=[];
+function _dupGroups(){
+ var g={};
+ state.rides.forEach(function(r,i){var k='E|'+(r.date||'')+'|'+String(r.attraction||'').toLowerCase()+'|'+String(r.variant||'').toLowerCase();(g[k]=g[k]||{t:'rides',label:shortRide(r.attraction||'?')+((r.variant&&r.variant!=='Standard')?' ('+r.variant+')':'')+' \u00b7 '+fmt(r.date),idxs:[]}).idxs.push(i);});
+ state.meets.forEach(function(m,i){var k='M|'+(m.date||'')+'|'+String(m.character||'').toLowerCase();(g[k]=g[k]||{t:'meets',label:(m.character||'?')+' \u00b7 '+fmt(m.date),idxs:[]}).idxs.push(i);});
+ state.scores.forEach(function(sc,i){var k='S|'+(sc.date||'')+'|'+String(sc.attraction||'').toLowerCase()+'|'+(sc.score!=null?sc.score:'')+'|'+String(sc.with_||'').toLowerCase();(g[k]=g[k]||{t:'scores',label:fmtN(sc.score)+' on '+shortRide(sc.attraction||'?')+' \u00b7 '+fmt(sc.date),idxs:[]}).idxs.push(i);});
+ var out=[];Object.keys(g).forEach(function(k){if(g[k].idxs.length>1)out.push(g[k]);});
+ return out;
+}
+function _dupeKeep(d){var arr=state[d.t];var best=-1,bs=-1;d.idxs.forEach(function(ix){var x=arr[ix];var sc=(x&&x.photo?2:0)+(x&&x.notes?1:0);if(sc>bs){bs=sc;best=ix;}});return best;}
+function removeDupes(i){var d=_dupes[i];if(!d)return;var n=d.idxs.length-1;
+ if(!confirm('Remove '+n+' duplicate '+(n===1?'copy':'copies')+' of \u201c'+d.label+'\u201d? One copy stays.'))return;
+ var keep=_dupeKeep(d);d.idxs.filter(function(ix){return ix!==keep;}).sort(function(a,b){return b-a;}).forEach(function(ix){state[d.t].splice(ix,1);});
+ save();renderAll();openDupeCheck();}
+function removeAllDupes(){var extras=_dupes.reduce(function(a,d){return a+d.idxs.length-1;},0);
+ if(!confirm('Remove '+extras+' duplicate entries in one go? One copy of each stays.'))return;
+ var kill={rides:[],meets:[],scores:[]};
+ _dupes.forEach(function(d){var keep=_dupeKeep(d);d.idxs.forEach(function(ix){if(ix!==keep)kill[d.t].push(ix);});});
+ Object.keys(kill).forEach(function(t){kill[t].sort(function(a,b){return b-a;}).forEach(function(ix){state[t].splice(ix,1);});});
+ save();renderAll();openDupeCheck();}
+function openDupeCheck(){_dupes=_dupGroups();
+ var extras=_dupes.reduce(function(a,d){return a+d.idxs.length-1;},0);
+ var h='<h3>Check for duplicates</h3>';
+ if(!_dupes.length){h+='<div class="emptyc">'+IC.rides+'<div class="et">No duplicates found</div><div class="es">Every experience, meet, and score looks unique. All clear.</div></div>';}
+ else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">These entries share the same date and details. Riding the same ride twice in one day is a real thing, so only remove what you know is an accident. The copy with a photo or note is always the one kept.</p>';
+  h+='<div class="card">'+_dupes.map(function(d,i){return '<div class="checkitem"><div class="nm">'+esc(d.label)+' <span class="cnt">\u00d7'+d.idxs.length+'</span></div><button class="xbtn" style="color:#8F3F7D;font-size:13px;font-weight:700" onclick="removeDupes('+i+')">Remove '+(d.idxs.length-1)+'</button></div>';}).join('')+'</div>';
+  if(_dupes.length>1)h+='<div class="btnrow" style="margin-top:12px"><button class="btn ghost" style="color:#8F3F7D" onclick="removeAllDupes()">Remove all extras ('+extras+')</button></div>';}
+ h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+'<button onclick="closeSheet();startOnboarding()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg></span><b>How it works</b></button>'+
   '<button onclick="closeSheet();go(\'badges\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9A6BD4"/><path d="M9.4 12.5L8.2 18.6l3.8-2 3.8 2-1.2-6.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="8.8" r="5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 6.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.9-1.5.9.3-1.7-1.2-1.2 1.7-.2z" fill="#1B1A17"/></svg></span><b>Badges</b></button>'+
@@ -874,6 +902,7 @@ function openMenu(){
   '<button onclick="openRestore()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#A9AFE2"/><rect x="5.4" y="6" width="13.2" height="12.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 16.4V9.8M9.3 12.5 12 9.8l2.7 2.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Restore from backup</b></button>'+
   '<button onclick="downloadTemplate()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B5D0B5"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M8.4 8h7.2M8.4 11.4h7.2M8.4 14.8h4.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg></span><b>Download CSV template</b></button>'+
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>'+pp+' catalog</b></button>';}).join('')):'')+
+  '<button onclick="openDupeCheck()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg></span><b>Check for duplicates</b></button>'+
   '<button onclick="resetData()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Reset to imported</b></button>'+
   '</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
