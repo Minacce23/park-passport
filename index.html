@@ -940,6 +940,21 @@ function stOpts(cat){if(DISGUISE)return stSlotOpts(cat);return '<option value=""
 function formStarTours(){sheet('<h3>'+(DISGUISE?'Log a flight':'Star Tours flight')+'</h3><label>Date</label><input type="date" id="f_stdate" value="'+today()+'"><label>The Escape</label><select id="f_esc">'+stOpts('The Escape')+'</select><label>Planet 1</label><select id="f_p1">'+stOpts('Planet 1')+'</select><label>Hologram</label><select id="f_holo">'+stOpts('Hologram')+'</select><label>Planet 2</label><select id="f_p2">'+stOpts('Planet 2')+'</select><label>Ending</label><select id="f_end">'+stOpts('Ending')+'</select><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveStarTours()">Save flight</button></div>');}
 function saveStarTours(){var f={date:val('f_stdate')||today(),escape:val('f_esc')||null,planet1:val('f_p1')||null,hologram:val('f_holo')||null,planet2:val('f_p2')||null,ending:val('f_end')||null};if(!f.escape&&!f.planet1&&!f.hologram&&!f.planet2&&!f.ending){alert('Pick at least one scene.');return;}state.starTours.push(f);save();closeSheet();go('variants');}
 function delStarTours(i){if(!confirm('Delete this flight?'))return;state.starTours.splice(i,1);save();go('variants');}
+function formCatalogVariant(rn){sheet('<h3>Add a variant to the list</h3>'+
+ '<p class="muted" style="margin:0 0 12px;line-height:1.5">This adds a variant as not-experienced, so it waits on your list until you log it.</p>'+
+ attrField(rn||'','')+
+ '<label>Variant name</label><input id="f_cvar" placeholder="e.g. Holiday overlay" autocomplete="off">'+
+ '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveCatalogVariant()">Add to list</button></div>');}
+function saveCatalogVariant(){var a=val('f_attr');if(!a){alert('Pick or write in an experience');return;}var v=val('f_cvar');if(!v){alert('Enter a variant name');return;}
+ state.catalogVars=state.catalogVars||{};state.catalogAttr=state.catalogAttr||[];
+ var aL=a.toLowerCase();var canon=a;catalog().some(function(x){if(x.name.toLowerCase()===aL){canon=x.name;return true;}return false;});
+ if(!catalog().some(function(x){return x.name.toLowerCase()===aL;}))state.catalogAttr.push({name:a,park:''});
+ var arr=state.catalogVars[canon]=state.catalogVars[canon]||[];var vL=v.toLowerCase();
+ if(arr.some(function(x){return x.toLowerCase()===vL;})||state.rides.some(function(r){return r.attraction===canon&&r.variant&&r.variant.toLowerCase()===vL;})){alert('That variant is already on the list.');return;}
+ arr.push(v);save();closeSheet();go('variants');}
+function delCatalogVariant(rn,v){if(!confirm('Remove \u201c'+v+'\u201d from the '+rn+' list?'))return;
+ var arr=(state.catalogVars||{})[rn]||[];var i=-1;arr.some(function(x,k){if(x.toLowerCase()===v.toLowerCase()){i=k;return true;}return false;});
+ if(i>=0)arr.splice(i,1);if(!arr.length)delete state.catalogVars[rn];save();renderAll();}
 function viewVariants(){
  if(GENERIC){
   var byRide={},firstv={};
@@ -949,17 +964,17 @@ function viewVariants(){
   var rnames=Object.keys(rset),total=0,doneV=0;
   rnames.forEach(function(rn){var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});Object.keys(vs).forEach(function(v){total++;if(byRide[rn]&&byRide[rn][v])doneV++;});});
   var gout='<h2 class="sec" style="margin-top:2px">Variants &amp; special versions</h2>';
-  if(!total){gout+=emptyState(IC.rides,'No variants yet','Tap the + button and choose "Add a variant", or import a park catalog CSV with the variants for each ride.');gout+='<div class="linkrow"><button onclick="formVariant()">+ Add a variant</button></div>';return gout;}
+  if(!total){gout+=emptyState(IC.rides,'No variants yet','Tap the + button and choose "Add a variant", or import a park catalog CSV with the variants for each ride.');gout+='<div class="linkrow"><button onclick="formVariant()">+ Log a variant</button><button onclick="formCatalogVariant(&#39;&#39;)">+ Add to list</button></div>';return gout;}
   if(doneV<total){gout+='<div class="card"><div class="t">Special versions experienced</div><div class="prog"><div style="width:'+Math.round(doneV/total*100)+'%"></div></div><div class="muted">'+doneV+' of '+total+' &middot; '+pct(doneV,total)+'%</div></div>';}
   else{gout+='<div class="card"><div class="t">Special versions logged</div><div class="row" style="border:none;padding:8px 0 0"><div class="main"><div class="num" style="font-size:24px">'+total+'</div><div class="s">across '+rnames.length+' ride'+(rnames.length===1?'':'s')+'</div></div></div></div>';}
   rnames.sort(function(a,b){return a.localeCompare(b);}).forEach(function(rn){
    var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});
-   gout+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--accent);margin-bottom:4px">'+esc(rn)+extinctPill(rn)+'</div>';
+   gout+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--accent);margin-bottom:4px;display:flex;align-items:center"><span style="flex:1">'+esc(rn)+extinctPill(rn)+'</span><button class="xbtn" style="font-size:13px;font-weight:700;color:var(--accent)" onclick="formCatalogVariant('+jsarg(rn)+')">+ Add</button></div>';
    Object.keys(vs).sort().forEach(function(v){var c=(byRide[rn]&&byRide[rn][v])||0;var fk=rn+'|'+v;
-    gout+='<div class="checkitem '+(c?'done':'')+'" style="cursor:pointer" title="Tap to mark or unmark extinct" onclick="toggleExtinct('+jsarg(v)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(v)+extinctPill(v)+(c?' <span class="cnt">first '+fmt(firstv[fk])+'</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});
+    gout+='<div class="checkitem '+(c?'done':'')+'" style="cursor:pointer" title="Tap to mark or unmark extinct" onclick="toggleExtinct('+jsarg(v)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(v)+extinctPill(v)+(c?' <span class="cnt">first '+fmt(firstv[fk])+'</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'<button class="xbtn" onclick="event.stopPropagation();delCatalogVariant('+jsarg(rn)+','+jsarg(v)+')">&times;</button>')+'</div>';});
    gout+='</div>';
   });
-  gout+='<div class="linkrow"><button onclick="formVariant()">+ Add a variant</button></div>';
+  gout+='<div class="linkrow"><button onclick="formVariant()">+ Log a variant</button><button onclick="formCatalogVariant(&#39;&#39;)">+ Add to list</button></div>';
   return gout;
  }
  const all=SEED.lists.variants.filter(v=>v && v!=='Standard');
