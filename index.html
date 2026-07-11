@@ -985,7 +985,9 @@ function viewVariants(){
   var byRide={},firstv={};
   fRides().forEach(function(r){rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard'){byRide[r.attraction]=byRide[r.attraction]||{};byRide[r.attraction][vv]=(byRide[r.attraction][vv]||0)+1;var k=r.attraction+'|'+vv;if(!firstv[k]||r.date<firstv[k])firstv[k]=r.date;}});});
   var catV=state.catalogVars||{};
-  var rset={};Object.keys(byRide).forEach(function(k){rset[k]=1;});Object.keys(catV).forEach(function(k){if((catV[k]||[]).length)rset[k]=1;});
+  var _ap=actPark();
+  var inPark=function(rn){if(!_ap)return true;var rnL=String(rn).toLowerCase();var pk='';catalog().some(function(a){if(a.name.toLowerCase()===rnL){pk=a.park||'';return true;}return false;});return pk===_ap||pk==='Both Parks';};
+  var rset={};Object.keys(byRide).forEach(function(k){rset[k]=1;});Object.keys(catV).forEach(function(k){if((catV[k]||[]).length&&inPark(k))rset[k]=1;});
   var rnames=Object.keys(rset),total=0,doneV=0;
   rnames.forEach(function(rn){var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});Object.keys(vs).forEach(function(v){total++;if(byRide[rn]&&byRide[rn][v])doneV++;});});
   var gout='<h2 class="sec" style="margin-top:2px">Variants &amp; special versions</h2>';
