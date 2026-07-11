@@ -346,7 +346,7 @@ function openVisit(date){curDay=date;
  var scores=state.scores.filter(s=>s.date===date);
  var h='<h3>'+fmt(date)+'</h3><div class="vmeta" style="margin:-6px 0 12px">'+parkPill(v.park)+(v.notes?'<span class="muted">'+v.notes+'</span>':'')+'</div>';
  if(rides.length){h+='<h2 class="sec">Experiences ('+rides.length+')</h2><div class="card">';
-  rides.forEach(function(r){h+='<div class="row" style="cursor:pointer" onclick="editRide('+state.rides.indexOf(r)+')">'+rideIcon(r.attraction)+'<div class="main"><div class="t">'+shortRide(r.attraction)+(r.variant&&r.variant!=='Standard'?' <span class="muted">('+r.variant+')</span>':'')+'</div><div class="s">'+lOf(r.attraction)+(r.with_?' &middot; '+r.with_:'')+'</div>'+waitLabel(r)+'</div>'+parkPill(pOf(r.attraction))+'</div>';});h+='</div>';}
+  rides.forEach(function(r){h+='<div class="row" style="cursor:pointer" onclick="editRide('+state.rides.indexOf(r)+')">'+rideIcon(r.attraction)+'<div class="main"><div class="t">'+shortRide(r.attraction)+rideVarLabel(r)+'</div><div class="s">'+lOf(r.attraction)+(r.with_?' &middot; '+r.with_:'')+'</div>'+waitLabel(r)+'</div>'+parkPill(pOf(r.attraction))+'</div>';});h+='</div>';}
  if(meets.length){h+='<h2 class="sec">Character meets ('+meets.length+')</h2><div class="card">';
   meets.forEach(function(m){h+='<div class="row" style="cursor:pointer" onclick="editMeet('+state.meets.indexOf(m)+')">'+meetMark(m)+'<div class="main"><div class="t">'+m.character+'</div>'+(m.where?'<div class="s">'+m.where+'</div>':'')+'</div>'+parkPill(m.park)+'</div>';});h+='</div>';}
  if(scores.length){h+='<h2 class="sec">Scores ('+scores.length+')</h2><div class="card">';
@@ -361,7 +361,7 @@ function viewRides(){
  rs.forEach(r=>{
   if(r.date!==cur){cur=r.date;out+='<div class="date-h">'+fmt(r.date)+'</div>';}
   out+='<div class="card" style="padding:10px 14px;cursor:pointer" onclick="editRide('+state.rides.indexOf(r)+')"><div class="row" style="padding:4px 0;border:none">'+rideIcon(r.attraction)+
-   '<div class="main"><div class="t">'+shortRide(r.attraction)+(r.variant&&r.variant!=='Standard'?' <span class="muted">('+r.variant+')</span>':'')+extinctPill(r.attraction)+'</div>'+
+   '<div class="main"><div class="t">'+shortRide(r.attraction)+rideVarLabel(r)+extinctPill(r.attraction)+'</div>'+
    '<div class="s">'+lOf(r.attraction)+(r.with_?' &middot; '+r.with_:'')+(r.access?' &middot; '+r.access:'')+'</div>'+waitLabel(r)+'</div>'+parkPill(pOf(r.attraction))+'</div></div>';
  });
  return out;
@@ -573,7 +573,7 @@ function parkFilterOpts(sel){sel=sel||'';return '<option value="">All parks</opt
 function attrOptsByPark(park,sel){sel=sel||'';var s='<option value=""></option>';var pks=park?[park]:parksOn();pks.forEach(function(pk){if(!park)s+='<optgroup label="'+pk+'">';SEED.attractions.filter(function(a){return a.park===pk;}).forEach(function(a){s+='<option'+(a.name===sel?' selected':'')+'>'+a.name+'</option>';});if(!park)s+='</optgroup>';});return s;}
 function variantOptsFor(attr,sel){sel=sel||'';var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return '<option value=""></option>'+list.map(function(v){return '<option'+(v===sel?' selected':'')+'>'+v+'</option>';}).join('');}
 function attrDataOpts(park){var pks=park?[park]:parksOn();var s='';pks.forEach(function(pk){SEED.attractions.filter(function(a){return a.park===pk;}).forEach(function(a){s+='<option value="'+esc(a.name)+'">';});});return s;}
-function variantDataOpts(attr){attr=String(attr||'');if(GENERIC){var aL=attr.toLowerCase();var seen={},o=[];Object.keys(state.catalogVars||{}).forEach(function(k){if(k.toLowerCase()===aL){(state.catalogVars[k]||[]).forEach(function(v){if(!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;o.push(v);}});}});state.rides.forEach(function(r){if(r.attraction&&r.attraction.toLowerCase()===aL&&r.variant&&r.variant!=='Standard'&&!seen[r.variant.toLowerCase()]){seen[r.variant.toLowerCase()]=1;o.push(r.variant);}});o.sort();return o.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return list.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}
+function variantDataOpts(attr){attr=String(attr||'');if(GENERIC){var aL=attr.toLowerCase();var seen={},o=[];Object.keys(state.catalogVars||{}).forEach(function(k){if(k.toLowerCase()===aL){(state.catalogVars[k]||[]).forEach(function(v){if(!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;o.push(v);}});}});state.rides.forEach(function(r){if(r.attraction&&r.attraction.toLowerCase()===aL)rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard'&&!seen[vv.toLowerCase()]){seen[vv.toLowerCase()]=1;o.push(vv);}});});o.sort();return o.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return list.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}
 function onParkChange(){var pe=document.getElementById('f_park');var pk=pe?pe.value:'';var dl=document.getElementById('dl_attr');if(dl)dl.innerHTML=attrDataOpts(pk);onAttrChange();}
 function onAttrChange(){var ae=document.getElementById('f_attr');var a=ae?ae.value:'';var dv=document.getElementById('dl_var');if(dv)dv.innerHTML=variantDataOpts(a);}
 function parkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="e.g. Magic Kingdom"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park" onchange="onParkChange()">'+parkFilterOpts(sel)+'</select>';}
@@ -583,12 +583,19 @@ function meetParkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><
 function scoreRideField(sel){sel=sel||'';if(GENERIC){return '<label>Experience</label><input id="f_attr" list="dl_sr" value="'+esc(sel)+'" placeholder="Ride name"><datalist id="dl_sr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Experience</label><select id="f_attr">'+opts(scoreRidesList(),sel)+'</select>';}
 function visitWith(d){var v=state.visits.find(function(x){return x.date===d;});return (v&&v.with_)?v.with_:'';}
 function syncVisitWith(){var d=val('f_date');var w=visitWith(d);if(!w)return;var e=document.getElementById('f_with')||document.getElementById('f_party');if(e&&!e.value)e.value=w;}
+function rideVariants(r){if(!r)return[];if(r.variants&&r.variants.length)return r.variants.slice();return r.variant?[r.variant]:[];}
+function rideVarLabel(r){var lst=rideVariants(r).filter(function(v){return v&&v!=='Standard';});return lst.length?' <span class="muted">('+lst.map(esc).join(', ')+')</span>':'';}
+function variantRowHTML(val){return '<div class="scorerow"><input class="vr_val" list="dl_var" placeholder="Standard, or write in a version" autocomplete="off" value="'+esc(val||'')+'"><button type="button" class="xbtn" onclick="this.closest(&#39;.scorerow&#39;).remove()">&times;</button></div>';}
+function addVariantRow(){var c=document.getElementById('vrows');if(c)c.insertAdjacentHTML('beforeend',variantRowHTML(''));}
+function collectVariantRows(){var out=[],seen={};document.querySelectorAll('#vrows .vr_val').forEach(function(e){var v=e.value.trim();if(!v||v==='Standard')return;if(seen[v.toLowerCase()])return;seen[v.toLowerCase()]=1;out.push(v);});return out;}
+function variantRowsField(vals,attr){vals=(vals&&vals.length)?vals:[''];
+ return '<label>Variants / special versions (optional)</label><div id="vrows">'+vals.map(variantRowHTML).join('')+'</div><button type="button" class="addrow" onclick="addVariantRow()">+ Add another variant</button><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}
 function formRide(d){pendingPhoto=null;
  sheet('<h3>Log an experience</h3>'+
   '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'" onchange="syncVisitWith()">'+
   parkField('')+
   attrField('','')+
-  variantField('','')+
+  variantRowsField([],'')+
   extinctChk('f_ext','')+
   '<label>Who with</label>'+withSelect('f_with',visitWith(d||today()))+
   '<label>Access</label><select id="f_acc">'+opts(SEED.lists.access,'Standby')+'</select>'+
@@ -603,7 +610,7 @@ function saveRide(){
  var po=numOrNull('f_posted');var ls=valOrUndef('f_lstart'),le=valOrUndef('f_lend');
  var lst=(ls===undefined?null:(ls||null)),len=(le===undefined?null:(le||null));
  var lmin=(lst&&len)?diffMin(lst,len):null;
- state.rides.push({date:val('f_date'),attraction:a,park:val('f_park')||null,variant:val('f_var')||null,with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
+ state.rides.push({date:val('f_date'),attraction:a,park:val('f_park')||null,variant:(collectVariantRows()[0]||null),variants:(collectVariantRows().length>1?collectVariantRows():null),with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
  collectScoreRows().forEach(function(r){state.scores.push({date:val('f_date'),attraction:a,score:r.score,with_:r.who||null,party:val('f_with')||null,rank:r.rank||null,notes:null,photo:null});});
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  save();closeSheet();go('visits');
@@ -614,7 +621,7 @@ function editRide(i){
   '<label>Date</label><input type="date" id="f_date" value="'+(r.date||'')+'">'+
   parkField(pOf(r.attraction))+
   attrField(r.attraction,pOf(r.attraction))+
-  variantField(r.variant,r.attraction)+
+  variantRowsField(rideVariants(r),r.attraction)+
   extinctChk('f_ext',r.attraction)+
   '<label>Who with</label>'+withSelect('f_with',r.with_)+
   '<label>Access</label><select id="f_acc">'+opts(SEED.lists.access,r.access)+'</select>'+
@@ -625,7 +632,7 @@ function editRide(i){
 }
 function updateRide(i){
  var r=state.rides[i];if(!r)return;var a=val('f_attr');if(!a){alert('Pick an attraction');return;}
- r.date=val('f_date');r.attraction=a;r.park=val('f_park')||null;r.variant=val('f_var')||null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
+ r.date=val('f_date');r.attraction=a;r.park=val('f_park')||null;var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  save();closeSheet();renderAll();
 }
@@ -804,7 +811,7 @@ function badgeList(){
  var s=stats();
  var exp=state.rides.length, vis=s.visits, chars=s.chars, explored=s.attr, scores=state.scores.length;
  var draws=Object.keys(academyUnique().m).length;
- var vset={};state.rides.forEach(function(r){if(r.variant&&r.variant!=='Standard')vset[r.variant]=1;});var variants=Object.keys(vset).length;
+ var vset={};state.rides.forEach(function(r){rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard')vset[vv]=1;});});var variants=Object.keys(vset).length;
  var stc=SEED.stCatalog||[], stsn=stSeen();
  var stCaught=stc.filter(function(x){return stsn[x.name];}).length, stFlights=(state.starTours||[]).length;
  var stRare=stc.some(function(x){return stsn[x.name]&&x.tier==='Rare';})?1:0;
@@ -880,13 +887,30 @@ function removeAllDupes(){var extras=_dupes.reduce(function(a,d){return a+d.idxs
  _dupes.forEach(function(d){var keep=_dupeKeep(d);d.idxs.forEach(function(ix){if(ix!==keep)kill[d.t].push(ix);});});
  Object.keys(kill).forEach(function(t){kill[t].sort(function(a,b){return b-a;}).forEach(function(ix){state[t].splice(ix,1);});});
  save();renderAll();openDupeCheck();}
-function openDupeCheck(){_dupes=_dupGroups();
+var _mg=[];
+function _mergeGroups(){var g={};
+ state.rides.forEach(function(r,i){var k=(r.date||'')+'|'+String(r.attraction||'').toLowerCase();(g[k]=g[k]||{idxs:[],label:shortRide(r.attraction||'?')+' \u00b7 '+fmt(r.date)}).idxs.push(i);});
+ var out=[];Object.keys(g).forEach(function(k){var d=g[k];if(d.idxs.length<2)return;
+  var vs={};d.idxs.forEach(function(ix){rideVariants(state.rides[ix]).forEach(function(v){if(v&&v!=='Standard')vs[v]=1;});});
+  var vl=Object.keys(vs);if(vl.length<2)return;d.vars=vl;out.push(d);});
+ return out;}
+function mergeVarGroup(i){var d=_mg[i];if(!d)return;
+ if(!confirm('Merge '+d.idxs.length+' entries of '+d.label+' into one ride with '+d.vars.length+' variants?'))return;
+ var arr=state.rides;var keep=-1,bs=-1;
+ d.idxs.forEach(function(ix){var x=arr[ix];var sc=(x.photo?4:0)+(x.notes?2:0)+(x.line!=null?1:0);if(sc>bs){bs=sc;keep=ix;}});
+ var kEntry=arr[keep];kEntry.variants=d.vars.slice();kEntry.variant=d.vars[0];
+ d.idxs.filter(function(ix){return ix!==keep;}).sort(function(a,b){return b-a;}).forEach(function(ix){arr.splice(ix,1);});
+ save();renderAll();openDupeCheck();}
+function openDupeCheck(){_dupes=_dupGroups();_mg=_mergeGroups();
  var extras=_dupes.reduce(function(a,d){return a+d.idxs.length-1;},0);
  var h='<h3>Check for duplicates</h3>';
- if(!_dupes.length){h+='<div class="emptyc">'+IC.rides+'<div class="et">No duplicates found</div><div class="es">Every experience, meet, and score looks unique. All clear.</div></div>';}
- else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">These entries share the same date and details. Riding the same ride twice in one day is a real thing, so only remove what you know is an accident. The copy with a photo or note is always the one kept.</p>';
+ if(!_dupes.length&&!_mg.length){h+='<div class="emptyc">'+IC.rides+'<div class="et">No duplicates found</div><div class="es">Every experience, meet, and score looks unique. All clear.</div></div>';}
+ if(_dupes.length){h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">These entries share the same date and details. Riding the same ride twice in one day is a real thing, so only remove what you know is an accident. The copy with a photo or note is always the one kept.</p>';
   h+='<div class="card">'+_dupes.map(function(d,i){return '<div class="checkitem"><div class="nm">'+esc(d.label)+' <span class="cnt">\u00d7'+d.idxs.length+'</span></div><button class="xbtn" style="color:#8F3F7D;font-size:13px;font-weight:700" onclick="removeDupes('+i+')">Remove '+(d.idxs.length-1)+'</button></div>';}).join('')+'</div>';
   if(_dupes.length>1)h+='<div class="btnrow" style="margin-top:12px"><button class="btn ghost" style="color:#8F3F7D" onclick="removeAllDupes()">Remove all extras ('+extras+')</button></div>';}
+ if(_mg.length){h+='<h2 class="sec">Merge same-day variants</h2>';
+  h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Same ride, same day, logged once per variant. Merging turns each group into a single ride that carries all its variants, so your experience count matches real rides. Great for Star Tours scenes.</p>';
+  h+='<div class="card">'+_mg.map(function(d,i){return '<div class="checkitem"><div class="nm">'+esc(d.label)+'<div class="cnt" style="margin-top:2px">'+d.idxs.length+' entries \u00b7 '+d.vars.length+' variants</div></div><button class="xbtn" style="color:#3E5A3E;font-size:13px;font-weight:700" onclick="mergeVarGroup('+i+')">Merge</button></div>';}).join('')+'</div>';}
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+'<button onclick="closeSheet();startOnboarding()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg></span><b>How it works</b></button>'+
@@ -958,7 +982,7 @@ function delCatalogVariant(rn,v){if(!confirm('Remove \u201c'+v+'\u201d from the 
 function viewVariants(){
  if(GENERIC){
   var byRide={},firstv={};
-  fRides().forEach(function(r){if(r.variant&&r.variant!=='Standard'){byRide[r.attraction]=byRide[r.attraction]||{};byRide[r.attraction][r.variant]=(byRide[r.attraction][r.variant]||0)+1;var k=r.attraction+'|'+r.variant;if(!firstv[k]||r.date<firstv[k])firstv[k]=r.date;}});
+  fRides().forEach(function(r){rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard'){byRide[r.attraction]=byRide[r.attraction]||{};byRide[r.attraction][vv]=(byRide[r.attraction][vv]||0)+1;var k=r.attraction+'|'+vv;if(!firstv[k]||r.date<firstv[k])firstv[k]=r.date;}});});
   var catV=state.catalogVars||{};
   var rset={};Object.keys(byRide).forEach(function(k){rset[k]=1;});Object.keys(catV).forEach(function(k){if((catV[k]||[]).length)rset[k]=1;});
   var rnames=Object.keys(rset),total=0,doneV=0;
@@ -979,7 +1003,7 @@ function viewVariants(){
  }
  const all=SEED.lists.variants.filter(v=>v && v!=='Standard');
  const cnt={},first={};
- state.rides.forEach(function(r){if(r.variant){cnt[r.variant]=(cnt[r.variant]||0)+1;if(!first[r.variant]||r.date<first[r.variant])first[r.variant]=r.date;}});
+ state.rides.forEach(function(r){rideVariants(r).forEach(function(vv){cnt[vv]=(cnt[vv]||0)+1;if(!first[vv]||r.date<first[vv])first[vv]=r.date;});});
  const owners=SEED.variantOwners||{};
  function owner(v){if(owners[v])return owners[v];var rr=state.rides.find(x=>x.variant===v);return rr?rr.attraction:'Other';}
  const done=all.filter(v=>cnt[v]).length;
@@ -1074,7 +1098,7 @@ function exportCSV(){
  var head=['Type','Date','Name','Variant','Access','Score','Player','Who with','Park','Where','Notes'];
  var lines=[head];
  var all=[];
- state.rides.forEach(function(r){all.push({d:r.date||'',row:['Ride',r.date||'',r.attraction||'',r.variant||'',r.access||'','','',r.with_||'','','',r.notes||'']});});
+ state.rides.forEach(function(r){all.push({d:r.date||'',row:['Ride',r.date||'',r.attraction||'',rideVariants(r).join(' + '),r.access||'','','',r.with_||'','','',r.notes||'']});});
  state.meets.forEach(function(m){all.push({d:m.date||'',row:['Meet',m.date||'',m.character||'','','','','','',m.park||'',m.where||'',m.notes||'']});});
  state.scores.forEach(function(s){all.push({d:s.date||'',row:['Score',s.date||'',s.attraction||'','','',(s.score!=null?s.score:''),s.with_||'',s.party||'','','',s.notes||'']});});
  (state.academy||[]).forEach(function(a){all.push({d:a.date||'',row:['Draw',a.date||'',a.character||'','','','','','','','','']});});
@@ -1227,9 +1251,11 @@ function doImport(text){
   var entry,key;
   if(type==='ride'){
    var attr=matchName(nm,attrL,attrO)||nm;
-   var vr=get(r,iVar);if(vr){var mv=matchName(vr,varL,varO);vr=(mv&&mv!=='Standard')?mv:vr;}else{vr=null;}
+   var vrRaw=get(r,iVar);var vrs=[];
+   if(vrRaw){vrRaw.split(' + ').forEach(function(part){part=part.trim();if(!part||part==='Standard')return;var mv=matchName(part,varL,varO);vrs.push((mv&&mv!=='Standard')?mv:part);});}
+   var vr=vrs[0]||null;
    var ac=get(r,iAcc);ac=ac?(matchName(ac,accL,accO)||ac):null;
-   entry={date:date,attraction:attr,park:park,variant:vr,with_:get(r,iWith)||null,access:ac,notes:notes,photos:null};
+   entry={date:date,attraction:attr,park:park,variant:vr,variants:(vrs.length>1?vrs:null),with_:get(r,iWith)||null,access:ac,notes:notes,photos:null};
    key=kR(date,attr,park,vr);
   }else if(type==='meet'){
    entry={date:date,character:nm,park:park,where:get(r,iWhere)||null,notes:notes};
