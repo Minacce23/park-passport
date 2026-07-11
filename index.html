@@ -531,12 +531,12 @@ function openAdd(){
 function formVariant(d){pendingPhoto=null;
  sheet('<h3>Add a variant</h3>'+
   '<p class="muted" style="margin:0 0 12px;line-height:1.5">Pick an experience you have logged or write in a new one, then add the special or seasonal version.</p>'+
-  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'">'+
+  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'" onchange="syncVisitWith()">'+
   parkField('')+
   attrField('','')+
-  '<label>Variant / special version</label><input id="f_var" placeholder="e.g. Holiday overlay" autocomplete="off">'+
+  '<label>Variant / special version</label><input id="f_var" list="dl_var" placeholder="e.g. Holiday overlay" autocomplete="off"><datalist id="dl_var">'+variantDataOpts('')+'</datalist>'+
   '<label class="extchk"><input type="checkbox" id="f_vext"> This version is no longer running (extinct)</label>'+
-  '<label>Who with</label>'+withSelect('f_with')+
+  '<label>Who with</label>'+withSelect('f_with',visitWith(d||today()))+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveVariant()">Save variant</button></div>');
 }
 function saveVariant(){var a=val('f_attr');if(!a){alert('Pick or write in an experience');return;}var v=val('f_var');if(!v){alert('Enter a variant');return;}
@@ -573,22 +573,24 @@ function parkFilterOpts(sel){sel=sel||'';return '<option value="">All parks</opt
 function attrOptsByPark(park,sel){sel=sel||'';var s='<option value=""></option>';var pks=park?[park]:parksOn();pks.forEach(function(pk){if(!park)s+='<optgroup label="'+pk+'">';SEED.attractions.filter(function(a){return a.park===pk;}).forEach(function(a){s+='<option'+(a.name===sel?' selected':'')+'>'+a.name+'</option>';});if(!park)s+='</optgroup>';});return s;}
 function variantOptsFor(attr,sel){sel=sel||'';var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return '<option value=""></option>'+list.map(function(v){return '<option'+(v===sel?' selected':'')+'>'+v+'</option>';}).join('');}
 function attrDataOpts(park){var pks=park?[park]:parksOn();var s='';pks.forEach(function(pk){SEED.attractions.filter(function(a){return a.park===pk;}).forEach(function(a){s+='<option value="'+esc(a.name)+'">';});});return s;}
-function variantDataOpts(attr){var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return list.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}
+function variantDataOpts(attr){attr=String(attr||'');if(GENERIC){var aL=attr.toLowerCase();var seen={},o=[];Object.keys(state.catalogVars||{}).forEach(function(k){if(k.toLowerCase()===aL){(state.catalogVars[k]||[]).forEach(function(v){if(!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;o.push(v);}});}});state.rides.forEach(function(r){if(r.attraction&&r.attraction.toLowerCase()===aL&&r.variant&&r.variant!=='Standard'&&!seen[r.variant.toLowerCase()]){seen[r.variant.toLowerCase()]=1;o.push(r.variant);}});o.sort();return o.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return list.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}
 function onParkChange(){var pe=document.getElementById('f_park');var pk=pe?pe.value:'';var dl=document.getElementById('dl_attr');if(dl)dl.innerHTML=attrDataOpts(pk);onAttrChange();}
 function onAttrChange(){var ae=document.getElementById('f_attr');var a=ae?ae.value:'';var dv=document.getElementById('dl_var');if(dv)dv.innerHTML=variantDataOpts(a);}
 function parkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="e.g. Magic Kingdom"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park" onchange="onParkChange()">'+parkFilterOpts(sel)+'</select>';}
-function attrField(sel,park){sel=sel||'';if(GENERIC){return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Experience name"><datalist id="dl_attr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Pick or write in an experience" onchange="onAttrChange()" autocomplete="off"><datalist id="dl_attr">'+attrDataOpts(park||'')+'</datalist>';}
-function variantField(sel,attr){sel=sel||'';if(GENERIC){return '<label>Variant / special version (optional)</label><input id="f_var" value="'+esc(sel)+'" placeholder="e.g. holiday overlay">';}return '<label>Variant / special version (optional)</label><input id="f_var" list="dl_var" value="'+esc(sel)+'" placeholder="Standard, or write in a version" autocomplete="off"><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}
+function attrField(sel,park){sel=sel||'';if(GENERIC){return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Experience name" onchange="onAttrChange()" oninput="onAttrChange()"><datalist id="dl_attr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Pick or write in an experience" onchange="onAttrChange()" autocomplete="off"><datalist id="dl_attr">'+attrDataOpts(park||'')+'</datalist>';}
+function variantField(sel,attr){sel=sel||'';if(GENERIC){return '<label>Variant / special version (optional)</label><input id="f_var" list="dl_var" value="'+esc(sel)+'" placeholder="e.g. holiday overlay" autocomplete="off"><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}return '<label>Variant / special version (optional)</label><input id="f_var" list="dl_var" value="'+esc(sel)+'" placeholder="Standard, or write in a version" autocomplete="off"><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}
 function meetParkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="Park"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park">'+opts(SEED.lists.parks,sel||SEED.lists.parks[0])+'</select>';}
 function scoreRideField(sel){sel=sel||'';if(GENERIC){return '<label>Experience</label><input id="f_attr" list="dl_sr" value="'+esc(sel)+'" placeholder="Ride name"><datalist id="dl_sr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Experience</label><select id="f_attr">'+opts(scoreRidesList(),sel)+'</select>';}
+function visitWith(d){var v=state.visits.find(function(x){return x.date===d;});return (v&&v.with_)?v.with_:'';}
+function syncVisitWith(){var d=val('f_date');var w=visitWith(d);if(!w)return;var e=document.getElementById('f_with')||document.getElementById('f_party');if(e&&!e.value)e.value=w;}
 function formRide(d){pendingPhoto=null;
  sheet('<h3>Log an experience</h3>'+
-  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'">'+
+  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'" onchange="syncVisitWith()">'+
   parkField('')+
   attrField('','')+
   variantField('','')+
   extinctChk('f_ext','')+
-  '<label>Who with</label>'+withSelect('f_with')+
+  '<label>Who with</label>'+withSelect('f_with',visitWith(d||today()))+
   '<label>Access</label><select id="f_acc">'+opts(SEED.lists.access,'Standby')+'</select>'+
   waitFields()+
   '<label>Scores (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
@@ -632,14 +634,15 @@ function formVisit(){
  sheet('<h3>Add a visit day</h3>'+
   '<label>Date</label><input type="date" id="f_date" value="'+today()+'">'+
   meetParkField('')+
+  '<label>Who with (optional)</label>'+withSelect('f_vwith')+
   '<label>Day notes (optional)</label><input id="f_notes" placeholder="e.g. Family trip">'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveVisit()">Save visit</button></div>');
 }
 function saveVisit(){
  const d=val('f_date');
  const ex=state.visits.find(v=>v.date===d);
- if(ex){ex.park=val('f_park');ex.notes=val('f_notes')||ex.notes;}
- else state.visits.push({date:d,park:val('f_park')||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland')),notes:val('f_notes')||null});
+ if(ex){ex.park=val('f_park');ex.notes=val('f_notes')||ex.notes;ex.with_=val('f_vwith')||ex.with_||null;}
+ else state.visits.push({date:d,park:val('f_park')||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland')),notes:val('f_notes')||null,with_:val('f_vwith')||null});
  save();closeSheet();go('visits');
 }
 function cropBoxHTML(){if(!pendingPhoto)return '';return '<div class="alabel" style="margin:10px 0 6px">Thumbnail crop (drag the square)</div><div id="cropbox"><img id="cropimg" src="'+pendingPhoto+'" style="object-position:'+pendingFocus.x+'% '+pendingFocus.y+'%"></div><div class="linkrow"><button type="button" onclick="pendingPhoto=null;document.getElementById(&#39;photoPreview&#39;).innerHTML=&#39;&#39;">Remove photo</button></div>';}
@@ -697,9 +700,9 @@ function addScoreRow(){var c=document.getElementById('srows');if(c)c.insertAdjac
 function collectScoreRows(){var out=[];document.querySelectorAll('#srows .scorerow').forEach(function(r){var v=r.querySelector('.sr_val').value;if(v==='')return;out.push({score:Number(v),who:r.querySelector('.sr_who').value||null,rank:r.querySelector('.sr_rank').value||null});});return out;}
 function formScore(d){pendingPhoto=null;
  sheet('<h3>Log a ride score</h3>'+
-  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'">'+
+  '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'" onchange="syncVisitWith()">'+
   scoreRideField('')+
-  '<label>Who with (optional)</label>'+withSelect('f_party')+
+  '<label>Who with (optional)</label>'+withSelect('f_party',visitWith(d||today()))+
   '<label>Player scores (one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add another player</button>'+
   '<label>Notes (optional)</label><input id="f_notes">'+
   '<label>Scorecard photo (optional)</label><input type="file" accept="image/*" id="f_photo" onchange="handlePhoto(this)"><div id="photoPreview"></div>'+
