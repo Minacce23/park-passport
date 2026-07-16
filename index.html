@@ -145,7 +145,7 @@ if(!state.starTours)state.starTours=JSON.parse(JSON.stringify(SEED.starTours||[]
 if(!state.settings)state.settings={};
 function load(){try{const s=localStorage.getItem(LS);if(s)return JSON.parse(s);}catch(e){}return clone(SEED);}
 function clone(o){return JSON.parse(JSON.stringify(o));}
-function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){alert('Storage is full \u2014 export a backup and remove some photos.');}}
+function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){alert('Storage is full \u2014 export a backup and remove some photos.');}try{schedSync();}catch(e){}}
 let pendingPhoto=null;
 var pendingFocus={x:50,y:50};
 function handlePhoto(input){var f=input.files&&input.files[0];if(!f)return;var r=new FileReader();
@@ -171,6 +171,8 @@ function extinctChk(id,n){return '<label class="extchk"><input type="checkbox" i
 function isCoaster(n){return !!(n&&state.coasters&&state.coasters[String(n).toLowerCase()]);}
 function setCoaster(n,on){if(!n)return;state.coasters=state.coasters||{};var k=String(n).toLowerCase();if(on)state.coasters[k]=true;else delete state.coasters[k];}
 function coasterChk(id,n){return '<label class="extchk"><input type="checkbox" id="'+id+'"'+(isCoaster(n)?' checked':'')+'> Roller coaster (counts as a coaster credit)</label>';}
+function coasterCreditCount(){var cf=state.coasters||{};if(!Object.keys(cf).length)return 0;var rid={};state.rides.forEach(function(r){if(r.attraction)rid[r.attraction.toLowerCase()]=1;});return Object.keys(cf).filter(function(k){return rid[k];}).length;}
+function toggleCC(el,name){var on=!isCoaster(name);setCoaster(name,on);save();if(el){var slot=el.querySelector('.ccslot');if(slot)slot.innerHTML=on?' <span class="pill cca">CC</span>':'';el.classList.toggle('iscc',on);}var hc=document.getElementById('ccLive');if(hc)hc.textContent=coasterCreditCount();}
 function jsarg(s){return "'"+String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')+"'";}
 function scoreRidesList(){if(!GENERIC)return SEED['lists'].scoreRides;var seen={},o=[];state.scores.forEach(function(s){if(s.attraction&&!seen[s.attraction]){seen[s.attraction]=1;o.push(s.attraction);}});return o;}
 function rideIcon(n){var u=(SEED.rideIcons||{})[n];return u?'<img class="ricon" src="'+u+'">':'';}
@@ -467,12 +469,13 @@ function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div
 function viewCheck(){
  const cnt={}; state.rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  const active=attractionsOn().filter(a=>a.status==='Active');
- if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+'</div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});oG+='</div>';});return oG;}
+ if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';oG+='<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(a.name)+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});oG+='</div>';});return oG;}
  const done=active.filter(a=>cnt[a.name]).length;
  const pct=Math.round(done/active.length*100);
  let out='<div class="card">'+
   '<div class="prog"><div style="width:'+pct+'%"></div></div>'+
-  '<div class="muted">'+done+' of '+active.length+' active attractions &middot; '+pct+'%</div></div>';
+  '<div class="muted">'+done+' of '+active.length+' active attractions &middot; '+pct+'%</div></div>'+
+  '<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';
  // group by park then land
  const groups={};
  attractionsOn().forEach(a=>{const k=a.park;(groups[k]=groups[k]||[]).push(a);});
@@ -483,8 +486,8 @@ function viewCheck(){
   for(const ld in lands){
    out+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--pink);margin-bottom:4px">'+ld+'</div>';
    lands[ld].forEach(a=>{const c=cnt[a.name]||0;const ex=a.status==='Extinct';
-    out+='<div class="checkitem '+(c?'done':'')+' '+(ex?'ext':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div>'+
-     '<div class="nm">'+a.name+(ex?' <span class="pill gray">gone</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';
+    out+='<div class="checkitem '+(c?'done':'')+' '+(ex?'ext':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div>'+
+     '<div class="nm">'+esc(a.name)+(ex?' <span class="pill gray">gone</span>':'')+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';
    });
    out+='</div>';
   }
@@ -978,10 +981,152 @@ function openDupeCheck(){_dupes=_dupGroups();_mg=_mergeGroups();
   h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Same ride, same day, logged once per variant. Merging turns each group into a single ride that carries all its variants, so your experience count matches real rides. Great for Star Tours scenes.</p>';
   h+='<div class="card">'+_mg.map(function(d,i){return '<div class="checkitem"><div class="nm">'+esc(d.label)+'<div class="cnt" style="margin-top:2px">'+d.idxs.length+' entries \u00b7 '+d.vars.length+' variants</div></div><button class="xbtn" style="color:#3E5A3E;font-size:13px;font-weight:700" onclick="mergeVarGroup('+i+')">Merge</button></div>';}).join('')+'</div>';}
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
+
+/* ---- Friends (opt-in social sharing via Firebase) ---- */
+var FB={key:'AIzaSyBYGPfo5g6nF6Rsn8mZsdRhZY0CPuSwP1c',pid:'park-passport-88e11'};
+var FRCACHE={},FRBUSY=false,_syncT=null;
+function fbDocUrl(code){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/profiles/'+encodeURIComponent(code);}
+function fbJson(url,opts){return fetch(url,opts).then(function(r){return r.json().then(function(j){if(!r.ok){var e=new Error('fb');e.body=j;e.status=r.status;throw e;}return j;});});}
+function fbToken(cb,fail){
+ var so=state.social;if(!so||!so.refreshToken){if(fail)fail();return;}
+ if(so.idToken&&so.tokenExp&&Date.now()<so.tokenExp-300000){cb(so.idToken);return;}
+ fbJson('https://securetoken.googleapis.com/v1/token?key='+FB.key,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(so.refreshToken)})
+ .then(function(j){so.idToken=j.id_token;so.refreshToken=j.refresh_token||so.refreshToken;so.tokenExp=Date.now()+((parseInt(j.expires_in,10)||3600)*1000);save();cb(so.idToken);})
+ .catch(function(e){if(fail)fail(e);});
+}
+function socialSummary(){
+ var ridden={};state.rides.forEach(function(r){if(r.attraction)ridden[r.attraction.toLowerCase()]=1;});
+ var chars={};state.meets.forEach(function(m){var c=(m.character||'').trim().toLowerCase();if(c)chars[c]=1;});
+ var cf=state.coasters||{};var cr=Object.keys(cf).filter(function(k){return ridden[k];}).length;
+ return {experiences:state.rides.length,unique:Object.keys(ridden).length,visits:state.visits.length,characters:Object.keys(chars).length,scores:state.scores.length,coasters:cr};
+}
+function encFields(name,sum){
+ var sf={};for(var k in sum)sf[k]={integerValue:String(sum[k])};
+ return {fields:{uid:{stringValue:state.social.uid},name:{stringValue:name},updated:{stringValue:new Date().toISOString()},stats:{mapValue:{fields:sf}}}};
+}
+function decProfile(j){
+ var f=(j&&j.fields)||{};var st={};var sf=(f.stats&&f.stats.mapValue&&f.stats.mapValue.fields)||{};
+ for(var k in sf)st[k]=parseInt(sf[k].integerValue||'0',10)||0;
+ return {name:(f.name&&f.name.stringValue)||'Explorer',updated:(f.updated&&f.updated.stringValue)||'',stats:st};
+}
+function newFriendCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c='PARK-';for(var i=0;i<5;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
+function pushProfile(cb,fail){
+ var so=state.social;if(!so)return;
+ fbToken(function(tk){
+  fbJson(fbDocUrl(so.code),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(encFields(so.name,socialSummary()))})
+  .then(function(){so.lastPush=JSON.stringify(socialSummary());so.lastSync=new Date().toISOString();save();if(cb)cb();})
+  .catch(function(e){if(fail)fail(e);});
+ },fail);
+}
+function schedSync(){
+ var so=state.social;if(!so||!so.code)return;
+ if(typeof navigator!=='undefined'&&navigator.onLine===false)return;
+ if(so.lastPush===JSON.stringify(socialSummary()))return;
+ if(_syncT)clearTimeout(_syncT);
+ _syncT=setTimeout(function(){_syncT=null;pushProfile(null,function(){});},4000);
+}
+function turnOnSharing(){
+ var nm=(document.getElementById('fr_name')||{}).value||'';nm=nm.trim();
+ if(!nm){alert('Pick a display name first');return;}
+ if(navigator.onLine===false){alert('You are offline. Connect to the internet and try again.');return;}
+ var btn=document.getElementById('fr_go');if(btn){btn.disabled=true;btn.textContent='Setting up...';}
+ fbJson('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+FB.key,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+ .then(function(j){
+  state.social={uid:j.localId,refreshToken:j.refreshToken,idToken:j.idToken,tokenExp:Date.now()+3300000,name:nm,code:'',friends:[]};
+  var tries=0;
+  function attempt(){
+   var code=newFriendCode();
+   fbJson(fbDocUrl(code)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.social.idToken},body:JSON.stringify((function(){state.social.code=code;return encFields(nm,socialSummary());})())})
+   .then(function(){state.social.lastPush=JSON.stringify(socialSummary());state.social.lastSync=new Date().toISOString();save();openFriends();})
+   .catch(function(e){
+    if(e.status===409&&tries<6){tries++;attempt();return;}
+    state.social=null;save();alert('Could not finish setup. Check your connection and try again.');openFriends();
+   });
+  }
+  attempt();
+ })
+ .catch(function(){if(btn){btn.disabled=false;btn.textContent='Turn on sharing';}alert('Could not reach the sharing service. Check your connection and try again.');});
+}
+function stopSharing(){
+ if(!confirm('Stop sharing? Your code stops working and friends will no longer see your stats. Your own log is not affected.'))return;
+ var so=state.social;
+ fbToken(function(tk){fetch(fbDocUrl(so.code),{method:'DELETE',headers:{'Authorization':'Bearer '+tk}}).catch(function(){});},function(){});
+ state.social=null;save();openFriends();
+}
+function fetchProfile(code,cb,fail){
+ var go=function(tk){
+  var h=tk?{'Authorization':'Bearer '+tk}:{};
+  fbJson(fbDocUrl(code),{headers:h}).then(function(j){cb(decProfile(j));}).catch(function(e){if(fail)fail(e);});
+ };
+ if(state.social)fbToken(go,function(){go(null);});else go(null);
+}
+function addFriend(){
+ var inp=document.getElementById('fr_code');var code=(inp?inp.value:'').toUpperCase().replace(/\s/g,'');
+ if(!code)return;
+ if(code.indexOf('PARK-')!==0)code='PARK-'+code;
+ var so=state.social;
+ if(code===so.code){alert("That's your own code");return;}
+ if(so.friends.some(function(f){return f.code===code;})){alert('Already added');return;}
+ var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
+ fetchProfile(code,function(p){so.friends.push({code:code,name:p.name});FRCACHE[code]=p;save();openFriends();},
+  function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
+}
+function removeFriend(code){
+ if(!confirm('Remove this friend from your list?'))return;
+ state.social.friends=state.social.friends.filter(function(f){return f.code!==code;});save();openFriends();
+}
+function refreshFriends(){
+ var so=state.social;if(!so||FRBUSY)return;FRBUSY=true;
+ var left=so.friends.length;if(!left){FRBUSY=false;return;}
+ so.friends.forEach(function(f){
+  fetchProfile(f.code,function(p){FRCACHE[f.code]=p;f.name=p.name;left--;if(!left){FRBUSY=false;save();if(document.getElementById('fr_list'))openFriends();}},
+   function(){left--;if(!left){FRBUSY=false;if(document.getElementById('fr_list'))openFriends();}});
+ });
+}
+function shareCode(){
+ var so=state.social;var msg='Add me on Park Passport! My friend code is '+so.code;
+ if(navigator.share){navigator.share({text:msg}).catch(function(){});}
+ else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(so.code).then(function(){alert('Code copied');}).catch(function(){prompt('Copy your code:',so.code);});}
+ else prompt('Copy your code:',so.code);
+}
+function friendStatLine(st){
+ st=st||{};
+ var bits=[(st.experiences||0)+' experiences',(st.visits||0)+' visit days'];
+ if(st.coasters)bits.push(st.coasters+' coaster credits');
+ if(st.characters)bits.push(st.characters+' characters');
+ return bits.join(' &middot; ');
+}
+function openFriends(){
+ var so=state.social;var h='<h3>Friends</h3>';
+ if(!so||!so.code){
+  h+='<p class="muted" style="margin:0 0 12px;line-height:1.5">Share your park stats with friends and see theirs. Only your display name and headline totals are shared, never your full log. You can stop any time.</p>';
+  h+='<label>Display name</label><input id="fr_name" placeholder="What friends will see" maxlength="24">';
+  h+='<div class="btnrow"><button class="btn" id="fr_go" onclick="turnOnSharing()">Turn on sharing</button><button class="btn ghost" onclick="closeSheet()">Not now</button></div>';
+  sheet(h);return;
+ }
+ var mine=socialSummary();
+ h+='<div class="protip" style="margin:0 0 14px"><div class="pt-k" style="margin-bottom:4px">Your friend code</div><div style="font-weight:900;font-size:26px;letter-spacing:.06em;color:var(--ink);margin-bottom:8px">'+so.code+'</div><div class="pt-s" style="margin-bottom:10px">Sharing as <b>'+esc(so.name)+'</b>: '+friendStatLine(mine)+'</div><div class="pt-btns"><button class="pt-primary" onclick="shareCode()">Share my code</button></div></div>';
+ h+='<label>Add a friend by code</label><div class="scorerow"><input id="fr_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off"><button class="btn" id="fr_add" onclick="addFriend()" style="flex:none">Add</button></div>';
+ h+='<h2 class="sec" style="display:flex;justify-content:space-between;align-items:center">Friends'+(so.friends.length?'<span style="flex:1"></span><button class="btn ghost" style="flex:none;width:auto;padding:5px 12px;font-size:12px" onclick="refreshFriends()">Refresh</button>':'')+'</h2>';
+ h+='<div id="fr_list">';
+ if(!so.friends.length){h+='<div class="emptyc"><div class="et">No friends yet</div><div class="es">Share your code and add theirs to compare stats.</div></div>';}
+ else{
+  h+='<div class="card">'+so.friends.map(function(f){
+   var p=FRCACHE[f.code];
+   return '<div class="checkitem"><div class="nm"><b>'+esc(f.name)+'</b><br><span class="cnt">'+(p?friendStatLine(p.stats):'Tap Refresh to load stats')+'</span></div><button class="xbtn" onclick="removeFriend(\''+f.code+'\')">&times;</button></div>';
+  }).join('')+'</div>';
+ }
+ h+='</div>';
+ h+='<div class="btnrow" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Stop sharing</button></div>';
+ sheet(h);
+ refreshFriends();
+}
+
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+'<button onclick="closeSheet();startOnboarding()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg></span><b>How it works</b></button>'+
   '<button onclick="closeSheet();go(\'badges\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9A6BD4"/><path d="M9.4 12.5L8.2 18.6l3.8-2 3.8 2-1.2-6.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="8.8" r="5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 6.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.9-1.5.9.3-1.7-1.2-1.2 1.7-.2z" fill="#1B1A17"/></svg></span><b>Badges</b></button>'+
   '<button onclick="closeSheet();go(\'people\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#D9A3D4"/><circle cx="15.6" cy="10.3" r="2.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6"/><path d="M14.9 15.6c2.3-.7 4.7.4 5.4 2.8" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="9.5" r="3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.8 18.6c.5-3 2.7-4.6 5.2-4.6 2.6 0 4.3 1.4 5 3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>People &amp; Groups</b></button>'+
+  '<button onclick="closeSheet();openFriends()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#B388E6"/><circle cx="8.6" cy="9.6" r="3.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><circle cx="15.6" cy="9.6" r="3.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.6 18.2c.6-2.6 2.6-4.1 5-4.1 1.4 0 2.6.5 3.4 1.4.8-.9 2-1.4 3.4-1.4 2.4 0 4.4 1.5 5 4.1" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>Friends</b></button>'+
   '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
   '<div class="alabel">Parks</div>'+
