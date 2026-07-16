@@ -218,7 +218,7 @@ function stats(){
 const CHART_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5v14h16"/><path d="M7 14l3-4 3 2 4-6"/></svg>';
 let chartRide=null;
 let tab='stats';
-const TABS=[["stats","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"7\" fill=\"url(#gStats)\"/></svg>","Stats"],["visits","<svg viewBox=\"0 0 24 24\"><g fill=\"none\" stroke=\"url(#gVisits)\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4.2\" fill=\"url(#gVisits)\" stroke=\"none\"/><path d=\"M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6\"/></g></svg>","Visits"],["meets","<svg viewBox=\"0 0 24 24\"><g fill=\"url(#gMeets)\"><circle cx=\"12\" cy=\"7.5\" r=\"4.6\"/><circle cx=\"12\" cy=\"16.5\" r=\"4.6\"/><circle cx=\"7.5\" cy=\"12\" r=\"4.6\"/><circle cx=\"16.5\" cy=\"12\" r=\"4.6\"/></g></svg>","Meets"],["scores","<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"url(#gScore)\"/><circle cx=\"12\" cy=\"12\" r=\"3.6\" fill=\"#F4EFDE\"/></svg>","Scores"],["variants","<svg viewBox=\"0 0 24 24\"><path d=\"M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z\" fill=\"url(#gRides)\"/></svg>","Variants"],["photos","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"6\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gMeets)\"/><rect x=\"8\" y=\"9\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gVisits)\"/></svg>","Photos"]];
+const TABS=[["stats","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"7\" fill=\"url(#gStats)\"/></svg>","Stats"],["scores","<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"url(#gScore)\"/><circle cx=\"12\" cy=\"12\" r=\"3.6\" fill=\"#F4EFDE\"/></svg>","Scores"],["variants","<svg viewBox=\"0 0 24 24\"><path d=\"M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z\" fill=\"url(#gRides)\"/></svg>","Variants"],["photos","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"6\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gMeets)\"/><rect x=\"8\" y=\"9\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gVisits)\"/></svg>","Photos"],["friends","<svg viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"url(#gStats)\"/><circle cx=\"16\" cy=\"13\" r=\"4\" fill=\"url(#gStats)\"/></svg>","Friends"]];
 function renderNav(){document.getElementById('nav').innerHTML=TABS.map(t=>
  '<button class="'+(tab===t[0]?'on':'')+'" onclick="go(\''+t[0]+'\')"><span class="ic">'+t[1]+'</span>'+t[2]+'</button>').join('');}
 function go(t){tab=t;renderAll();window.scrollTo(0,0);}
@@ -242,6 +242,7 @@ function renderAll(){applyTheme();renderNav();renderChips();const s=stats();
  else if(tab==='ridegallery')v.innerHTML=viewRideGallery();
  else if(tab==='meetgallery')v.innerHTML=viewMeetGallery();
  else if(tab==='photos')v.innerHTML=viewPhotos();
+ else if(tab==='friends')v.innerHTML=viewFriends();
 }
 
 function getPasses(){return (state.passes&&typeof state.passes==='object')?state.passes:{};}
@@ -1037,10 +1038,10 @@ function turnOnSharing(){
   function attempt(){
    var code=newFriendCode();
    fbJson(fbDocUrl(code)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.social.idToken},body:JSON.stringify((function(){state.social.code=code;return encFields(nm,socialSummary());})())})
-   .then(function(){state.social.lastPush=JSON.stringify(socialSummary());state.social.lastSync=new Date().toISOString();save();openFriends();})
+   .then(function(){state.social.lastPush=JSON.stringify(socialSummary());state.social.lastSync=new Date().toISOString();save();go('friends');})
    .catch(function(e){
     if(e.status===409&&tries<6){tries++;attempt();return;}
-    state.social=null;save();alert('Could not finish setup. Check your connection and try again.');openFriends();
+    state.social=null;save();alert('Could not finish setup. Check your connection and try again.');go('friends');
    });
   }
   attempt();
@@ -1051,7 +1052,7 @@ function stopSharing(){
  if(!confirm('Stop sharing? Your code stops working and friends will no longer see your stats. Your own log is not affected.'))return;
  var so=state.social;
  fbToken(function(tk){fetch(fbDocUrl(so.code),{method:'DELETE',headers:{'Authorization':'Bearer '+tk}}).catch(function(){});},function(){});
- state.social=null;save();openFriends();
+ state.social=null;save();go('friends');
 }
 function fetchProfile(code,cb,fail){
  var go=function(tk){
@@ -1068,19 +1069,19 @@ function addFriend(){
  if(code===so.code){alert("That's your own code");return;}
  if(so.friends.some(function(f){return f.code===code;})){alert('Already added');return;}
  var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
- fetchProfile(code,function(p){so.friends.push({code:code,name:p.name});FRCACHE[code]=p;save();openFriends();},
+ fetchProfile(code,function(p){so.friends.push({code:code,name:p.name});FRCACHE[code]=p;save();go('friends');},
   function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
 }
 function removeFriend(code){
  if(!confirm('Remove this friend from your list?'))return;
- state.social.friends=state.social.friends.filter(function(f){return f.code!==code;});save();openFriends();
+ state.social.friends=state.social.friends.filter(function(f){return f.code!==code;});save();go('friends');
 }
 function refreshFriends(){
  var so=state.social;if(!so||FRBUSY)return;FRBUSY=true;
  var left=so.friends.length;if(!left){FRBUSY=false;return;}
  so.friends.forEach(function(f){
-  fetchProfile(f.code,function(p){FRCACHE[f.code]=p;f.name=p.name;left--;if(!left){FRBUSY=false;save();if(document.getElementById('fr_list'))openFriends();}},
-   function(){left--;if(!left){FRBUSY=false;if(document.getElementById('fr_list'))openFriends();}});
+  fetchProfile(f.code,function(p){FRCACHE[f.code]=p;f.name=p.name;left--;if(!left){FRBUSY=false;save();if(tab==='friends')renderAll();}},
+   function(){left--;if(!left){FRBUSY=false;if(tab==='friends')renderAll();}});
  });
 }
 function shareCode(){
@@ -1096,18 +1097,19 @@ function friendStatLine(st){
  if(st.characters)bits.push(st.characters+' characters');
  return bits.join(' &middot; ');
 }
-function openFriends(){
- var so=state.social;var h='<h3>Friends</h3>';
+function openFriends(){go('friends');}
+function viewFriends(){
+ var so=state.social;var h='';
  if(!so||!so.code){
-  h+='<p class="muted" style="margin:0 0 12px;line-height:1.5">Share your park stats with friends and see theirs. Only your display name and headline totals are shared, never your full log. You can stop any time.</p>';
-  h+='<label>Display name</label><input id="fr_name" placeholder="What friends will see" maxlength="24">';
-  h+='<div class="btnrow"><button class="btn" id="fr_go" onclick="turnOnSharing()">Turn on sharing</button><button class="btn ghost" onclick="closeSheet()">Not now</button></div>';
-  sheet(h);return;
+  h+='<div class="protip" style="margin-top:4px"><div class="pt-k" style="margin-bottom:4px">Friends</div><div class="pt-t">Share your stats, see theirs</div><div class="pt-s">Turn on sharing to get a friend code. Only your display name and headline totals are shared, never your full log. You can stop any time.</div>'+
+   '<label>Display name</label><input id="fr_name" placeholder="What friends will see" maxlength="24">'+
+   '<div class="pt-btns" style="margin-top:12px"><button class="pt-primary" id="fr_go" onclick="turnOnSharing()">Turn on sharing</button></div></div>';
+  return h;
  }
  var mine=socialSummary();
- h+='<div class="protip" style="margin:0 0 14px"><div class="pt-k" style="margin-bottom:4px">Your friend code</div><div style="font-weight:900;font-size:26px;letter-spacing:.06em;color:var(--ink);margin-bottom:8px">'+so.code+'</div><div class="pt-s" style="margin-bottom:10px">Sharing as <b>'+esc(so.name)+'</b>: '+friendStatLine(mine)+'</div><div class="pt-btns"><button class="pt-primary" onclick="shareCode()">Share my code</button></div></div>';
- h+='<label>Add a friend by code</label><div class="scorerow"><input id="fr_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off"><button class="btn" id="fr_add" onclick="addFriend()" style="flex:none">Add</button></div>';
- h+='<h2 class="sec" style="display:flex;justify-content:space-between;align-items:center">Friends'+(so.friends.length?'<span style="flex:1"></span><button class="btn ghost" style="flex:none;width:auto;padding:5px 12px;font-size:12px" onclick="refreshFriends()">Refresh</button>':'')+'</h2>';
+ h+='<div class="protip" style="margin-top:4px"><div class="pt-k" style="margin-bottom:4px">Your friend code</div><div style="font-weight:900;font-size:26px;letter-spacing:.06em;color:var(--ink);margin-bottom:8px">'+so.code+'</div><div class="pt-s" style="margin-bottom:10px">Sharing as <b>'+esc(so.name)+'</b>: '+friendStatLine(mine)+'</div><div class="pt-btns"><button class="pt-primary" onclick="shareCode()">Share my code</button></div></div>';
+ h+='<h2 class="sec">Add a friend</h2><div class="card" style="padding:12px"><div class="scorerow" style="margin:0"><input id="fr_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off"><button class="btn" id="fr_add" onclick="addFriend()" style="flex:none;width:auto">Add</button></div></div>';
+ h+='<h2 class="sec" style="display:flex;justify-content:space-between;align-items:center">Friends<span style="flex:1"></span>'+(so.friends.length?'<button class="btn ghost" style="flex:none;width:auto;padding:5px 12px;font-size:12px" onclick="refreshFriends()">Refresh</button>':'')+'</h2>';
  h+='<div id="fr_list">';
  if(!so.friends.length){h+='<div class="emptyc"><div class="et">No friends yet</div><div class="es">Share your code and add theirs to compare stats.</div></div>';}
  else{
@@ -1117,17 +1119,15 @@ function openFriends(){
   }).join('')+'</div>';
  }
  h+='</div>';
- h+='<div class="btnrow" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Stop sharing</button></div>';
- sheet(h);
- refreshFriends();
+ h+='<div class="btnrow" style="margin-top:16px"><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Stop sharing</button></div>';
+ setTimeout(function(){try{refreshFriends();}catch(e){}},50);
+ return h;
 }
-
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+'<button onclick="closeSheet();startOnboarding()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg></span><b>How it works</b></button>'+
   '<button onclick="closeSheet();go(\'badges\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9A6BD4"/><path d="M9.4 12.5L8.2 18.6l3.8-2 3.8 2-1.2-6.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="8.8" r="5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 6.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.9-1.5.9.3-1.7-1.2-1.2 1.7-.2z" fill="#1B1A17"/></svg></span><b>Badges</b></button>'+
   '<button onclick="closeSheet();go(\'people\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#D9A3D4"/><circle cx="15.6" cy="10.3" r="2.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6"/><path d="M14.9 15.6c2.3-.7 4.7.4 5.4 2.8" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="9.5" r="3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.8 18.6c.5-3 2.7-4.6 5.2-4.6 2.6 0 4.3 1.4 5 3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>People &amp; Groups</b></button>'+
-  '<button onclick="closeSheet();openFriends()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#B388E6"/><circle cx="8.6" cy="9.6" r="3.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><circle cx="15.6" cy="9.6" r="3.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.6 18.2c.6-2.6 2.6-4.1 5-4.1 1.4 0 2.6.5 3.4 1.4.8-.9 2-1.4 3.4-1.4 2.4 0 4.4 1.5 5 4.1" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>Friends</b></button>'+
-  '<div class="alabel">Appearance</div>'+
+    '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
   '<div class="alabel">Parks</div>'+
   allParks().map(function(pp){return '<div class="swrow" onclick="togglePark(&#39;'+pp+'&#39;)"><span class="micon" style="cursor:pointer" onclick="event.stopPropagation();openParkIconPicker(&#39;'+pp+'&#39;)">'+parkIconSVG(pp)+'</span><b>'+pp+'</b><span class="switch'+(parkOn(pp)?' on':'')+'" id="parksw_'+pp.replace(/[^a-z]/gi,'')+'"><span class="knob"></span></span></div>';}).join('')+
