@@ -835,7 +835,9 @@ function editMeet(i){var m=state.meets[i];if(!m)return;pendingPhoto=m.photo||nul
   '<div class="btnrow"><button class="btn ghost" onclick="delMeet('+i+')" style="color:#8F3F7D">Delete</button><button class="btn primary" onclick="updateMeet('+i+')">Save</button></div>');initCrop();}
 function updateMeet(i){var m=state.meets[i];if(!m)return;var c=val('f_char');if(!c){alert('Enter a character');return;}m.date=val('f_date');m.character=c;m.park=val('f_park')||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland'));m.where=val('f_where')||null;m.notes=val('f_notes')||null;m.photo=pendingPhoto||null;m.focus=pendingPhoto?{x:Math.round(pendingFocus.x),y:Math.round(pendingFocus.y)}:null;save();closeSheet();renderAll();}
 function delMeet(i){if(!confirm('Delete this meet?'))return;state.meets.splice(i,1);save();closeSheet();renderAll();}
-function sheet(html){var inr=document.getElementById('sheetInner');inr.style.transition='';inr.style.transform='';inr.innerHTML='<div class="sheet-handle"></div>'+html;document.getElementById('sheet').classList.add('open');inr.scrollTop=0;}
+function sheetMaxH(){var z=parseFloat(document.documentElement.style.zoom)||1;var f=(window.innerWidth/z)>=700?0.85:0.92;return Math.round(window.innerHeight*f/z);}
+function sheet(html){var inr=document.getElementById('sheetInner');inr.style.transition='';inr.style.transform='';inr.style.maxHeight=sheetMaxH()+'px';inr.innerHTML='<div class="sheet-handle"></div>'+html;document.getElementById('sheet').classList.add('open');inr.scrollTop=0;}
+window.addEventListener('resize',function(){var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('open')){var inr=document.getElementById('sheetInner');if(inr)inr.style.maxHeight=sheetMaxH()+'px';}});
 function closeSheet(){document.getElementById('sheet').classList.remove('open');var inr=document.getElementById('sheetInner');if(inr){inr.style.transition='';inr.style.transform='';}}
 document.getElementById('sheet').addEventListener('click',function(e){if(e.target.id==='sheet')closeSheet();});
 (function(){var inr=document.getElementById('sheetInner');var sy=0,cy=0,dg=false;
