@@ -546,11 +546,25 @@ function showRideScores(rn){
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
  sheet(h);
 }
+function removeExperience(n){
+ var nl=String(n).toLowerCase();
+ var logged=state.rides.filter(function(r){return (r.attraction||'').toLowerCase()===nl;}).length;
+ var msg=logged
+  ?'Remove "'+n+'" entirely? This deletes it from the checklist AND deletes your '+logged+' logged experience'+(logged===1?'':'s')+' of it. This cannot be undone.'
+  :'Remove "'+n+'" from the checklist? This cannot be undone.';
+ if(!confirm(msg))return;
+ state.catalogAttr=(state.catalogAttr||[]).filter(function(a){return (a.name||'').toLowerCase()!==nl;});
+ if(state.catalogVars){Object.keys(state.catalogVars).forEach(function(k){if(k.toLowerCase()===nl)delete state.catalogVars[k];});}
+ state.rides=state.rides.filter(function(r){return (r.attraction||'').toLowerCase()!==nl;});
+ if(state.coasters)delete state.coasters[nl];
+ if(state.extinct){Object.keys(state.extinct).forEach(function(k){if(k.toLowerCase()===nl)delete state.extinct[k];});}
+ save();renderAll();openChecklist();
+}
 function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function viewCheck(){
  const cnt={}; state.rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  const active=attractionsOn().filter(a=>a.status==='Active');
- if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';oG+='<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(a.name)+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});oG+='</div>';});return oG;}
+ if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';oG+='<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(a.name)+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'<button class="xbtn" onclick="event.stopPropagation();removeExperience('+jsarg(a.name)+')">&times;</button></div>';});oG+='</div>';});return oG;}
  const done=active.filter(a=>cnt[a.name]).length;
  const pct=Math.round(done/active.length*100);
  let out='<div class="card">'+
