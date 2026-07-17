@@ -558,7 +558,9 @@ function removeExperience(n){
  state.rides=state.rides.filter(function(r){return (r.attraction||'').toLowerCase()!==nl;});
  if(state.coasters)delete state.coasters[nl];
  if(state.extinct){Object.keys(state.extinct).forEach(function(k){if(k.toLowerCase()===nl)delete state.extinct[k];});}
+ var _inr=document.getElementById('sheetInner');var _st=_inr?_inr.scrollTop:0;
  save();renderAll();openChecklist();
+ if(_inr)_inr.scrollTop=_st;
 }
 function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function viewCheck(){
