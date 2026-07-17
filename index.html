@@ -19,7 +19,7 @@ body::before{content:"";position:fixed;inset:0;z-index:9000;pointer-events:none;
  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
 header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(16px + env(safe-area-inset-top)) 18px 12px;border-bottom:1.5px solid var(--line);}
-header h1{margin:0;font-size:26px;letter-spacing:-0.04em;font-weight:900;padding-right:92px;}
+header h1{margin:0;font-size:26px;letter-spacing:-0.04em;font-weight:900;padding-right:92px;display:flex;align-items:center;gap:9px;}.hseal{width:27px;height:27px;flex:none;}
 header .sub{font-size:13px;font-weight:700;color:var(--muted);margin-top:3px;padding-right:92px;}
 main{padding:14px 14px 92px;}
 .card{background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--line);}
@@ -30,7 +30,7 @@ main{padding:14px 14px 92px;}
 .stat .lbl{font-size:13px;color:var(--muted);margin-top:7px;text-transform:capitalize;letter-spacing:.5px;font-weight:800;}
 .stat.wide{grid-column:1/3;}
 .stat.wide .num{font-size:20px;}.statico{width:30px;height:30px;display:block;margin:2px auto 7px;}.lbl{font-size:13px;color:var(--muted);text-transform:capitalize;letter-spacing:.5px;font-weight:800;}.hero{background:var(--lemon);color:#1B1A17;border-radius:18px;padding:15px 16px 17px;margin-bottom:4px;}.hero .num,.hero .hbig .num{color:#1B1A17;}.hero .lbl{color:rgba(27,26,23,.65);}.hero .htop{display:flex;justify-content:space-between;align-items:baseline;}.hbig{margin:7px 0 11px;}.hrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}.hpct{font-weight:900;font-size:26px;letter-spacing:-0.03em;white-space:nowrap;}.hpct .hsub{font-size:12px;}.hbig .num{font-size:30px;}.hfrac{font-weight:900;color:#1B1A17;font-size:20px;}.hsub{font-weight:700;font-size:12px;color:rgba(27,26,23,.65);}.split{height:13px;border-radius:7px;overflow:hidden;display:flex;background:rgba(27,26,23,.12);margin-top:2px;}.split>div{height:100%;}.split .dl{background:#1B1A17;}.split .ca{background:#3E5A3E;}.splitlbl{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:9px;font-weight:800;font-size:14px;color:var(--ink);}.splitlbl>span{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}.pdot{display:inline-block;width:10px;height:10px;border-radius:4px;flex:none;}.mile{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 15px;margin-bottom:10px;}.mile .statico{margin:0;flex:none;}.mile .se{font-weight:800;font-size:15px;color:var(--ink);}
-h2.sec{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:20px 4px 8px;font-weight:800;}
+h2.pagetitle{font-size:24px;font-weight:900;letter-spacing:-0.04em;color:var(--ink);margin:4px 2px 14px;}.pagetitle .ptbar{display:block;width:28px;height:5px;border-radius:3px;background:var(--grape);margin-top:5px;}.sec{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.13em;margin:22px 4px 9px;font-weight:800;}
 .row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
 .row:last-child{border-bottom:none;}
 .row .main{flex:1;min-width:0;}
@@ -114,7 +114,7 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 <linearGradient id="gPeople" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A9AFE2"/><stop offset="1" stop-color="#B388E6"/></linearGradient>
 </defs></svg>
  <header>
-  <h1>Park Passport</h1>
+  <h1><svg class="hseal" viewBox="0 0 64 64" aria-hidden="true"><path d="M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z" fill="#B388E6"/><circle cx="32" cy="32" r="21" fill="none" stroke="#5B3E86" stroke-width="2.6"/><g fill="none" stroke="#5B3E86" stroke-width="2" transform="translate(32 32)"><circle r="13"/><path d="M0 -13V13M-11.3 -6.5L11.3 6.5M-11.3 6.5L11.3 -6.5"/><circle r="3.4" fill="#B388E6" stroke="none"/></g></svg><span>Park Passport</span></h1>
   <div class="sub" id="subline"></div>
   <button class="hdr-act" id="hdrAct" aria-label="Chart"></button>
   <button class="hdr-menu" id="hdrMenu" aria-label="Menu" onclick="openMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -277,24 +277,26 @@ function go(t){tab=t;renderAll();window.scrollTo(0,0);}
 
 function applyTheme(){document.body.classList.toggle('theme-dark', !!(state.settings&&state.settings.theme==='dark'));}
 function toggleTheme(){state.settings=state.settings||{};state.settings.theme=(state.settings.theme==='dark'?'warm':'dark');save();applyTheme();var sw=document.getElementById('themesw');if(sw)sw.classList.toggle('on');}
+var PAGETITLES={stats:'Stats',visits:'Visits',rides:'Experiences',meets:'Meets',scores:'Scores',people:'People &amp; groups',variants:'Variants',badges:'Badges',photos:'Photos',gallery:'Photos',ridegallery:'Experience photos',meetgallery:'Character photos',friends:'Friends'};
+function pageTitle(t){var n=PAGETITLES[t];return n?'<h2 class="pagetitle">'+n+'<span class="ptbar"></span></h2>':'';}
 function renderAll(){applyTheme();renderNav();renderChips();const s=stats();
  document.getElementById('subline').textContent=s.visits+' visits  &middot;  '+s.rides+' experiences  &middot;  '+s.chars+' characters';
  document.getElementById('subline').innerHTML=s.visits+' visits &nbsp;&middot;&nbsp; '+s.rides+' experiences &nbsp;&middot;&nbsp; '+s.chars+' characters';
  const ha=document.getElementById('hdrAct'); if(tab==='scores'){ha.style.display='block';ha.innerHTML=CHART_ICON;ha.onclick=openScoreChart;}else{ha.style.display='none';ha.onclick=null;}
  const v=document.getElementById('view');
- if(tab==='stats')v.innerHTML=viewStats(s);
- else if(tab==='visits')v.innerHTML=viewVisits();
- else if(tab==='rides')v.innerHTML=viewRides();
- else if(tab==='meets')v.innerHTML=viewMeets();
- else if(tab==='scores')v.innerHTML=viewScores();
- else if(tab==='people')v.innerHTML=viewPeople();
- else if(tab==='variants')v.innerHTML=viewVariants();
- else if(tab==='badges')v.innerHTML=viewBadges();
- else if(tab==='gallery')v.innerHTML=viewGallery();
- else if(tab==='ridegallery')v.innerHTML=viewRideGallery();
- else if(tab==='meetgallery')v.innerHTML=viewMeetGallery();
- else if(tab==='photos')v.innerHTML=viewPhotos();
- else if(tab==='friends')v.innerHTML=viewFriends();
+ if(tab==='stats')v.innerHTML=pageTitle(tab)+viewStats(s);
+ else if(tab==='visits')v.innerHTML=pageTitle(tab)+viewVisits();
+ else if(tab==='rides')v.innerHTML=pageTitle(tab)+viewRides();
+ else if(tab==='meets')v.innerHTML=pageTitle(tab)+viewMeets();
+ else if(tab==='scores')v.innerHTML=pageTitle(tab)+viewScores();
+ else if(tab==='people')v.innerHTML=pageTitle(tab)+viewPeople();
+ else if(tab==='variants')v.innerHTML=pageTitle(tab)+viewVariants();
+ else if(tab==='badges')v.innerHTML=pageTitle(tab)+viewBadges();
+ else if(tab==='gallery')v.innerHTML=pageTitle(tab)+viewGallery();
+ else if(tab==='ridegallery')v.innerHTML=pageTitle(tab)+viewRideGallery();
+ else if(tab==='meetgallery')v.innerHTML=pageTitle(tab)+viewMeetGallery();
+ else if(tab==='photos')v.innerHTML=pageTitle(tab)+viewPhotos();
+ else if(tab==='friends')v.innerHTML=pageTitle(tab)+viewFriends();
 }
 
 function getPasses(){return (state.passes&&typeof state.passes==='object')?state.passes:{};}
