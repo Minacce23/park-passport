@@ -509,30 +509,40 @@ function openPersonScores(name){
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
 function viewScores(){
- let out='<h2 class="sec">By experience &amp; player</h2>';
+ if(!fScores().length)return emptyState(IC.score,'No scores yet','Tap plus, then choose Log a ride score.');
+ var out='<h2 class="sec">High scores</h2><div class="grid">';
  scoreRidesList().forEach(function(rn){
-  const e=fScores().filter(s=>s.attraction===rn);
-  if(actPark()&&!e.length)return;
-  const nums=e.map(s=>Number(s.score)).filter(x=>!isNaN(x));
-  const best=nums.length?Math.max.apply(null,nums):0;
-  const avg=nums.length?Math.round(nums.reduce((a,b)=>a+b,0)/nums.length):0;
-  out+='<div class="card"><div class="t">'+shortRide(rn)+'</div>'+
-   '<div class="row" style="border:none;padding:8px 0 0">'+
-   '<div class="main"><div class="num" style="font-size:24px">'+(nums.length?fmtN(best):'-')+'</div><div class="s">best score</div></div>'+
-   '<div style="text-align:right"><div style="font-weight:bold;color:var(--accent);font-size:16px">'+(nums.length?fmtN(avg):'-')+'</div><div class="s">avg &middot; '+e.length+' card'+(e.length===1?'':'s')+'</div></div>'+
-   '</div>'+playerRows(rn)+'</div>';
+  var e=fScores().filter(function(s){return s.attraction===rn;});
+  if(!e.length)return;
+  var best=null;e.forEach(function(s){var n=Number(s.score);if(!isNaN(n)&&(best===null||n>best.n))best={n:n,who:s.with_||'Me'};});
+  out+='<div class="stat" onclick="showRideScores('+jsarg(rn)+')" style="cursor:pointer">'+
+   '<div class="num" style="font-size:'+ (best&&String(fmtN(best.n)).length>7?'19':'24') +'px">'+(best?fmtN(best.n):'&ndash;')+'</div>'+
+   '<div class="lbl">'+shortRide(rn)+'</div>'+
+   '<div class="lwho">'+(best?esc(best.who):'')+'</div></div>';
  });
- out+='<h2 class="sec">Scorecard history</h2>';
- const log=fScores().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
- if(!log.length)return out+emptyState(IC.score,'No scores yet','Tap plus, then choose Log a ride score.');
- log.forEach(function(s){
-  out+='<div class="card" style="padding:12px 16px;cursor:pointer" onclick="editScore('+state.scores.indexOf(s)+')"><div class="row" style="border:none;padding:0">'+
-   '<div class="main"><div class="num" style="font-size:21px">'+fmtN(s.score)+'</div>'+
-   '<div class="s">'+shortRide(s.attraction)+' &middot; '+fmt(s.date)+(s.with_?' &middot; '+s.with_:'')+(s.party?' &middot; with '+s.party:'')+'</div></div>'+
-   (s.rank?'<span class="pill">'+s.rank+'</span>':'')+'</div>'+
-   (s.notes?'<div class="muted" style="margin-top:6px">'+s.notes+'</div>':'')+(s.photo?'<img src="'+s.photo+'" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-top:8px">':'')+'</div>';
- });
+ out+='</div>';
  return out;
+}
+function showRideScores(rn){
+ var e=fScores().filter(function(s){return s.attraction===rn;});
+ var nums=e.map(function(s){return Number(s.score);}).filter(function(x){return !isNaN(x);});
+ var best=nums.length?Math.max.apply(null,nums):0;
+ var avg=nums.length?Math.round(nums.reduce(function(a,b){return a+b;},0)/nums.length):0;
+ var h='<h3>'+esc(shortRide(rn))+'</h3>';
+ h+='<div class="stat mile" style="cursor:default">'+IC.score+'<div><div class="se">'+fmtN(best)+'</div><div class="lbl" style="margin-top:2px">Best score &middot; avg '+fmtN(avg)+' &middot; '+e.length+' card'+(e.length===1?'':'s')+'</div></div></div>';
+ var pr=playerRows(rn);
+ if(pr)h+='<h2 class="sec">Best by player</h2><div class="card" style="padding:8px 14px">'+pr.replace('style="margin-top:8px;border-top:1px solid var(--line);padding-top:4px"','')+'</div>';
+ h+='<h2 class="sec">History</h2>';
+ e.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).forEach(function(s){
+  h+='<div class="card" style="padding:11px 14px;cursor:pointer" onclick="closeSheet();editScore('+state.scores.indexOf(s)+')"><div class="row" style="border:none;padding:0">'+
+   '<div class="main"><div class="num" style="font-size:20px">'+fmtN(s.score)+'</div>'+
+   '<div class="s">'+fmt(s.date)+(s.with_?' &middot; '+esc(s.with_):'')+(s.party?' &middot; with '+esc(s.party):'')+'</div></div>'+
+   (s.rank?'<span class="pill">'+esc(s.rank)+'</span>':'')+'</div>'+
+   (s.notes?'<div class="muted" style="margin-top:6px">'+esc(s.notes)+'</div>':'')+'</div>';
+ });
+ h+='<div class="linkrow"><button onclick="closeSheet();formScore(null,{attraction:'+jsarg(rn)+',date:today()})"><b>+ Log a score</b></button></div>';
+ h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
 }
 function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function viewCheck(){
