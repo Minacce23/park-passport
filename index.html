@@ -443,7 +443,7 @@ function openVisit(date){curDay=date;
  if(scores.length){h+='<h2 class="sec">Scores ('+scores.length+')</h2><div class="card">';
   scores.forEach(function(s){h+='<div class="row" style="cursor:pointer" onclick="editScore('+state.scores.indexOf(s)+')"><div class="main"><div class="t">'+fmtN(s.score)+'</div><div class="s">'+shortRide(s.attraction)+(s.with_?' &middot; '+s.with_:'')+'</div></div>'+(s.rank?'<span class="pill">'+s.rank+'</span>':'')+'</div>';});h+='</div>';}
  if(!rides.length&&!meets.length&&!scores.length)h+='<div class="muted">No rides or meets logged this day.</div>';
- h+='<div class="linkrow"><button onclick="quickAddRide()"><b>&#9889; Quick add</b></button><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
+ h+='<div class="linkrow"><button onclick="quickAddRide()"><b>+ Quick add</b></button><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
 function delRideSwipe(i){
  var r=state.rides[i];if(!r)return;
@@ -653,16 +653,16 @@ function savePhoto(){if(!pendingPhoto){alert('Pick a photo first');return;}var t
  pendingPhoto=null;save();closeSheet();go('photos');}
 function openAdd(){
  sheet('<h3>Add to your trip</h3><div class="actionlist">'+
-  '<button onclick="formRide()">&#127906; &nbsp;<b>Log an experience</b></button>'+
-  '<button onclick="quickAddRide()">&#9889; &nbsp;<b>Quick add experience</b></button>'+
-  (GENERIC?'<button onclick="formVariant()">&#10024; &nbsp;<b>Add a variant</b></button>':'')+
-  '<button onclick="formVisit()">&#9825; &nbsp;<b>Add a visit day</b></button>'+
-  '<button onclick="formMeet()">&#129309; &nbsp;<b>Log a character meet</b></button>'+
-  '<button onclick="formScore()">&#127919; &nbsp;<b>Log a score</b></button>'+
+  '<button onclick="formRide()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#A9AFE2"/><rect x="3.6" y="7" width="16.8" height="10" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9.4 7v10" stroke="#1B1A17" stroke-width="1.5" stroke-dasharray="2 2.2" fill="none"/><path d="M13 10.4h4.6M13 13.6h3.2" stroke="#1B1A17" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></span><b>Log an experience</b></button>'+
+  '<button onclick="quickAddRide()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#F0E952"/><path d="M13.4 3.6L6.8 13h4.2l-1.6 6.6L16.6 10h-4.4l1.2-6.4z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg></span><b>Quick add experience</b></button>'+
+  (GENERIC?'<button onclick="formVariant()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E7BCE3"/><path d="M12 3.8l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.6 4.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="#1B1A17"/></svg></span><b>Add a variant</b></button>':'')+
+  '<button onclick="formVisit()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B5D0B5"/><path d="M8 19.4V4.4" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M8 5h9.6l-2.6 3 2.6 3H8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg></span><b>Add a visit day</b></button>'+
+  '<button onclick="formMeet()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.4" rx="7" ry="2" fill="#D9A3D4"/><path d="M12 18.2S4.4 13.6 4.4 8.9C4.4 6.2 6.5 4.6 8.6 4.6c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 4.2 1.6 4.2 4.3 0 4.7-7.6 9.3-7.6 9.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Log a character meet</b></button>'+
+  '<button onclick="formScore()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E8D93B"/><path d="M8.2 4.6h7.6v4.6a3.8 3.8 0 0 1-7.6 0z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 6H5.6a2.6 2.6 0 0 0 2.7 2.9M15.8 6h2.6a2.6 2.6 0 0 1-2.7 2.9" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 12.8v2.4M10.2 15.2h3.6v2.4h-3.6zM9 17.6h6" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg></span><b>Log a score</b></button>'+
   '<div class="alabel">Parks</div>'+
-  '<button onclick="formPark()">&#128205; &nbsp;<b>Add a park</b></button>'+
+  '<button onclick="formPark()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6" ry="1.8" fill="#B388E6"/><path d="M12 18.6S5.8 12.8 5.8 8.9a6.2 6.2 0 0 1 12.4 0c0 3.9-6.2 9.7-6.2 9.7z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="8.9" r="2.2" fill="none" stroke="#1B1A17" stroke-width="1.6"/></svg></span><b>Add a park</b></button>'+
   '<div class="alabel">Photos</div>'+
-  '<button onclick="formPhoto()">&#128247; &nbsp;<b>Add a photo</b></button>'+
+  '<button onclick="formPhoto()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#8E96D6"/><rect x="3.8" y="7.2" width="16.4" height="11" rx="2.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9 7.2l1.2-2h3.6l1.2 2" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12.6" r="3.2" fill="none" stroke="#1B1A17" stroke-width="1.7"/></svg></span><b>Add a photo</b></button>'+
   '</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
 }
 function formVariant(d){pendingPhoto=null;
