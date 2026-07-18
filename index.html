@@ -1606,14 +1606,31 @@ function openFriendSheet(code){
 }
 function friendLeadersHTML(){
  var so=state.social;if(!so||!so.friends.length||!leadersOn())return '';
- var ppl=[{name:'You',st:socialSummary()}];
- so.friends.forEach(function(f){var p=FRCACHE[f.code];if(p&&p.stats)ppl.push({name:f.name,st:p.stats});});
+ var ppl=[{name:'You',st:socialSummary(),last:(lastExperience()||{}).date||''}];
+ so.friends.forEach(function(f){var p=FRCACHE[f.code];if(p&&p.stats)ppl.push({name:f.name,st:p.stats,last:(p.last&&p.last.date)||''});});
  if(ppl.length<2)return '';
- var cats=[['experiences','Experiences'],['unique','Unique attractions'],['visits','Visit days'],['coasters','Coasters']];
- var tiles=cats.map(function(c){
-  var best=ppl[0];ppl.forEach(function(x){if((x.st[c[0]]||0)>(best.st[c[0]]||0))best=x;});
-  return '<div class="stat lstat"><div class="num" style="font-size:21px">'+(best.st[c[0]]||0)+'</div><div class="lbl">'+c[1]+'</div><div class="lwho'+(best.name==='You'?' me':'')+'">'+esc(best.name)+'</div></div>';
- }).join('');
+ function shortDate(d){
+  if(!d)return '&ndash;';
+  var t=fmt(d);
+  var thisYear=(new Date()).getFullYear();
+  if(d.slice(0,4)==String(thisYear))t=t.replace(/, \d{4}$/,'');
+  return t;
+ }
+ var tiles='';
+ var cats=[['experiences','Experiences'],['unique','Unique attractions'],['lastvisit','Latest park day'],['coasters','Coasters']];
+ cats.forEach(function(c){
+  var best,val,fs='21px';
+  if(c[0]==='lastvisit'){
+   best=ppl[0];ppl.forEach(function(x){if((x.last||'')>(best.last||''))best=x;});
+   val=shortDate(best.last);
+   if(val.length>7)fs='15px';
+   if(!best.last)return;
+  }else{
+   best=ppl[0];ppl.forEach(function(x){if((x.st[c[0]]||0)>(best.st[c[0]]||0))best=x;});
+   val=best.st[c[0]]||0;
+  }
+  tiles+='<div class="stat lstat"><div class="num" style="font-size:'+fs+'">'+val+'</div><div class="lbl">'+c[1]+'</div><div class="lwho'+(best.name==='You'?' me':'')+'">'+esc(best.name)+'</div></div>';
+ });
  return '<h2 class="sec">Leaderboard</h2><div class="grid">'+tiles+'</div>';
 }
 function viewFriends(){
