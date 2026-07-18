@@ -380,7 +380,7 @@ function viewStats(s){
    numTile(years, yrsN?yrsN+' years tracked':'Years tracked',"showYears()")+
   '</div>';
  var _bl=badgeList(),_be=_bl.filter(function(b){return b.earned;}).length;
- out+='<div class="stat mile" onclick="openBadges()" style="cursor:pointer">'+BADGE_MEDAL+'<div style="flex:1"><div class="se">'+_be+' of '+_bl.length+' earned</div><div class="lbl" style="margin-top:2px">Tap to see your badges</div></div><span class="vchev">&rsaquo;</span></div>';
+ out+='<div class="stat mile" onclick="openBadges()" style="cursor:pointer;margin-top:14px">'+BADGE_MEDAL+'<div style="flex:1"><div class="se">'+_be+' of '+_bl.length+' earned</div><div class="lbl" style="margin-top:2px">Tap to see your badges</div></div><span class="vchev">&rsaquo;</span></div>';
  return out;
 }
 function st(n,l){return '<div class="stat"><div class="num">'+n+'</div><div class="lbl">'+l+'</div></div>';}
