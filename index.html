@@ -1379,8 +1379,8 @@ function openDataHub(){
   '<div class="step"><span class="stepn">3</span><span class="stept">Save or export the file as a CSV.</span></div>'+
   '<div class="step" style="margin-bottom:0"><span class="stepn">4</span><span class="stept">Come back here, tap <b>Import from CSV</b>, and pick your file. Importing never creates duplicates, so it is safe to bring the same file in twice.</span></div>'+
  '</div>';
- h+='<div class="linkrow"><button onclick="downloadTemplate()"><b>&#8595; Download the template</b></button></div>';
- h+='<div class="linkrow"><button onclick="downloadCatalogTemplate()">&#8595; Park catalog template (rides you have not been on yet)</button></div>';
+ h+='<div class="linkrow"><button onclick="downloadTemplate()"><b>&#8595; Log template</b></button><button onclick="downloadCatalogTemplate()"><b>&#8595; Park checklist template</b></button></div>';
+ h+='<p class="muted" style="margin:2px 4px 4px;font-size:13px;line-height:1.55"><b style="color:var(--ink)">Log template:</b> for things you HAVE done. Each row is one experience, meet, or score, with its date.<br><b style="color:var(--ink)">Park checklist template:</b> for everything a park HAS. No dates needed. Each ride (and its special versions) waits unchecked in your Experience Checklist until you log it, so you can see what is left to do.</p>';
  h+='<h2 class="sec">Import</h2>';
  h+='<div class="linkrow"><button onclick="openImport()"><b>Import from CSV</b></button></div>';
  h+='<h2 class="sec">Export</h2>';
@@ -1607,8 +1607,8 @@ function resetData(){if(confirm('Reset to the originally imported history? Anyth
 
 function openImport(){
  sheet('<h3>Import from CSV</h3>'+
-  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Upload a spreadsheet saved as a CSV. Rows with a date log your history (one experience, meet, or score per row). Rows with Type \"Catalog\" and no date add rides and their variants to your checklists without marking them experienced, so you can track what you still want to do.</p>'+
-  '<div class="btnrow" style="margin-bottom:14px"><button class="btn ghost" onclick="downloadTemplate()">Log template</button><button class="btn ghost" onclick="downloadCatalogTemplate()">Catalog template</button></div>'+
+  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Upload a spreadsheet saved as a CSV. Rows with a date log your history (one experience, meet, or score per row). Rows with Type \"Catalog\" and no date are park checklist rows: they add rides and their special versions to your Experience Checklist unchecked, so you can see what you still want to do.</p>'+
+  '<div class="btnrow" style="margin-bottom:14px"><button class="btn ghost" onclick="downloadTemplate()">Log template</button><button class="btn ghost" onclick="downloadCatalogTemplate()">Park checklist template</button></div>'+
   '<label>Choose your CSV file</label><input type="file" accept=".csv,text/csv" id="f_csv" onchange="handleCSV(this)">'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
 }
