@@ -1461,7 +1461,7 @@ function friendLeadersHTML(){
  var ppl=[{name:'You',st:socialSummary()}];
  so.friends.forEach(function(f){var p=FRCACHE[f.code];if(p&&p.stats)ppl.push({name:f.name,st:p.stats});});
  if(ppl.length<2)return '';
- var cats=[['experiences','Experiences'],['unique','Unique attractions'],['visits','Visit days'],['characters','Characters'],['scores','Scores'],['coasters','Coasters']];
+ var cats=[['experiences','Experiences'],['unique','Unique attractions'],['visits','Visit days'],['coasters','Coasters']];
  var tiles=cats.map(function(c){
   var best=ppl[0];ppl.forEach(function(x){if((x.st[c[0]]||0)>(best.st[c[0]]||0))best=x;});
   return '<div class="stat lstat"><div class="num" style="font-size:21px">'+(best.st[c[0]]||0)+'</div><div class="lbl">'+c[1]+'</div><div class="lwho'+(best.name==='You'?' me':'')+'">'+esc(best.name)+'</div></div>';
