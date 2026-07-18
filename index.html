@@ -217,8 +217,8 @@ function sOf(n){if(isExtinct(n))return 'Extinct';if(GENERIC)return 'Active';retu
 function isExtinct(n){return !!(n&&state.extinct&&state.extinct[n]);}
 function setExtinct(n,on){if(!n)return;state.extinct=state.extinct||{};if(on)state.extinct[n]=true;else delete state.extinct[n];}
 function toggleExtinct(n){setExtinct(n,!isExtinct(n));save();renderAll();}
-function extinctPill(n){return isExtinct(n)?' <span class="pill ext">&#10013; retired</span>':'';}
-function extinctChk(id,n){return '<label class="extchk"><input type="checkbox" id="'+id+'"'+(isExtinct(n)?' checked':'')+'> No longer operating (extinct)</label>';}
+function extinctPill(n){return isExtinct(n)?' <span class="pill ext">defunct</span>':'';}
+function extinctChk(id,n){return '<label class="extchk"><input type="checkbox" id="'+id+'"'+(isExtinct(n)?' checked':'')+'> Defunct (no longer operating)</label>';}
 function isCoaster(n){return !!(n&&state.coasters&&state.coasters[String(n).toLowerCase()]);}
 function setCoaster(n,on){if(!n)return;state.coasters=state.coasters||{};var k=String(n).toLowerCase();if(on)state.coasters[k]=true;else delete state.coasters[k];}
 function coasterChk(id,n){return '<label class="extchk"><input type="checkbox" id="'+id+'"'+(isCoaster(n)?' checked':'')+'> Roller coaster (counts as a coaster credit)</label>';}
@@ -236,7 +236,7 @@ function parkPill(p){var ab=(SEED.parkAbbr||{});var c=(p==='Both Parks'?'both':(
 function allParks(){var s={},o=[];(GENERIC?catalog():SEED.attractions).forEach(function(a){if(a.park&&!s[a.park]){s[a.park]=1;o.push(a.park);}});(state.userParks||[]).forEach(function(p){if(p&&!s[p]){s[p]=1;o.push(p);}});return o;}
 function parkOn(p){var pk=(state.settings&&state.settings.parks)||{};return pk[p]!==false;}
 function parksOn(){return allParks().filter(parkOn);}
-function actPark(){return (state.actPark&&allParks().indexOf(state.actPark)>=0)?state.actPark:'';}
+function actPark(){return (state.actPark&&parksOn().indexOf(state.actPark)>=0)?state.actPark:'';}
 function setActPark(p){state.actPark=p||'';save();tab=(tab==='badges'||tab==='gallery'||tab==='ridegallery'||tab==='meetgallery'||tab==='people')?'stats':tab;renderAll();window.scrollTo(0,0);}
 function ridePark(r){return r.park||pOf(r.attraction);}
 function fRides(){var a=actPark();return a?state.rides.filter(function(r){var p=ridePark(r);return p===a||p==='Both Parks';}):state.rides;}
@@ -245,7 +245,7 @@ function fScores(){var a=actPark();return a?state.scores.filter(function(s){retu
 function dayParkSet(d){var ps={};state.rides.forEach(function(r){if(r.date===d){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?'&&pk!=='Both Parks')ps[pk]=1;}});state.meets.forEach(function(m){if(m.date===d&&m.park&&m.park!=='Both Parks')ps[m.park]=1;});state.scores.forEach(function(sc){if(sc.date===d){var pk2=pOf(sc.attraction);if(pk2&&pk2!=='?'&&pk2!=='Both Parks')ps[pk2]=1;}});var meta=visitMeta(d);if(meta&&meta.park&&meta.park!=='Both Parks')ps[meta.park]=1;return ps;}
 function fVisits(){var a=actPark();var vs=allVisits();return a?vs.filter(function(v){var ps=dayParkSet(v.date);return !!ps[a]||(v.park===a);}):vs;}
 function attractionsScoped(){var a=actPark();return attractionsOn().filter(function(x){return !a||x.park===a;});}
-function renderChips(){var el=document.getElementById('chips');if(!el)return;if(tab==='friends'||tab==='badges'||tab==='people'){el.innerHTML='';el.style.display='none';return;}el.style.display='';var ps=allParks();if(ps.length<1){el.innerHTML='<span class="chip add" onclick="formPark()">+ Add a park</span>';return;}var a=actPark();var h='<span class="chip'+(a===''?' on':'')+'" onclick="setActPark(&#39;&#39;)">All parks</span>';ps.forEach(function(p){h+='<span class="chip'+(a===p?' on':'')+'" onclick="setActPark(&#39;'+p.replace(/&/g,'&amp;').replace(/'/g,'&#39;')+'&#39;)">'+p+'</span>';});h+='<span class="chip add" onclick="formPark()">+ Add</span>';el.innerHTML=h;}
+function renderChips(){var el=document.getElementById('chips');if(!el)return;if(tab==='friends'||tab==='badges'||tab==='people'){el.innerHTML='';el.style.display='none';return;}el.style.display='';var ps=parksOn();if(state.actPark&&ps.indexOf(state.actPark)<0){state.actPark='';try{save();}catch(e){}}if(ps.length<1){el.innerHTML='<span class="chip add" onclick="formPark()">+ Add a park</span>';return;}var a=actPark();var h='<span class="chip'+(a===''?' on':'')+'" onclick="setActPark(&#39;&#39;)">All parks</span>';ps.forEach(function(p){h+='<span class="chip'+(a===p?' on':'')+'" onclick="setActPark(&#39;'+p.replace(/&/g,'&amp;').replace(/'/g,'&#39;')+'&#39;)">'+p+'</span>';});h+='<span class="chip add" onclick="formPark()">+ Add</span>';el.innerHTML=h;}
 function formPark(){sheet('<h3>Add a park</h3><label>Park name</label><input id="f_pname" placeholder="e.g. Sunshine Park" autocomplete="off"><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="savePark()">Add park</button></div>');}
 function savePark(){var n=(val('f_pname')||'').trim();if(!n){alert('Enter a park name');return;}state.userParks=state.userParks||[];if(allParks().indexOf(n)<0){state.userParks.push(n);assignParkIcon(n);}state.actPark=n;save();closeSheet();renderAll();window.scrollTo(0,0);}
 function attractionsOn(){return catalog().filter(function(a){return parkOn(a.park);});}
@@ -308,7 +308,7 @@ function delPass(p){if(!confirm('Remove the annual pass for '+p+'?'))return;stat
 function togglePass(p){state.passes=getPasses();if(state.passes[p]){state.passes[p].off=!state.passes[p].off;save();renderAll();passManager();}}
 function passManager(){var ps=getPasses();var keys=Object.keys(ps);var h='<h3>Annual passes</h3>';if(!keys.length){h+='<p class="muted" style="line-height:1.5;margin:0 0 12px">Track an annual pass and the app shows when it pays for itself. Add the pass cost, an average single-ticket price, and the date you got it, and your visits do the math.</p>';}else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Use the switch to show or hide a pass on your Stats page. Handy when a pass expires.</p><div class="card">'+keys.map(function(p){var i=passInfo(p);var d=i.savings>=0?money(i.savings)+' saved':i.more+' to break even';return '<div class="checkitem" style="cursor:pointer" onclick="formPass('+jsarg(p)+')"><div class="nm">'+esc(p)+'</div><div class="cnt">'+d+'</div><span class="switch'+(ps[p].off?'':' on')+'" onclick="event.stopPropagation();togglePass('+jsarg(p)+')" style="margin-left:9px"><span class="knob"></span></span></div>';}).join('')+'</div>';}h+='<div class="linkrow"><button onclick="formPass()">+ Add a pass</button></div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function statSheet(title,body){sheet('<h3>'+title+'</h3>'+body+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
-function showExtinct(){var ext=attractionsOn().filter(function(a){return a.status==='Extinct';});var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var got=ext.filter(function(a){return cnt[a.name];}).length;var body='<div class="muted" style="margin:0 4px 10px">You experienced '+got+' of '+ext.length+' now-extinct attractions.</div><div class="card">';ext.forEach(function(a){var c=cnt[a.name]||0;var pk=a.park==='California Adventure'?'DCA':(a.park==='Disneyland'?'DL':a.park);body+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+' <span class="cnt">'+pk+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});body+='</div>';statSheet('Extinct attractions',body);}
+function showExtinct(){var ext=attractionsOn().filter(function(a){return a.status==='Extinct';});var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var got=ext.filter(function(a){return cnt[a.name];}).length;var body='<div class="muted" style="margin:0 4px 10px">You experienced '+got+' of '+ext.length+' now-defunct attractions.</div><div class="card">';ext.forEach(function(a){var c=cnt[a.name]||0;var pk=a.park==='California Adventure'?'DCA':(a.park==='Disneyland'?'DL':a.park);body+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+' <span class="cnt">'+pk+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});body+='</div>';statSheet('Defunct attractions',body);}
 function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});if(!arr.length){statSheet('Most experienced','<div class="emptyc"><div class="et">Nothing logged yet</div><div class="es">Log a ride and your most-experienced attractions show up here.</div></div>');return;}var body='<div class="card">'+arr.map(function(x){return '<div class="checkitem"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';statSheet('Most experienced',body);}
 function showByPark(pk){var cnt={};state.rides.filter(function(r){return pOf(r.attraction)===pk;}).forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});var body=arr.length?('<div class="muted" style="margin:0 4px 10px">'+arr.length+' attractions, '+arr.reduce(function(a,b){return a+b.c;},0)+' experiences.</div><div class="card">'+arr.map(function(x){return '<div class="checkitem"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>'):'<div class="muted">Nothing logged at '+pk+' yet.</div>';statSheet(pk,body);}
 function showByParkDL(){showByPark(SEED.lists.parks[0]);}
@@ -379,7 +379,7 @@ function viewStats(s){
  var _pp=getPasses();var _pk=Object.keys(_pp);if(_pk.length&&passesOn()){var _show=(actPark()?(_pp[actPark()]?[actPark()]:[]):_pk).filter(function(p){return !(_pp[p]&&_pp[p].off);});if(_show.length){out+='<h2 class="sec">Annual pass</h2>'+_show.map(passCard).join('');}}
  out+='<h2 class="sec">Milestones &amp; badges</h2>';
  out+='<div class="grid">'+
-   (GENERIC?(s.extinct?numTile(s.extinct,'Extinct experienced',"showExtinct()"):numTile(allParks().length,'Parks visited')):numTile(s.extinct,'Extinct ones experienced',"showExtinct()"))+
+   (GENERIC?(s.extinct?numTile(s.extinct,'Defunct experienced',"showExtinct()"):numTile(allParks().length,'Parks visited')):numTile(s.extinct,'Defunct experienced',"showExtinct()"))+
    numTile(years, yrsN?yrsN+' years tracked':'Years tracked',"showYears()")+
   '</div>';
  var _bl=badgeList(),_be=_bl.filter(function(b){return b.earned;}).length;
@@ -585,7 +585,7 @@ function viewCheck(){
    out+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--pink);margin-bottom:4px">'+ld+'</div>';
    lands[ld].forEach(a=>{const c=cnt[a.name]||0;const ex=a.status==='Extinct';
     out+='<div class="checkitem '+(c?'done':'')+' '+(ex?'ext':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div>'+
-     '<div class="nm">'+esc(a.name)+(ex?' <span class="pill gray">gone</span>':'')+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';
+     '<div class="nm">'+esc(a.name)+(ex?' <span class="pill gray">defunct</span>':'')+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';
    });
    out+='</div>';
   }
@@ -1051,7 +1051,7 @@ function badgeList(){
   ['prk','Park hopper','Experience 3 parks',3,nparks],
   ['prk','Park collector','Experience 5 parks',5,nparks],
   ['prk','Globe trotter','Experience 10 parks',10,nparks],
-  ['spc','Nostalgia','Experience an extinct attraction',1,s.extinct],
+  ['spc','Nostalgia','Experience a defunct attraction',1,s.extinct],
   ['st','First flight','Log a Star Tours flight',1,stFlights],
   ['st','Scene collector','Catch 10 Star Tours scenes',10,stCaught],
   ['st','Hyperspace half','Catch half the scenes',14,stCaught],
@@ -1498,6 +1498,38 @@ function saveCatalogVariant(){var a=val('f_attr');if(!a){alert('Pick or write in
 function delCatalogVariant(rn,v){if(!confirm('Remove \u201c'+v+'\u201d from the '+rn+' list?'))return;
  var arr=(state.catalogVars||{})[rn]||[];var i=-1;arr.some(function(x,k){if(x.toLowerCase()===v.toLowerCase()){i=k;return true;}return false;});
  if(i>=0)arr.splice(i,1);if(!arr.length)delete state.catalogVars[rn];save();renderAll();}
+function openVariantActions(rn,v){
+ var used=state.rides.filter(function(r){return r.attraction===rn&&rideVariants(r).indexOf(v)>-1;}).length;
+ var h='<h3>'+esc(v)+'</h3><p class="muted" style="margin:0 0 12px;line-height:1.5">A version of <b>'+esc(rn)+'</b>'+(used?' &middot; logged '+used+' time'+(used===1?'':'s'):'')+'</p>';
+ h+='<div class="actionlist">';
+ h+='<button onclick="toggleExtinct('+jsarg(v)+');closeSheet();renderAll()"><b>'+(isExtinct(v)?'Remove the defunct label':'Label as defunct')+'</b></button>';
+ h+='<button onclick="promoteVariant('+jsarg(rn)+','+jsarg(v)+')"><b>Make this its own ride</b></button>';
+ if(!used)h+='<button onclick="delCatalogVariant('+jsarg(rn)+','+jsarg(v)+');closeSheet();renderAll()" style="color:#B4433A"><b>Remove from the list</b></button>';
+ h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>';
+ sheet(h);
+}
+function promoteVariant(rn,v){
+ var used=state.rides.filter(function(r){return r.attraction===rn&&rideVariants(r).indexOf(v)>-1;});
+ var msg='Make "'+v+'" its own ride?'+(used.length?' Your '+used.length+' logged experience'+(used.length===1?'':'s')+' of it will move from "'+rn+'" to "'+v+'".':' It will appear in your checklist as a separate ride.');
+ if(!confirm(msg))return;
+ var vl=String(v).toLowerCase();
+ used.forEach(function(r){
+  r.attraction=v;
+  var rest=rideVariants(r).filter(function(x){return x!==v;});
+  r.variant=rest[0]||null;r.variants=rest.length>1?rest:null;
+ });
+ // its own catalog entry, in the same park
+ var pk='';catalog().some(function(a){if(a.name===rn){pk=a.park||'';return true;}return false;});
+ state.catalogAttr=state.catalogAttr||[];
+ if(!state.catalogAttr.some(function(a){return (a.name||'').toLowerCase()===vl;})&&!catalog().some(function(a){return a.name.toLowerCase()===vl;})){
+  state.catalogAttr.push({name:v,park:pk});
+ }
+ if(state.catalogVars&&state.catalogVars[rn]){
+  state.catalogVars[rn]=state.catalogVars[rn].filter(function(x){return x!==v;});
+  if(!state.catalogVars[rn].length)delete state.catalogVars[rn];
+ }
+ save();closeSheet();renderAll();
+}
 function viewVariants(){
  if(GENERIC){
   var byRide={},firstv={};
@@ -1516,7 +1548,7 @@ function viewVariants(){
    var vs={};(catV[rn]||[]).forEach(function(v){vs[v]=1;});Object.keys(byRide[rn]||{}).forEach(function(v){vs[v]=1;});
    gout+='<div class="card"><div class="muted" style="font-weight:bold;color:var(--accent);margin-bottom:4px;display:flex;align-items:center"><span style="flex:1">'+esc(rn)+extinctPill(rn)+'</span><button class="xbtn" style="font-size:13px;font-weight:700;color:var(--accent)" onclick="formCatalogVariant('+jsarg(rn)+')">+ Add</button></div>';
    Object.keys(vs).sort().forEach(function(v){var c=(byRide[rn]&&byRide[rn][v])||0;var fk=rn+'|'+v;
-    gout+='<div class="checkitem '+(c?'done':'')+'" style="cursor:pointer" title="Tap to mark or unmark extinct" onclick="toggleExtinct('+jsarg(v)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(v)+extinctPill(v)+(c?' <span class="cnt">first '+fmt(firstv[fk])+'</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'<button class="xbtn" onclick="event.stopPropagation();delCatalogVariant('+jsarg(rn)+','+jsarg(v)+')">&times;</button>')+'</div>';});
+    gout+='<div class="checkitem '+(c?'done':'')+'" style="cursor:pointer" title="Variant options" onclick="openVariantActions('+jsarg(rn)+','+jsarg(v)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(v)+extinctPill(v)+(c?' <span class="cnt">first '+fmt(firstv[fk])+'</span>':'')+'</div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'<span class="vchev">&rsaquo;</span></div>';});
    gout+='</div>';
   });
   gout+='<div class="linkrow"><button onclick="formVariant()">+ Log a variant</button><button onclick="formCatalogVariant(&#39;&#39;)">+ Add to list</button></div>';
