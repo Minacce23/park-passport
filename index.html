@@ -1503,7 +1503,7 @@ function openBlocked(){
   sheet(h);return;
  }
  h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Someone you block can no longer see your stats, and their code cannot be added to your friends.</p>';
- h+='<label>Block a friend code</label><div class="scorerow"><input id="bl_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off"><button class="btn" id="bl_add" onclick="blockCode()" style="flex:none;width:auto">Block</button></div>';
+ h+='<label>Block a friend code</label><div class="scorerow"><input id="bl_code" value="PARK-" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off" oninput="keepParkPrefix(this)"><button class="btn" id="bl_add" onclick="blockCode()" style="flex:none;width:auto">Block</button></div>';
  var bl=so.blocked||[];
  h+='<h2 class="sec">Blocked</h2>';
  if(!bl.length)h+='<div class="emptyc"><div class="et">No one blocked</div><div class="es">Enter a code above and that person loses access to your stats.</div></div>';
@@ -1572,11 +1572,19 @@ function checkFriendLinks(){
   }).catch(function(){});
  },function(){});
 }
+function keepParkPrefix(el){
+ var v=(el.value||'').toUpperCase();
+ v=v.replace(/\s/g,'');
+ if(v.indexOf('PARK-')!==0){
+  v='PARK-'+v.replace(/^P?A?R?K?-?/,'');
+ }
+ el.value=v;
+}
 function openAddFriend(){
  sheet('<h3>Add a friend</h3><p class="muted" style="margin:0 0 12px;line-height:1.5">Enter the friend code they shared with you.</p>'+
-  '<label>Friend code</label><input id="fr_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off">'+
+  '<label>Friend code</label><input id="fr_code" value="PARK-" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off" oninput="keepParkPrefix(this)">'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" id="fr_add" onclick="addFriend()">Add friend</button></div>');
- var e=document.getElementById('fr_code');if(e){try{e.focus();}catch(err){}}
+ var e=document.getElementById('fr_code');if(e){try{e.focus();e.setSelectionRange(e.value.length,e.value.length);}catch(err){}}
 }
 function openFriends(){go('friends');}
 function openFriendSheet(code){
