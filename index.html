@@ -758,7 +758,27 @@ function pickChip(el,target){
  el.classList.add('on');inp.value=v;
 }
 function syncWithChips(v){var row=document.getElementById('withChips');if(!row)return;[].slice.call(row.children).forEach(function(c){c.classList.toggle('on',c.getAttribute('data-v')===v);});}
-function setDateQuick(back){var d=new Date(Date.now()-back*86400000);var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var e=document.getElementById('f_date');if(e){e.value=v;syncVisitWith();}}
+function flexDate(v){
+ v=String(v||'').trim();if(!v)return '';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+ var m;
+ var pad=function(n){return String(n).padStart(2,'0');};
+ var mk=function(y,mo,d){mo=+mo;d=+d;y=+y;if(y<100)y+=(y>50?1900:2000);if(mo<1||mo>12||d<1||d>31||y<1900||y>2100)return '';return y+'-'+pad(mo)+'-'+pad(d);};
+ if(m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/))return mk(m[3],m[1],m[2]);
+ if(m=v.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/))return mk(m[1],m[2],m[3]);
+ if(m=v.match(/^(\d{1,2})[\/\-.](\d{4})$/))return mk(m[2],m[1],1);
+ if(m=v.match(/^(\d{4})$/))return mk(m[1],1,1);
+ var t=Date.parse(v);
+ if(!isNaN(t)){var d2=new Date(t);return d2.getFullYear()+'-'+pad(d2.getMonth()+1)+'-'+pad(d2.getDate());}
+ return '';
+}
+function dateBlurNorm(el){if(el.type!=='text')return;var v=flexDate(el.value);if(v){try{el.type='date';}catch(e){}el.value=v;syncVisitWith();}}
+function toggleDateType(){
+ var e=document.getElementById('f_date');if(!e)return;
+ if(e.type==='date'){var cur=e.value;try{e.type='text';}catch(err){}e.placeholder='e.g. 6/9/2013 or June 2013';e.value='';try{e.focus();}catch(err2){}}
+ else{var iso=flexDate(e.value);try{e.type='date';}catch(err3){}if(iso)e.value=iso;}
+}
+function setDateQuick(back){var e0=document.getElementById('f_date');if(e0&&e0.type!=='date'){try{e0.type='date';}catch(e){}}var d=new Date(Date.now()-back*86400000);var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var e=document.getElementById('f_date');if(e){e.value=v;syncVisitWith();}}
 function toggleMoreDet(){var dd=document.getElementById('moredet');var b=document.getElementById('mdbtn');if(!dd)return;var open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(b)b.innerHTML=open?'More details &#9662;':'Fewer details &#9652;';}
 function formRide(d,qa){pendingPhoto=null;d=d||today();
  var L=state.lastLog||{};
@@ -769,7 +789,7 @@ function formRide(d,qa){pendingPhoto=null;d=d||today();
  sheet('<h3>'+(qa?'Quick add experience':'Log an experience')+'</h3>'+
   (qa?'<p class="muted" style="margin:0 0 12px;line-height:1.5">Carried over from your last experience. Just pick the attraction.'+(waitsOn()?' Line start is set to now.':'')+'</p>':'')+
   attrField('',pk)+
-  '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="setDateQuick(1)">Yesterday</span></div>'+
+  '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="setDateQuick(1)">Yesterday</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
   parkField(pk)+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">More details &#9662;</button>'+
   '<div id="moredet" style="display:none">'+
@@ -790,7 +810,7 @@ function saveRide(again){
  var po=numOrNull('f_posted');var ls=valOrUndef('f_lstart'),le=valOrUndef('f_lend');
  var lst=(ls===undefined?null:(ls||null)),len=(le===undefined?null:(le||null));
  var lmin=(lst&&len)?diffMin(lst,len):null;
- var dd=val('f_date');
+ var dd=flexDate(val('f_date'))||val('f_date');
  state.rides.push({date:dd,attraction:a,park:val('f_park')||null,variant:(collectVariantRows()[0]||null),variants:(collectVariantRows().length>1?collectVariantRows():null),with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
  collectScoreRows().forEach(function(r){state.scores.push({date:dd,attraction:a,score:r.score,with_:r.who||null,party:val('f_with')||null,rank:r.rank||null,notes:null,photo:null});});
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
@@ -804,7 +824,7 @@ function editRide(i){
  var r=state.rides[i];if(!r)return;pendingPhoto=r.photo||null;
  sheet('<h3>Edit experience</h3>'+
   attrField(r.attraction,pOf(r.attraction))+
-  '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+(r.date||'')+'"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="setDateQuick(1)">Yesterday</span></div>'+
+  '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+(r.date||'')+'" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="setDateQuick(1)">Yesterday</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
   parkField(pOf(r.attraction))+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">Fewer details &#9652;</button>'+
   '<div id="moredet">'+
@@ -820,7 +840,7 @@ function editRide(i){
 }
 function updateRide(i){
  var r=state.rides[i];if(!r)return;var a=val('f_attr');if(!a){alert('Pick an attraction');return;}
- r.date=val('f_date');r.attraction=a;r.park=val('f_park')||null;var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
+ r.date=flexDate(val('f_date'))||val('f_date');r.attraction=a;r.park=val('f_park')||null;var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
  save();closeSheet();renderAll();
