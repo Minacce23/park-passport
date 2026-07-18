@@ -1040,8 +1040,8 @@ var PARKICONS={ferris:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6
 function parkIconKey(p){var keys=Object.keys(PARKICONS);var pi=(state.parkIcons||{})[p];if(pi&&PARKICONS[pi])return pi;var h=0;for(var i=0;i<p.length;i++)h=(h*97+p.charCodeAt(i))>>>0;return keys[h%keys.length];}
 function parkIconSVG(p){return PARKICONS[parkIconKey(p)];}
 function assignParkIcon(p){state.parkIcons=state.parkIcons||{};if(!state.parkIcons[p]){var keys=Object.keys(PARKICONS);state.parkIcons[p]=keys[Math.floor(Math.random()*keys.length)];}}
-function openParkIconPicker(p){var cur=parkIconKey(p);sheet('<h3>Pick an icon</h3><p class="muted" style="margin:0 0 10px">'+esc(p)+'</p><div class="iconpick">'+Object.keys(PARKICONS).map(function(k){return '<button type="button" class="'+(k===cur?'on':'')+'" onclick="setParkIcon('+jsarg(p)+','+jsarg(k)+')">'+PARKICONS[k]+'</button>';}).join('')+'</div><div class="btnrow"><button class="btn ghost" onclick="openMenu()">Back</button></div>');}
-function setParkIcon(p,k){state.parkIcons=state.parkIcons||{};state.parkIcons[p]=k;save();openMenu();}
+function openParkIconPicker(p){var cur=parkIconKey(p);sheet('<h3>Pick an icon</h3><p class="muted" style="margin:0 0 10px">'+esc(p)+'</p><div class="iconpick">'+Object.keys(PARKICONS).map(function(k){return '<button type="button" class="'+(k===cur?'on':'')+'" onclick="setParkIcon('+jsarg(p)+','+jsarg(k)+')">'+PARKICONS[k]+'</button>';}).join('')+'</div><div class="btnrow"><button class="btn ghost" onclick="openParkToggles()">Back</button></div>');}
+function setParkIcon(p,k){state.parkIcons=state.parkIcons||{};state.parkIcons[p]=k;save();openParkToggles();}
 var _dupes=[];
 function _dupGroups(){
  var g={};
@@ -1353,6 +1353,18 @@ function viewFriends(){
  setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000)refreshFriends();}catch(e){}},50);
  return h;
 }
+function openParkToggles(){
+ var ps=allParks();
+ var h='<h3>Parks</h3>';
+ if(!ps.length){h+='<div class="emptyc"><div class="et">No parks yet</div><div class="es">Add a park and it shows up here with an on/off switch.</div></div>';}
+ else{
+  h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Switch a park off to hide it from your stats and lists. Tap an icon to change it.</p>';
+  h+=ps.map(function(pp){return '<div class="swrow" onclick="togglePark(&#39;'+pp+'&#39;)"><span class="micon" style="cursor:pointer" onclick="event.stopPropagation();openParkIconPicker(&#39;'+pp+'&#39;)">'+parkIconSVG(pp)+'</span><b>'+pp+'</b><span class="switch'+(parkOn(pp)?' on':'')+'" id="parksw_'+pp.replace(/[^a-z]/gi,'')+'"><span class="knob"></span></span></div>';}).join('');
+ }
+ h+='<div class="linkrow"><button onclick="formPark()">+ Add a park</button></div>';
+ h+='<div class="btnrow"><button class="btn ghost" onclick="openMenu()">Back</button><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
+}
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+'<button onclick="closeSheet();startOnboarding()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg></span><b>How it works</b></button>'+
   '<button onclick="closeSheet();go(\'badges\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9A6BD4"/><path d="M9.4 12.5L8.2 18.6l3.8-2 3.8 2-1.2-6.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="8.8" r="5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 6.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.9-1.5.9.3-1.7-1.2-1.2 1.7-.2z" fill="#1B1A17"/></svg></span><b>Badges</b></button>'+
@@ -1360,7 +1372,7 @@ function openMenu(){
     '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
   '<div class="alabel">Parks</div>'+
-  allParks().map(function(pp){return '<div class="swrow" onclick="togglePark(&#39;'+pp+'&#39;)"><span class="micon" style="cursor:pointer" onclick="event.stopPropagation();openParkIconPicker(&#39;'+pp+'&#39;)">'+parkIconSVG(pp)+'</span><b>'+pp+'</b><span class="switch'+(parkOn(pp)?' on':'')+'" id="parksw_'+pp.replace(/[^a-z]/gi,'')+'"><span class="knob"></span></span></div>';}).join('')+
+  '<button onclick="openParkToggles()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#3E5A3E" opacity=".35"/><path d="M5 18.5V9.6l4-3 4 3v8.9M13 18.5v-6.4l3-2.2 3 2.2v6.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.4 18.5h17.2" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>Toggle parks on / off</b><span class="vchev" style="margin-left:auto">&rsaquo;</span></button>'+
   '<div class="alabel">Tracking</div>'+
   '<div class="swrow" onclick="toggleWaits()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#8E96D6"/><circle cx="12" cy="11.2" r="7.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 7.4v4l2.6 1.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg></span><b>Wait times</b><span class="switch'+(waitsOn()?' on':'')+'" id="waitsw"><span class="knob"></span></span></div>'+
   '<div class="swrow" onclick="closeSheet();passManager()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12.5" cy="20.7" rx="7.5" ry="1.8" fill="#E8D93B"/><rect x="3.6" y="6.4" width="16.8" height="11" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M3.6 10h16.8" fill="none" stroke="#1B1A17" stroke-width="1.7"/><path d="M6.6 13.8h5" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg></span><b>Annual passes</b><span class="switch'+(passesOn()?' on':'')+'" id="passsw" onclick="event.stopPropagation();togglePasses()"><span class="knob"></span></span></div>'+
