@@ -1337,10 +1337,19 @@ function avatarSVG(k,c){
   '<g transform="translate(32 32) scale(1.3) translate(-12 -12)">'+tone(wax[1])+'</g>'+
   '</svg>';
 }
+var _avClip=0;
 function avatarAny(o){
  o=o||{};
- if(o.photo){var wax=AVWAX[(o.color&&AVWAX[o.color])?o.color:'grape'];
-  return '<span class="avph" style="border-color:'+wax[0]+';box-shadow:inset 0 0 0 1.5px '+wax[1]+'"><img src="'+o.photo+'"></span>';}
+ if(o.photo){
+  var wax=AVWAX[(o.color&&AVWAX[o.color])?o.color:'grape'];
+  var cid='avclip'+(_avClip++);
+  return '<svg viewBox="0 0 64 64" class="avseal">'+
+   '<defs><clipPath id="'+cid+'"><path d="'+SEAL_PATH+'" transform="translate(32 32) scale(0.86) translate(-32 -32)"/></clipPath></defs>'+
+   '<path d="'+SEAL_PATH+'" fill="'+wax[0]+'"/>'+
+   '<path d="'+SEAL_PATH+'" fill="none" stroke="'+wax[1]+'" stroke-width="1.6" transform="translate(32 32) scale(0.975) translate(-32 -32)"/>'+
+   '<image href="'+o.photo+'" x="0" y="0" width="64" height="64" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+cid+')"/>'+
+   '</svg>';
+ }
  return avatarSVG(o.icon,o.color);
 }
 function handleAvatarPhoto(input){
