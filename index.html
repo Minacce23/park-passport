@@ -1309,7 +1309,7 @@ function addFriend(){
  if(so.friends.some(function(f){return f.code===code;})){alert('Already added');return;}
  if((so.blocked||[]).some(function(b){return b.code===code;})){alert('You have blocked this code. Unblock it in the menu first.');return;}
  var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
- fetchProfile(code,function(p){so.friends.push({code:code,name:p.name,icon:p.icon,color:p.color,photo:p.photo});FRCACHE[code]=p;so.seenLast=so.seenLast||{};so.seenLast[code]=(p.last&&p.last.date)||'';save();closeSheet();go('friends');},
+ fetchProfile(code,function(p){so.friends.push({code:code,name:p.name,icon:p.icon,color:p.color,photo:p.photo});FRCACHE[code]=p;so.seenLast=so.seenLast||{};so.seenLast[code]=(p.last&&p.last.date)||'';save();createFriendLink(code,p.uid);closeSheet();go('friends');},
   function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
 }
 function removeFriend(code){
@@ -1536,6 +1536,42 @@ function unblockCode(code){
  so.blocked=so.blocked.filter(function(b){return b.code!==code;});
  save();pushProfile(function(){openBlocked();},function(){openBlocked();});
 }
+function fbLinkUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/links/'+encodeURIComponent(id);}
+function createFriendLink(toCode,toUid){
+ var so=state.social;if(!so||!toUid)return;
+ fbToken(function(tk){
+  fbJson(fbLinkUrl(toCode+'__'+so.code)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+   body:JSON.stringify({fields:{to:{stringValue:toCode},toUid:{stringValue:toUid},from:{stringValue:so.code},fromUid:{stringValue:so.uid}}})}).catch(function(){});
+ },function(){});
+}
+function deleteFriendLink(id){fbToken(function(tk){fetch(fbLinkUrl(id),{method:'DELETE',headers:{'Authorization':'Bearer '+tk}}).catch(function(){});},function(){});}
+function checkFriendLinks(){
+ var so=state.social;if(!so||!so.code)return;
+ if(navigator.onLine===false)return;
+ fbToken(function(tk){
+  fbJson('https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents:runQuery',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+   body:JSON.stringify({structuredQuery:{from:[{collectionId:'links'}],where:{fieldFilter:{field:{fieldPath:'toUid'},op:'EQUAL',value:{stringValue:so.uid}}}}})})
+  .then(function(rows){
+   (rows||[]).forEach(function(row){
+    if(!row.document)return;
+    var f=row.document.fields||{};
+    var from=(f.from&&f.from.stringValue)||'';
+    var lid=row.document.name.split('/').pop();
+    if(!from){deleteFriendLink(lid);return;}
+    if((so.blocked||[]).some(function(b){return b.code===from;})){deleteFriendLink(lid);return;}
+    if(from===so.code||so.friends.some(function(x){return x.code===from;})){deleteFriendLink(lid);return;}
+    fetchProfile(from,function(p){
+     if(so.friends.some(function(x){return x.code===from;}))return;
+     so.friends.push({code:from,name:p.name,icon:p.icon,color:p.color,photo:p.photo});
+     FRCACHE[from]=p;
+     so.seenLast=so.seenLast||{};so.seenLast[from]='';
+     save();renderNav();if(tab==='friends')renderAll();
+     deleteFriendLink(lid);
+    },function(){});
+   });
+  }).catch(function(){});
+ },function(){});
+}
 function openAddFriend(){
  sheet('<h3>Add a friend</h3><p class="muted" style="margin:0 0 12px;line-height:1.5">Enter the friend code they shared with you.</p>'+
   '<label>Friend code</label><input id="fr_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off">'+
@@ -1601,7 +1637,7 @@ function viewFriends(){
  }
  h+='</div>';
  h+='<div class="btnrow" style="margin-top:16px"><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Stop sharing</button></div>';
- setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000)refreshFriends();}catch(e){}},50);
+ setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000){refreshFriends();checkFriendLinks();}}catch(e){}},50);
  return h;
 }
 function openDataHub(){
@@ -2136,7 +2172,7 @@ document.addEventListener('dblclick',function(e){
 
 renderAll();
 hydratePhotos(function(){renderAll();});
-setTimeout(function(){try{if(state.social&&state.social.code&&navigator.onLine!==false)refreshFriends();}catch(e){}},2500);
+setTimeout(function(){try{if(state.social&&state.social.code&&navigator.onLine!==false){refreshFriends();checkFriendLinks();}}catch(e){}},2500);
 </script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </body>
