@@ -1113,12 +1113,12 @@ function shareSnap(){return JSON.stringify([socialSummary(),lastExperience()]);}
 function encFields(name,sum){
  var sf={};for(var k in sum)sf[k]={integerValue:String(sum[k])};
  var le=lastExperience();
- return {fields:{uid:{stringValue:state.social.uid},name:{stringValue:name},updated:{stringValue:new Date().toISOString()},icon:{stringValue:state.social.icon||'ferris'},lastExp:{stringValue:le?le.name:''},lastDate:{stringValue:le?le.date:''},stats:{mapValue:{fields:sf}}}};
+ return {fields:{uid:{stringValue:state.social.uid},name:{stringValue:name},updated:{stringValue:new Date().toISOString()},icon:{stringValue:state.social.icon||'ferris'},blocked:{arrayValue:{values:(state.social.blocked||[]).filter(function(b){return b.uid;}).map(function(b){return {stringValue:b.uid};})}},lastExp:{stringValue:le?le.name:''},lastDate:{stringValue:le?le.date:''},stats:{mapValue:{fields:sf}}}};
 }
 function decProfile(j){
  var f=(j&&j.fields)||{};var st={};var sf=(f.stats&&f.stats.mapValue&&f.stats.mapValue.fields)||{};
  for(var k in sf)st[k]=parseInt(sf[k].integerValue||'0',10)||0;
- return {name:(f.name&&f.name.stringValue)||'Explorer',icon:(f.icon&&f.icon.stringValue)||'ferris',updated:(f.updated&&f.updated.stringValue)||'',last:{name:(f.lastExp&&f.lastExp.stringValue)||'',date:(f.lastDate&&f.lastDate.stringValue)||''},stats:st};
+ return {uid:(f.uid&&f.uid.stringValue)||'',name:(f.name&&f.name.stringValue)||'Explorer',icon:(f.icon&&f.icon.stringValue)||'ferris',updated:(f.updated&&f.updated.stringValue)||'',last:{name:(f.lastExp&&f.lastExp.stringValue)||'',date:(f.lastDate&&f.lastDate.stringValue)||''},stats:st};
 }
 function newFriendCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c='PARK-';for(var i=0;i<5;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
 function pushProfile(cb,fail){
@@ -1178,6 +1178,7 @@ function addFriend(){
  var so=state.social;
  if(code===so.code){alert("That's your own code");return;}
  if(so.friends.some(function(f){return f.code===code;})){alert('Already added');return;}
+ if((so.blocked||[]).some(function(b){return b.code===code;})){alert('You have blocked this code. Unblock it in the menu first.');return;}
  var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
  fetchProfile(code,function(p){so.friends.push({code:code,name:p.name,icon:p.icon});FRCACHE[code]=p;so.seenLast=so.seenLast||{};so.seenLast[code]=(p.last&&p.last.date)||'';save();go('friends');},
   function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
@@ -1236,6 +1237,47 @@ function saveShareName(){
  var btn=document.getElementById('fr_savename');if(btn){btn.disabled=true;btn.textContent='Saving...';}
  var prev=so.name;so.name=nm;save();
  pushProfile(function(){closeSheet();renderAll();},function(){so.name=prev;save();if(btn){btn.disabled=false;btn.textContent='Save';}alert('Could not update your name. Check your connection and try again.');});
+}
+function openBlocked(){
+ var so=state.social;
+ var h='<h3>Blocked codes</h3>';
+ if(!so||!so.code){
+  h+='<p class="muted" style="margin:0 0 12px;line-height:1.5">Blocking stops a specific friend code from seeing your shared stats. Turn on sharing in the Friends tab first.</p><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+  sheet(h);return;
+ }
+ h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Someone you block can no longer see your stats, and their code cannot be added to your friends.</p>';
+ h+='<label>Block a friend code</label><div class="scorerow"><input id="bl_code" placeholder="PARK-XXXXX" autocapitalize="characters" autocomplete="off"><button class="btn" id="bl_add" onclick="blockCode()" style="flex:none;width:auto">Block</button></div>';
+ var bl=so.blocked||[];
+ h+='<h2 class="sec">Blocked</h2>';
+ if(!bl.length)h+='<div class="emptyc"><div class="et">No one blocked</div><div class="es">Enter a code above and that person loses access to your stats.</div></div>';
+ else h+='<div class="card">'+bl.map(function(b){return '<div class="checkitem"><div class="nm"><b>'+esc(b.name||'Unknown')+'</b><br><span class="cnt">'+b.code+'</span></div><button class="xbtn" onclick="unblockCode(\''+b.code+'\')">&times;</button></div>';}).join('')+'</div>';
+ h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
+}
+function blockCode(){
+ var so=state.social;if(!so)return;
+ var inp=document.getElementById('bl_code');var code=(inp?inp.value:'').toUpperCase().replace(/\s/g,'');
+ if(!code)return;
+ if(code.indexOf('PARK-')!==0)code='PARK-'+code;
+ if(code===so.code){alert("That's your own code");return;}
+ so.blocked=so.blocked||[];
+ if(so.blocked.some(function(b){return b.code===code;})){alert('Already blocked');return;}
+ var btn=document.getElementById('bl_add');if(btn){btn.disabled=true;btn.textContent='Blocking...';}
+ fetchProfile(code,function(p){
+  so.blocked.push({code:code,uid:p.uid||'',name:p.name});
+  so.friends=so.friends.filter(function(f){return f.code!==code;});
+  save();
+  pushProfile(function(){openBlocked();renderAll();},function(){openBlocked();renderAll();});
+ },function(e){
+  if(btn){btn.disabled=false;btn.textContent='Block';}
+  alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');
+ });
+}
+function unblockCode(code){
+ var so=state.social;if(!so||!so.blocked)return;
+ if(!confirm('Unblock '+code+'? If they still have your code, they will be able to see your stats again.'))return;
+ so.blocked=so.blocked.filter(function(b){return b.code!==code;});
+ save();pushProfile(function(){openBlocked();},function(){openBlocked();});
 }
 function openFriends(){go('friends');}
 function openFriendSheet(code){
@@ -1310,6 +1352,7 @@ function openMenu(){
   '<div class="swrow" onclick="toggleWaits()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#8E96D6"/><circle cx="12" cy="11.2" r="7.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 7.4v4l2.6 1.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg></span><b>Wait times</b><span class="switch'+(waitsOn()?' on':'')+'" id="waitsw"><span class="knob"></span></span></div>'+
   '<div class="swrow" onclick="closeSheet();passManager()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12.5" cy="20.7" rx="7.5" ry="1.8" fill="#E8D93B"/><rect x="3.6" y="6.4" width="16.8" height="11" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M3.6 10h16.8" fill="none" stroke="#1B1A17" stroke-width="1.7"/><path d="M6.6 13.8h5" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg></span><b>Annual passes</b><span class="switch'+(passesOn()?' on':'')+'" id="passsw" onclick="event.stopPropagation();togglePasses()"><span class="knob"></span></span></div>'+
   '<div class="swrow" onclick="toggleLeaders()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#B388E6"/><path d="M4 18.6v-4.2h4.6v4.2M9.8 18.6V8.8h4.4v9.8M15.4 18.6v-6.8H20v6.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 18.6h18" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>Friend leaderboard</b><span class="switch'+(leadersOn()?' on':'')+'" id="leadsw"><span class="knob"></span></span></div>'+
+  '<button onclick="closeSheet();openBlocked()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#E7BCE3"/><circle cx="12" cy="11.5" r="7" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M7.2 6.7l9.6 9.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg></span><b>Blocked codes</b></button>'+
   '<button onclick="exportData()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#8E96D6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 13.6v3a2 2 0 0 0 2 2h10.8a2 2 0 0 0 2-2v-3" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg></span><b>Export backup</b></button>'+
   '<button onclick="exportCSV()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#D9CF3F"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 7.4v7M12 14.4l-2.6-2.6M12 14.4l2.6-2.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Export to CSV</b></button>'+
   '<button onclick="openImport()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B9B3E8"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 14.4v-7M12 7.4L9.4 10M12 7.4l2.6 2.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Import from CSV</b></button>'+
