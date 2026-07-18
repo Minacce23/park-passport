@@ -252,7 +252,8 @@ function attractionsOn(){return catalog().filter(function(a){return parkOn(a.par
 function togglePark(p){state.settings=state.settings||{};state.settings.parks=state.settings.parks||{};if(parkOn(p)&&parksOn().length<=1){alert('Keep at least one park on.');return;}state.settings.parks[p]=!parkOn(p);save();var sw=document.getElementById('parksw_'+p.replace(/[^a-z]/gi,''));if(sw)sw.classList.toggle('on');renderAll();}
 function stats(){
  const rides=fRides(), ridden=new Set(rides.map(r=>r.attraction));
- const allAttr=attractionsScoped();
+ var _ap0=actPark();
+ const allAttr=catalog().filter(function(x){return !_ap0||x.park===_ap0;});
  const ext=allAttr.filter(a=>a.status==='Extinct');
  const cnt={}; rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  let top='',topN=0; for(const k in cnt){if(cnt[k]>topN){topN=cnt[k];top=k;}}
@@ -260,7 +261,8 @@ function stats(){
  const _vd=fVisits().map(function(v){return v.date;}).filter(Boolean).sort();
  return{
   rides:rides.length, visits:fVisits().length, scores:fScores().length, firstDate:(_vd[0]||''), lastDate:(_vd[_vd.length-1]||''),
-  attr:allAttr.filter(a=>ridden.has(a.name)).length, attrTot:allAttr.length,
+  attr:(function(){var m={};rides.forEach(function(r){if(r.attraction)m[String(r.attraction).toLowerCase()]=1;});return Object.keys(m).length;})(),
+  attrTot:(function(){var m={};allAttr.forEach(function(a){m[String(a.name).toLowerCase()]=1;});return Object.keys(m).length;})(),
   chars:chars.size, top:top, topN:topN,
   extinct:ext.filter(a=>ridden.has(a.name)).length,
  };
