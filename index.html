@@ -1317,7 +1317,7 @@ function refreshFriends(){
  });
 }
 function shareCode(){
- var so=state.social;var msg='Add me on Park Passport! My friend code is '+so.code+'. Get the app: https://minacce23.github.io/park-passport/';
+ var so=state.social;var msg='Add me on Park Passport! My friend code is '+so.code+'. Get the app: https://apps.apple.com/us/app/park-passport/id6780341927';
  if(navigator.share){navigator.share({text:msg}).catch(function(){});}
  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(so.code).then(function(){alert('Code copied');}).catch(function(){prompt('Copy your code:',so.code);});}
  else prompt('Copy your code:',so.code);
