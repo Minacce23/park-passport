@@ -115,7 +115,7 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 </defs></svg>
  <header>
   <h1><svg class="hseal" viewBox="0 0 64 64" aria-hidden="true"><path d="M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z" fill="#B388E6"/><circle cx="32" cy="32" r="21" fill="none" stroke="#5B3E86" stroke-width="2.6"/><g fill="none" stroke="#5B3E86" stroke-width="2" transform="translate(32 32)"><circle r="13"/><path d="M0 -13V13M-11.3 -6.5L11.3 6.5M-11.3 6.5L11.3 -6.5"/><circle r="3.4" fill="#B388E6" stroke="none"/></g></svg><span>Park Passport</span></h1>
-  <div class="sub" id="subline"></div>
+  
   <button class="hdr-act" id="hdrAct" aria-label="Chart"></button>
   <button class="hdr-menu" id="hdrMenu" aria-label="Menu" onclick="openMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
  </header>
@@ -280,8 +280,6 @@ function toggleTheme(){state.settings=state.settings||{};state.settings.theme=(s
 var PAGETITLES={stats:'Stats',visits:'Visits',rides:'Experiences',meets:'Meets',scores:'Scores',people:'People &amp; groups',variants:'Variants',badges:'Badges',photos:'Photos',gallery:'Photos',ridegallery:'Experience photos',meetgallery:'Character photos',friends:'Friends'};
 function pageTitle(t){var n=PAGETITLES[t];return n?'<h2 class="pagetitle">'+n+'<span class="ptbar"></span></h2>':'';}
 function renderAll(){applyTheme();renderNav();renderChips();const s=stats();
- document.getElementById('subline').textContent=s.visits+' visits  &middot;  '+s.rides+' experiences  &middot;  '+s.chars+' characters';
- document.getElementById('subline').innerHTML=s.visits+' visits &nbsp;&middot;&nbsp; '+s.rides+' experiences &nbsp;&middot;&nbsp; '+s.chars+' characters';
  const ha=document.getElementById('hdrAct'); if(tab==='scores'){ha.style.display='block';ha.innerHTML=CHART_ICON;ha.onclick=openScoreChart;}else{ha.style.display='none';ha.onclick=null;}
  const v=document.getElementById('view');
  if(tab==='stats')v.innerHTML=pageTitle(tab)+viewStats(s);
