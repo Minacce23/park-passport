@@ -252,15 +252,15 @@ function attractionsOn(){return catalog().filter(function(a){return parkOn(a.par
 function togglePark(p){state.settings=state.settings||{};state.settings.parks=state.settings.parks||{};if(parkOn(p)&&parksOn().length<=1){alert('Keep at least one park on.');return;}state.settings.parks[p]=!parkOn(p);save();var sw=document.getElementById('parksw_'+p.replace(/[^a-z]/gi,''));if(sw)sw.classList.toggle('on');renderAll();}
 function stats(){
  const rides=fRides(), ridden=new Set(rides.map(r=>r.attraction));
- const active=attractionsScoped().filter(a=>a.status==='Active');
- const ext=attractionsScoped().filter(a=>a.status==='Extinct');
+ const allAttr=attractionsScoped();
+ const ext=allAttr.filter(a=>a.status==='Extinct');
  const cnt={}; rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  let top='',topN=0; for(const k in cnt){if(cnt[k]>topN){topN=cnt[k];top=k;}}
  const chars=new Set(fMeets().map(m=>(m.character||'').trim().toLowerCase()));
  const _vd=fVisits().map(function(v){return v.date;}).filter(Boolean).sort();
  return{
   rides:rides.length, visits:fVisits().length, scores:fScores().length, firstDate:(_vd[0]||''), lastDate:(_vd[_vd.length-1]||''),
-  attr:active.filter(a=>ridden.has(a.name)).length, attrTot:active.length,
+  attr:allAttr.filter(a=>ridden.has(a.name)).length, attrTot:allAttr.length,
   chars:chars.size, top:top, topN:topN,
   extinct:ext.filter(a=>ridden.has(a.name)).length,
  };
@@ -1447,7 +1447,7 @@ function openFriendSheet(code){
  var h='<div style="display:flex;gap:12px;align-items:center;margin-bottom:4px"><span class="frav2" style="width:52px;height:52px">'+avatarSVG((p&&p.icon)||f.icon,(p&&p.color)||f.color||'grape')+'</span><div><h3 style="margin:0">'+esc(f.name)+'</h3><div class="muted" style="font-size:12.5px">'+(p&&p.last&&p.last.name?'Last experience: <b>'+esc(p.last.name)+'</b>'+(p.last.date?' ('+fmt(p.last.date)+')':''):'')+'</div></div></div>';
  h+='<div class="grid" style="margin-top:12px">'+
   statTile(IC.rides,(st.experiences!=null?st.experiences:'&ndash;'),'Experiences','')+
-  statTile(IC.top,(st.unique!=null?st.unique:'&ndash;'),'Unique rides','')+
+  statTile(IC.top,(st.unique!=null?st.unique:'&ndash;'),'Unique attractions','')+
   statTile(IC.visits,(st.visits!=null?st.visits:'&ndash;'),'Visit days','')+
   statTile(IC.meets,(st.characters!=null?st.characters:'&ndash;'),'Characters','')+
   statTile(IC.score,(st.scores!=null?st.scores:'&ndash;'),'Scores','')+
@@ -1461,7 +1461,7 @@ function friendLeadersHTML(){
  var ppl=[{name:'You',st:socialSummary()}];
  so.friends.forEach(function(f){var p=FRCACHE[f.code];if(p&&p.stats)ppl.push({name:f.name,st:p.stats});});
  if(ppl.length<2)return '';
- var cats=[['experiences','Experiences'],['unique','Unique rides'],['visits','Visit days'],['characters','Characters'],['scores','Scores'],['coasters','Coasters']];
+ var cats=[['experiences','Experiences'],['unique','Unique attractions'],['visits','Visit days'],['characters','Characters'],['scores','Scores'],['coasters','Coasters']];
  var tiles=cats.map(function(c){
   var best=ppl[0];ppl.forEach(function(x){if((x.st[c[0]]||0)>(best.st[c[0]]||0))best=x;});
   return '<div class="stat lstat"><div class="num" style="font-size:21px">'+(best.st[c[0]]||0)+'</div><div class="lbl">'+c[1]+'</div><div class="lwho'+(best.name==='You'?' me':'')+'">'+esc(best.name)+'</div></div>';
