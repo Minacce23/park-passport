@@ -972,12 +972,12 @@ function introGo(i){introI=i;var n=document.getElementById('ob-inner');if(n)n.in
 function startOnboarding(){var o=document.getElementById('onboard');if(o)o.parentNode.removeChild(o);o=document.createElement('div');o.id='onboard';o.innerHTML='<div id="ob-inner"></div>';document.body.appendChild(o);introGo(0);}
 function introDone(){try{localStorage.setItem('pp_intro','1');}catch(e){}var o=document.getElementById('onboard');if(o)o.parentNode.removeChild(o);}
 function maybeOnboard(){var seen=null;try{seen=localStorage.getItem('pp_intro');}catch(e){}if(!seen)startOnboarding();}
-var BCOL={exp:'#E7BCE3',vis:'#B5D0B5',exr:'#F5F0A0',met:'#C3C8EC',scr:'#F0E952',vrs:'#A9AFE2',aca:'#D9A3D4',spc:'#E8D93B',st:'#8E96D6'};
+var BCOL={exp:'#E7BCE3',vis:'#B5D0B5',exr:'#F5F0A0',met:'#C3C8EC',scr:'#F0E952',vrs:'#A9AFE2',aca:'#D9A3D4',spc:'#E8D93B',st:'#8E96D6',cst:'#B388E6',prk:'#A9C8A9'};
 function bGlyph(e){return e?'<svg viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M12 3.6l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg>':'<svg viewBox="0 0 24 24" style="width:24px;height:24px"><rect x="6.2" y="10.4" width="11.6" height="9" rx="2.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9 10.4V8.5a3 3 0 0 1 6 0v1.9" fill="none" stroke="#1B1A17" stroke-width="1.7"/><circle cx="12" cy="14.8" r="1.4" fill="#1B1A17"/></svg>';}
 var BADGE_MEDAL='<svg class="statico" viewBox="0 0 24 24"><ellipse cx="12" cy="20.8" rx="7" ry="2" fill="#9A6BD4"/><path d="M9 12.5L7.6 20l4.4-2.3L16.4 20 15 12.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="8.6" r="5.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 6l.8 1.7 1.9.2-1.4 1.3.4 1.9-1.7-1-1.7 1 .4-1.9-1.4-1.3 1.9-.2z" fill="#1B1A17"/></svg>';
 var SEAL_PATH='M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z';
 var SEAL_STAR='M 0.0 -10.5 L 2.6 -3.6 L 10.0 -3.2 L 4.2 1.4 L 6.2 8.5 L 0.0 4.4 L -6.2 8.5 L -4.2 1.4 L -10.0 -3.2 L -2.6 -3.6 Z';
-var BDARK={exp:'#8F3F7D',vis:'#3E5A3E',exr:'#857D18',met:'#4A3F8F',scr:'#857D18',vrs:'#4A3F8F',aca:'#8F3F7D',spc:'#857D18',st:'#2C2566'};
+var BDARK={exp:'#8F3F7D',vis:'#3E5A3E',exr:'#857D18',met:'#4A3F8F',scr:'#857D18',vrs:'#4A3F8F',aca:'#8F3F7D',spc:'#857D18',st:'#2C2566',cst:'#5B3E86',prk:'#2E4A2E'};
 function sealBadge(cat,earned){var wax=earned?(BCOL[cat]||'#B388E6'):'#C6C3B8';var dk=earned?(BDARK[cat]||'#5B3E86'):'#8B887C';var lt='rgba(255,255,255,.55)';
  var glyph;
  if(earned){glyph='<path d="'+SEAL_STAR+'" fill="'+lt+'" transform="translate(33.2 33.6)"/><path d="'+SEAL_STAR+'" fill="'+dk+'" transform="translate(32 32)"/>';}
@@ -990,6 +990,7 @@ function badgeList(){
  var exp=state.rides.length, vis=s.visits, chars=s.chars, explored=s.attr, scores=state.scores.length;
  var draws=Object.keys(academyUnique().m).length;
  var vset={};state.rides.forEach(function(r){rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard')vset[vv]=1;});});var variants=Object.keys(vset).length;
+ var ccred=(typeof coasterCreditCount==='function')?coasterCreditCount():0;
  var stc=SEED.stCatalog||[], stsn=stSeen();
  var stCaught=stc.filter(function(x){return stsn[x.name];}).length, stFlights=(state.starTours||[]).length;
  var stRare=stc.some(function(x){return stsn[x.name]&&x.tier==='Rare';})?1:0;
@@ -1011,10 +1012,17 @@ function badgeList(){
   ['met','Character collector','Meet 15 characters',15,chars],
   ['met','Greet master','Meet 30 characters',30,chars],
   ['scr','On the board','Log your first score',1,scores],
+  ['cst','First credit','Your first coaster credit',1,ccred],
+  ['cst','Coaster fan','5 coaster credits',5,ccred],
+  ['cst','Coaster head','10 coaster credits',10,ccred],
+  ['cst','Loop legend','25 coaster credits',25,ccred],
   ['vrs','Seasonal specialist','5 special versions',5,variants],
   ['aca','Budding artist','Draw your first character',1,draws],
   ['aca','Sketch collector','Draw 5 characters',5,draws],
   ['spc','Two-park fan','Experience two or more parks',2,nparks],
+  ['prk','Park hopper','Experience 3 parks',3,nparks],
+  ['prk','Park collector','Experience 5 parks',5,nparks],
+  ['prk','Globe trotter','Experience 10 parks',10,nparks],
   ['spc','Nostalgia','Experience an extinct attraction',1,s.extinct],
   ['st','First flight','Log a Star Tours flight',1,stFlights],
   ['st','Scene collector','Catch 10 Star Tours scenes',10,stCaught],
@@ -1024,7 +1032,7 @@ function badgeList(){
   ['st','Very rare find','Catch a Very Rare scene',1,stVR]
  ];
  var nparks=(function(){var ps={};state.rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;});return Object.keys(ps).length;})();
- defs[defs.findIndex(function(d){return d[1]==='Two-park fan';})][4]=nparks;
+ defs.forEach(function(d){if(d[0]==='prk'||d[1]==='Two-park fan')d[4]=nparks;});
  if(GENERIC)defs=defs.filter(function(d){return ['exr','aca','st'].indexOf(d[0])<0 && d[1]!=='Nostalgia';});
  else if(DISGUISE)defs=defs.filter(function(d){return ['aca','st'].indexOf(d[0])<0;});
  return defs.map(function(d){var need=d[3],val=d[4];return {cat:d[0],t:d[1],d:d[2],need:need,val:val,earned:val>=need,prog:need?Math.min(1,val/need):0};});
