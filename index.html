@@ -24,7 +24,7 @@ header .sub{font-size:13px;font-weight:700;color:var(--muted);margin-top:3px;pad
 main{padding:14px 14px 92px;}
 .card{background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--line);}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.stat{background:var(--card);border-radius:18px;padding:16px 12px;text-align:center;}.grid .stat:nth-child(4n+1){background:var(--peri);}.grid .stat:nth-child(4n+2){background:var(--blush);}.grid .stat:nth-child(4n+3){background:var(--lemon);}.grid .stat:nth-child(4n){background:var(--grape);}.grid .stat,.grid .stat .num{color:#1B1A17;}.grid .stat .lbl{color:rgba(27,26,23,.65);}
+.stat{background:var(--card);border-radius:18px;padding:16px 12px;text-align:center;}.grid .stat:nth-child(4n+1),.grid .tw:nth-child(4n+1) .stat{background:var(--peri);}.grid .stat:nth-child(4n+2),.grid .tw:nth-child(4n+2) .stat{background:var(--blush);}.grid .stat:nth-child(4n+3),.grid .tw:nth-child(4n+3) .stat{background:var(--lemon);}.grid .stat:nth-child(4n),.grid .tw:nth-child(4n) .stat{background:var(--grape);}.grid .stat,.grid .stat .num{color:#1B1A17;}.grid .stat .lbl{color:rgba(27,26,23,.65);}
 .num{color:var(--ink);font-weight:900;letter-spacing:-0.03em;}
 .stat .num{font-size:27px;font-weight:900;line-height:1;color:inherit;}
 .stat .lbl{font-size:13px;color:var(--muted);margin-top:7px;text-transform:capitalize;letter-spacing:.5px;font-weight:800;}
@@ -90,7 +90,7 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 .gcell{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;}
 .gcell img{width:100%;height:130px;object-fit:cover;display:block;}
 .gcap{font-size:13px;color:var(--muted);padding:6px 8px;}
-.ricon{width:34px;height:34px;object-fit:contain;flex:none;margin-right:2px;}.mk{width:32px;height:32px;flex:none;margin-right:4px;}.mk svg{width:100%;height:100%;display:block;}.mk.mkimg{border-radius:9px;overflow:hidden;border:1.8px solid var(--ink);background:var(--card);}.mk.mkimg img{width:100%;height:100%;object-fit:cover;display:block;}#cropbox{width:132px;height:132px;border-radius:14px;border:1.8px solid var(--ink);overflow:hidden;touch-action:none;cursor:grab;margin-top:2px;}#cropbox img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}.searchrow{margin:4px 0 10px;}.searchrow input{width:100%;box-sizing:border-box;}.swipewrap{position:relative;overflow:hidden;border-radius:18px;margin-bottom:12px;}.swipewrap .card{position:relative;z-index:1;}.swipedel{position:absolute;top:0;right:0;bottom:0;width:84px;border:none;border-radius:0 18px 18px 0;background:#C9433A;color:#FFF;font-weight:800;font-size:13px;font-family:inherit;z-index:0;cursor:pointer;}.frme{background:var(--card);border:1.5px solid var(--ink);border-radius:18px;padding:16px;margin-top:4px;margin-bottom:4px;}.frme-top{display:flex;gap:14px;align-items:center;}.frav{position:relative;width:60px;height:60px;flex:none;background:none;border:none;padding:0;cursor:pointer;}.frav svg{width:100%;height:100%;display:block;}.frav-edit{position:absolute;right:-4px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;line-height:20px;text-align:center;}.frcode{font-weight:900;font-size:27px;letter-spacing:.06em;color:var(--ink);}.fchips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px;}.fchip{font-weight:700;font-size:13px;padding:8px 13px;border-radius:999px;background:#FBF9F0;border:1px solid var(--line);color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;}.fchip.on{background:var(--ink);color:var(--bg);border-color:transparent;}.daterow{display:flex;gap:7px;align-items:center;}.daterow input{flex:1;min-width:0;}.daterow .fchip{flex:none;}.mdbtn{display:block;width:100%;margin-top:16px;background:none;border:1.5px dashed rgba(27,26,23,.3);border-radius:12px;padding:11px;font-family:inherit;font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;}body.theme-dark .fchip{background:#2A2721;border-color:var(--line);}body.theme-dark .fchip.on{background:var(--ink);color:var(--bg);}body.theme-dark .mdbtn{border-color:rgba(240,237,227,.3);}.step{display:flex;gap:11px;margin-bottom:12px;align-items:flex-start;}.stepn{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;}.stept{font-size:13.5px;color:var(--muted);line-height:1.55;}.stept b{color:var(--ink);}.bprow{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;}.bprow:last-child{border-bottom:none;}.bpic{width:24px;height:24px;flex:none;}.bpic svg{width:100%;height:100%;display:block;}.bpname{flex:1;font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.bpbar{width:76px;height:6px;border-radius:4px;background:rgba(27,26,23,.09);overflow:hidden;flex:none;display:block;}body.theme-dark .bpbar{background:rgba(240,237,227,.14);}.bpbar>span{display:block;height:100%;border-radius:4px;}.bpnum{font-weight:900;font-size:15px;min-width:24px;text-align:right;color:var(--ink);}.waxrow{display:flex;gap:10px;margin:2px 0 6px;}.waxsw{width:34px;height:34px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;padding:0;}.waxsw.on{transform:scale(1.12);}.lstat{padding:9px 10px 10px;}.lstat .lbl{margin-top:2px;}.lwho{font-weight:800;font-size:12px;margin-top:4px;color:#1B1A17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.lwho.me{color:#5B3E86;}.frcard2{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:10px;cursor:pointer;}.frhead{display:flex;gap:11px;align-items:center;}.frav2{width:48px;height:48px;flex:none;background:none;border:none;padding:0;}.frav2 svg{width:100%;height:100%;display:block;}.frnm{font-weight:800;font-size:15.5px;color:var(--ink);}.frlast{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.frnew{display:inline-block;background:#C9433A;color:#FFF;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:2px;}.frgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px;}.ftile{border-radius:14px;padding:10px 4px 8px;text-align:center;color:#1B1A17;}.ft1{background:var(--peri);}.ft2{background:var(--lemon);}.ft3{background:var(--blush);}.fnum{font-weight:900;font-size:22px;line-height:1;}.flbl{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:rgba(27,26,23,.6);margin-top:4px;}.navdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C9433A;margin-left:4px;vertical-align:top;margin-top:1px;}.protip{background:var(--card);border:1.5px solid var(--ink);border-radius:18px;padding:16px 16px 14px;margin:4px 0 14px;}.pt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}.pt-k{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);}.pt-x{background:none;border:none;font-size:22px;line-height:1;color:var(--muted);padding:0 2px;cursor:pointer;}.pt-t{font-weight:800;font-size:16.5px;color:var(--ink);margin-bottom:5px;}.pt-s{font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}.pt-btns{display:flex;gap:8px;flex-wrap:wrap;}.pt-primary{background:var(--ink);color:var(--bg);border:none;border-radius:999px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;}.pt-ghost{background:none;border:1.5px solid var(--ink);color:var(--ink);border-radius:999px;padding:8px 15px;font-weight:700;font-size:13px;cursor:pointer;}.emptyc{text-align:center;padding:34px 18px;background:var(--card);border:1px solid var(--line);border-radius:18px;margin-top:4px;}.emptyc svg{width:54px;height:54px;display:block;margin:0 auto 12px;}.emptyc .et{font-weight:800;font-size:16px;color:var(--ink);margin-bottom:5px;}.emptyc .es{font-size:14px;color:var(--muted);line-height:1.5;max-width:250px;margin:0 auto;}
+.ricon{width:34px;height:34px;object-fit:contain;flex:none;margin-right:2px;}.mk{width:32px;height:32px;flex:none;margin-right:4px;}.mk svg{width:100%;height:100%;display:block;}.mk.mkimg{border-radius:9px;overflow:hidden;border:1.8px solid var(--ink);background:var(--card);}.mk.mkimg img{width:100%;height:100%;object-fit:cover;display:block;}#cropbox{width:132px;height:132px;border-radius:14px;border:1.8px solid var(--ink);overflow:hidden;touch-action:none;cursor:grab;margin-top:2px;}#cropbox img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}.searchrow{margin:4px 0 10px;}.searchrow input{width:100%;box-sizing:border-box;}.swipewrap{position:relative;overflow:hidden;border-radius:18px;margin-bottom:12px;}.swipewrap .card{position:relative;z-index:1;}.swipedel{position:absolute;top:0;right:0;bottom:0;width:84px;border:none;border-radius:0 18px 18px 0;background:#C9433A;color:#FFF;font-weight:800;font-size:13px;font-family:inherit;z-index:0;cursor:pointer;}.frme{background:var(--card);border:1.5px solid var(--ink);border-radius:18px;padding:16px;margin-top:4px;margin-bottom:4px;}.frme-top{display:flex;gap:14px;align-items:center;}.frav{position:relative;width:60px;height:60px;flex:none;background:none;border:none;padding:0;cursor:pointer;}.frav svg{width:100%;height:100%;display:block;}.frav-edit{position:absolute;right:-4px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;line-height:20px;text-align:center;}.frcode{font-weight:900;font-size:27px;letter-spacing:.06em;color:var(--ink);}@keyframes hwwig{0%{transform:rotate(-0.35deg);}50%{transform:rotate(0.35deg);}100%{transform:rotate(-0.35deg);}}.hw.editing{position:relative;animation:hwwig .32s infinite;margin-bottom:6px;border-radius:18px;}.hwctl{position:absolute;top:-4px;right:-2px;z-index:6;display:flex;gap:5px;}.hwctl button{width:27px;height:27px;border-radius:50%;background:var(--ink);color:var(--bg);border:2px solid var(--bg);font-size:12px;font-weight:800;padding:0;cursor:pointer;line-height:1;}.tw{position:relative;}.twx{position:absolute;top:-5px;right:-5px;z-index:6;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);border:2px solid var(--bg);font-size:13px;font-weight:800;padding:0;cursor:pointer;line-height:1;}.twoff{opacity:.38;}.hwhint{font-size:13px;font-weight:700;color:var(--muted);text-align:center;margin:2px 0 12px;}.hwdone{position:fixed;bottom:calc(74px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border:none;border-radius:999px;padding:12px 30px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(27,26,23,.25);}.fchips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 6px;}.fchip{font-weight:700;font-size:13px;padding:8px 13px;border-radius:999px;background:#FBF9F0;border:1px solid var(--line);color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;}.fchip.on{background:var(--ink);color:var(--bg);border-color:transparent;}.daterow{display:flex;gap:7px;align-items:center;}.daterow input{flex:1;min-width:0;}.daterow .fchip{flex:none;}.mdbtn{display:block;width:100%;margin-top:16px;background:none;border:1.5px dashed rgba(27,26,23,.3);border-radius:12px;padding:11px;font-family:inherit;font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;}body.theme-dark .fchip{background:#2A2721;border-color:var(--line);}body.theme-dark .fchip.on{background:var(--ink);color:var(--bg);}body.theme-dark .mdbtn{border-color:rgba(240,237,227,.3);}.step{display:flex;gap:11px;margin-bottom:12px;align-items:flex-start;}.stepn{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;}.stept{font-size:13.5px;color:var(--muted);line-height:1.55;}.stept b{color:var(--ink);}.bprow{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;}.bprow:last-child{border-bottom:none;}.bpic{width:24px;height:24px;flex:none;}.bpic svg{width:100%;height:100%;display:block;}.bpname{flex:1;font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.bpbar{width:76px;height:6px;border-radius:4px;background:rgba(27,26,23,.09);overflow:hidden;flex:none;display:block;}body.theme-dark .bpbar{background:rgba(240,237,227,.14);}.bpbar>span{display:block;height:100%;border-radius:4px;}.bpnum{font-weight:900;font-size:15px;min-width:24px;text-align:right;color:var(--ink);}.waxrow{display:flex;gap:10px;margin:2px 0 6px;}.waxsw{width:34px;height:34px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;padding:0;}.waxsw.on{transform:scale(1.12);}.lstat{padding:9px 10px 10px;}.lstat .lbl{margin-top:2px;}.lwho{font-weight:800;font-size:12px;margin-top:4px;color:#1B1A17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.lwho.me{color:#5B3E86;}.frcard2{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:10px;cursor:pointer;}.frhead{display:flex;gap:11px;align-items:center;}.frav2{width:48px;height:48px;flex:none;background:none;border:none;padding:0;}.frav2 svg{width:100%;height:100%;display:block;}.frnm{font-weight:800;font-size:15.5px;color:var(--ink);}.frlast{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.frnew{display:inline-block;background:#C9433A;color:#FFF;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:2px;}.frgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px;}.ftile{border-radius:14px;padding:10px 4px 8px;text-align:center;color:#1B1A17;}.ft1{background:var(--peri);}.ft2{background:var(--lemon);}.ft3{background:var(--blush);}.fnum{font-weight:900;font-size:22px;line-height:1;}.flbl{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:rgba(27,26,23,.6);margin-top:4px;}.navdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C9433A;margin-left:4px;vertical-align:top;margin-top:1px;}.protip{background:var(--card);border:1.5px solid var(--ink);border-radius:18px;padding:16px 16px 14px;margin:4px 0 14px;}.pt-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}.pt-k{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);}.pt-x{background:none;border:none;font-size:22px;line-height:1;color:var(--muted);padding:0 2px;cursor:pointer;}.pt-t{font-weight:800;font-size:16.5px;color:var(--ink);margin-bottom:5px;}.pt-s{font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}.pt-btns{display:flex;gap:8px;flex-wrap:wrap;}.pt-primary{background:var(--ink);color:var(--bg);border:none;border-radius:999px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;}.pt-ghost{background:none;border:1.5px solid var(--ink);color:var(--ink);border-radius:999px;padding:8px 15px;font-weight:700;font-size:13px;cursor:pointer;}.emptyc{text-align:center;padding:34px 18px;background:var(--card);border:1px solid var(--line);border-radius:18px;margin-top:4px;}.emptyc svg{width:54px;height:54px;display:block;margin:0 auto 12px;}.emptyc .et{font-weight:800;font-size:16px;color:var(--ink);margin-bottom:5px;}.emptyc .es{font-size:14px;color:var(--muted);line-height:1.5;max-width:250px;margin:0 auto;}
 .vcard{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:10px;cursor:pointer;}
 .vcount{flex:none;width:72px;height:58px;border-radius:16px;background:var(--lemon);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1B1A17;}
 .vnum{font-size:21px;font-weight:900;line-height:1;}
@@ -273,7 +273,7 @@ let tab='stats';
 const TABS=[["stats","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"7\" fill=\"url(#gStats)\"/></svg>","Stats"],["scores","<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"url(#gScore)\"/><circle cx=\"12\" cy=\"12\" r=\"3.6\" fill=\"#F4EFDE\"/></svg>","Scores"],["variants","<svg viewBox=\"0 0 24 24\"><path d=\"M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z\" fill=\"url(#gRides)\"/></svg>","Variants"],["photos","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"6\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gMeets)\"/><rect x=\"8\" y=\"9\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gVisits)\"/></svg>","Photos"],["friends","<svg viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"url(#gStats)\"/><circle cx=\"16\" cy=\"13\" r=\"4\" fill=\"url(#gStats)\"/></svg>","Friends"]];
 function renderNav(){document.getElementById('nav').innerHTML=TABS.map(t=>
  '<button class="'+(tab===t[0]?'on':'')+'" onclick="go(\''+t[0]+'\')"><span class="ic">'+t[1]+'</span><span class="tlbl">'+t[2]+(t[0]==='friends'&&tab!=='friends'&&hasFriendNews()?'<span class="navdot"></span>':'')+'</span></button>').join('');}
-function go(t){tab=t;renderAll();window.scrollTo(0,0);}
+function go(t){if(t!=='stats')HOMEEDIT=false;tab=t;renderAll();window.scrollTo(0,0);}
 
 function applyTheme(){document.body.classList.toggle('theme-dark', !!(state.settings&&state.settings.theme==='dark'));}
 function toggleTheme(){state.settings=state.settings||{};state.settings.theme=(state.settings.theme==='dark'?'warm':'dark');save();applyTheme();var sw=document.getElementById('themesw');if(sw)sw.classList.toggle('on');}
@@ -346,44 +346,106 @@ function numTile(n,l,oc){return '<div class="stat"'+(oc?' onclick="'+oc+'" style
 function tipSeen(){try{return localStorage.getItem('pp_tip')==='1';}catch(e){return false;}}
 function dismissTip(){try{localStorage.setItem('pp_tip','1');}catch(e){}renderAll();}
 function proTipCard(){return '<div class="protip"><div class="pt-top"><span class="pt-k">Pro tip</span><button class="pt-x" onclick="dismissTip()" aria-label="Dismiss">&times;</button></div><div class="pt-t">Two ways to start</div><div class="pt-s">Log your first experience by typing its name once, it autofills after that. Or download the template from the menu, fill it in, and import your whole list at once.</div><div class="pt-btns"><button class="pt-primary" onclick="formRide()">Log my first experience</button><button class="pt-ghost" onclick="openImport()">Import a list</button></div></div>';}
+var HOMEDEF=['hero','overview','bypark','waits','pass','milestones'];
+var HOMEEDIT=false;
+function homeState(){state.home=state.home||{};state.home.hidden=state.home.hidden||{};state.home.hiddenTiles=state.home.hiddenTiles||{};if(!Array.isArray(state.home.order))state.home.order=HOMEDEF.slice();return state.home;}
+function homeOrder(){var hs=homeState();var o=hs.order.filter(function(k){return HOMEDEF.indexOf(k)>-1;});HOMEDEF.forEach(function(k){if(o.indexOf(k)<0)o.push(k);});return o;}
+function enterHomeEdit(){if(tab!=='stats'||HOMEEDIT)return;HOMEEDIT=true;renderAll();}
+function exitHomeEdit(){HOMEEDIT=false;renderAll();}
+function moveWidget(k,dir){var hs=homeState();var o=homeOrder();var i=o.indexOf(k);var t=i+dir;if(t<0||t>=o.length)return;o.splice(i,1);o.splice(t,0,k);hs.order=o;save();renderAll();}
+function hideWidget(k){homeState().hidden[k]=1;save();renderAll();}
+function hideTile(k){homeState().hiddenTiles[k]=1;save();renderAll();}
+function resetHome(){if(!confirm('Restore the default home screen? All widgets come back in their original order.'))return;delete state.home;save();closeSheet();HOMEEDIT=false;go('stats');}
 function viewStats(s){
  var pct=s.attrTot?Math.round(s.attr/s.attrTot*100):0;
  var years='-', yrsN=0;
  if(s.firstDate){var y0=+s.firstDate.slice(0,4), y1=+s.lastDate.slice(0,4); yrsN=y1-y0+1; years=(y0===y1?(''+y0):y0+'-'+y1);}
- var out='';
- if(GENERIC&&!state.rides.length&&!state.meets.length&&!state.scores.length&&!tipSeen())out+=proTipCard();
- if(GENERIC){if(s.attrTot>s.attr){out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+'<div class="lbl">Unique attractions experienced</div>'+
-   '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+'<div class="prog"><div style="width:'+pct+'%"></div></div></div>';}else{out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}}
- else{out+='<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+
+ var hs=homeState();
+ var SEC={};
+ SEC.hero=function(){
+  if(GENERIC){if(s.attrTot>s.attr){return '<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+'<div class="lbl">Unique attractions experienced</div>'+
+   '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+'<div class="prog"><div style="width:'+pct+'%"></div></div></div>';}
+   return '<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig"><span class="num">'+s.attr+'</span></div></div>';}
+  return '<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+
    '<div class="lbl">Unique attractions experienced</div>'+
    '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+
-   '<div class="prog"><div style="width:'+pct+'%"></div></div></div>';}
- out+='<h2 class="sec">Overview</h2><div class="grid">'+
-   statTile(IC.rides,s.rides,'Total experiences',"go('rides')")+
-   statTile(IC.visits,s.visits,'Visit days',"go('visits')")+
-   statTile(IC.meets,s.chars,'Characters met',"go('meets')")+
-   statTile(IC.score,s.scores,'Scores logged',"go('scores')")+
-   (function(){var cf=state.coasters||{};if(!Object.keys(cf).length)return '';var rid={};state.rides.forEach(function(r){if(r.attraction)rid[r.attraction.toLowerCase()]=1;});var cr=Object.keys(cf).filter(function(k){return rid[k];}).length;return statTile(IC.coaster,cr,'Coaster credits',"showCoasters()")+statTile(IC.top,s.topN||0,(s.top?shortRide(s.top):'Most experienced'),"showFrequency()");})()+
-  '</div>';
- var _pon=parksOn();
- if(_pon.length&&!actPark()){var _cnt={};_pon.forEach(function(pk){_cnt[pk]=state.rides.filter(function(r){return pOf(r.attraction)===pk;}).length;});var _sum=_pon.reduce(function(a,pk){return a+_cnt[pk];},0)||1;
-  out+='<h2 class="sec">By park</h2><div class="card" style="padding:6px 15px">';
+   '<div class="prog"><div style="width:'+pct+'%"></div></div></div>';
+ };
+ SEC.overview=function(){
+  var tiles=[
+   ['rides',statTile(IC.rides,s.rides,'Total experiences',"go('rides')")],
+   ['visits',statTile(IC.visits,s.visits,'Visit days',"go('visits')")],
+   ['meets',statTile(IC.meets,s.chars,'Characters met',"go('meets')")],
+   ['scores',statTile(IC.score,s.scores,'Scores logged',"go('scores')")]
+  ];
+  var cf=state.coasters||{};
+  if(Object.keys(cf).length){
+   var rid={};state.rides.forEach(function(r){if(r.attraction)rid[r.attraction.toLowerCase()]=1;});
+   var cr=Object.keys(cf).filter(function(k){return rid[k];}).length;
+   tiles.push(['coaster',statTile(IC.coaster,cr,'Coaster credits',"showCoasters()")]);
+   tiles.push(['top',statTile(IC.top,s.topN||0,(s.top?shortRide(s.top):'Most experienced'),"showFrequency()")]);
+  }
+  tiles=tiles.filter(function(t){return HOMEEDIT||!hs.hiddenTiles[t[0]];});
+  if(!tiles.length)return '';
+  var inner=tiles.map(function(t){
+   if(!HOMEEDIT)return t[1];
+   var off=!!hs.hiddenTiles[t[0]];
+   return '<div class="tw'+(off?' twoff':'')+'">'+t[1]+'<button class="twx" onclick="event.stopPropagation();'+(off?'delete homeState().hiddenTiles['+jsarg(t[0])+'];save();renderAll();':'hideTile('+jsarg(t[0])+')')+'">'+(off?'+':'&times;')+'</button></div>';
+  }).join('');
+  return '<h2 class="sec">Overview</h2><div class="grid">'+inner+'</div>';
+ };
+ SEC.bypark=function(){
+  var _pon=parksOn();
+  if(!_pon.length||actPark())return '';
+  var _cnt={};_pon.forEach(function(pk){_cnt[pk]=state.rides.filter(function(r){return pOf(r.attraction)===pk;}).length;});
   var PCOL=['#3E5A3E','#8E96D6','#B388E6','#D9CF3F','#8F3F7D','#57554C','#D9A3D4','#7FA57F'];
   var _ranked=_pon.map(function(pk,i){return {pk:pk,n:_cnt[pk],col:PCOL[i%PCOL.length]};}).sort(function(a,b){return b.n-a.n;});
   var _max=Math.max.apply(null,_ranked.map(function(x){return x.n;}))||1;
-  out+=_ranked.map(function(x){
+  var rows=_ranked.map(function(x){
    return '<div class="bprow" onclick="showByPark('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+(x.pk==='California Adventure'?'Calif. Adv.':esc(x.pk))+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
   }).join('');
-  out+='</div>';}
- if(waitsOn()){var wr=state.rides.filter(function(r){return r.line!=null;});if(wr.length){var totLine=wr.reduce(function(a,r){return a+r.line;},0);out+='<h2 class="sec">Wait times</h2><div class="grid">'+numTile(Math.round(totLine/wr.length)+'m','Avg time in line',"showWaitByDay()")+numTile((Math.round(totLine/60*10)/10)+'h','Total in line')+'</div>';}}
- var _pp=getPasses();var _pk=Object.keys(_pp);if(_pk.length&&passesOn()){var _show=(actPark()?(_pp[actPark()]?[actPark()]:[]):_pk).filter(function(p){return !(_pp[p]&&_pp[p].off);});if(_show.length){out+='<h2 class="sec">Annual pass</h2>'+_show.map(passCard).join('');}}
- out+='<h2 class="sec">Milestones &amp; badges</h2>';
- out+='<div class="grid">'+
+  return '<h2 class="sec">By park</h2><div class="card" style="padding:6px 15px">'+rows+'</div>';
+ };
+ SEC.waits=function(){
+  if(!waitsOn())return '';
+  var wr=state.rides.filter(function(r){return r.line!=null;});
+  if(!wr.length)return '';
+  var totLine=wr.reduce(function(a,r){return a+r.line;},0);
+  return '<h2 class="sec">Wait times</h2><div class="grid">'+numTile(Math.round(totLine/wr.length)+'m','Avg time in line',"showWaitByDay()")+numTile((Math.round(totLine/60*10)/10)+'h','Total in line')+'</div>';
+ };
+ SEC.pass=function(){
+  var _pp=getPasses();var _pk=Object.keys(_pp);
+  if(!_pk.length||!passesOn())return '';
+  var _show=(actPark()?(_pp[actPark()]?[actPark()]:[]):_pk).filter(function(p){return !(_pp[p]&&_pp[p].off);});
+  if(!_show.length)return '';
+  return '<h2 class="sec">Annual pass</h2>'+_show.map(passCard).join('');
+ };
+ SEC.milestones=function(){
+  var g='<h2 class="sec">Milestones &amp; badges</h2>';
+  g+='<div class="grid">'+
    (GENERIC?(s.extinct?numTile(s.extinct,'Defunct experienced',"showExtinct()"):numTile(allParks().length,'Parks visited')):numTile(s.extinct,'Defunct experienced',"showExtinct()"))+
    numTile(years, yrsN?yrsN+' years tracked':'Years tracked',"showYears()")+
   '</div>';
- var _bl=badgeList(),_be=_bl.filter(function(b){return b.earned;}).length;
- out+='<div class="stat mile" onclick="openBadges()" style="cursor:pointer;margin-top:14px">'+BADGE_MEDAL+'<div style="flex:1"><div class="se">'+_be+' of '+_bl.length+' earned</div><div class="lbl" style="margin-top:2px">Tap to see your badges</div></div><span class="vchev">&rsaquo;</span></div>';
+  var _bl=badgeList(),_be=_bl.filter(function(b){return b.earned;}).length;
+  g+='<div class="stat mile" onclick="openBadges()" style="cursor:pointer;margin-top:14px">'+BADGE_MEDAL+'<div style="flex:1"><div class="se">'+_be+' of '+_bl.length+' earned</div><div class="lbl" style="margin-top:2px">Tap to see your badges</div></div><span class="vchev">&rsaquo;</span></div>';
+  return g;
+ };
+ var out='';
+ if(GENERIC&&!state.rides.length&&!state.meets.length&&!state.scores.length&&!tipSeen())out+=proTipCard();
+ if(HOMEEDIT)out+='<div class="hwhint">Reorder with the arrows, hide with &times;, then tap Done.</div>';
+ var order=homeOrder();
+ order.forEach(function(k,ix){
+  if(!HOMEEDIT&&hs.hidden[k])return;
+  var body=SEC[k]?SEC[k]():'';
+  if(!body)return;
+  if(!HOMEEDIT){out+=body;return;}
+  var off=!!hs.hidden[k];
+  out+='<div class="hw editing'+(off?' twoff':'')+'"><div class="hwctl">'+
+   (ix>0?'<button onclick="moveWidget('+jsarg(k)+',-1)">&#9650;</button>':'')+
+   (ix<order.length-1?'<button onclick="moveWidget('+jsarg(k)+',1)">&#9660;</button>':'')+
+   '<button onclick="'+(off?'delete homeState().hidden['+jsarg(k)+'];save();renderAll();':'hideWidget('+jsarg(k)+')')+'">'+(off?'+':'&times;')+'</button></div>'+body+'</div>';
+ });
+ if(HOMEEDIT)out+='<button class="hwdone" onclick="exitHomeEdit()">Done</button>';
  return out;
 }
 function st(n,l){return '<div class="stat"><div class="num">'+n+'</div><div class="lbl">'+l+'</div></div>';}
@@ -1457,6 +1519,7 @@ function openMenu(){
   '<button onclick="closeSheet();go(\'people\')"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#D9A3D4"/><circle cx="15.6" cy="10.3" r="2.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6"/><path d="M14.9 15.6c2.3-.7 4.7.4 5.4 2.8" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="9.5" r="3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.8 18.6c.5-3 2.7-4.6 5.2-4.6 2.6 0 4.3 1.4 5 3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>People &amp; Groups</b></button>'+
     '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
+  '<button onclick="resetHome()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#A9AFE2"/><path d="M5.4 12a6.6 6.6 0 1 1 1.9 4.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><path d="M5.2 12.6L5 8.6l4 .2" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Restore default home screen</b></button>'+
   '<div class="alabel">Parks</div>'+
   '<button onclick="openParkToggles()"><span class="micon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#3E5A3E" opacity=".35"/><path d="M5 18.5V9.6l4-3 4 3v8.9M13 18.5v-6.4l3-2.2 3 2.2v6.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.4 18.5h17.2" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg></span><b>Toggle parks on / off</b><span class="vchev" style="margin-left:auto">&rsaquo;</span></button>'+
   '<div class="alabel">Tracking</div>'+
@@ -1929,6 +1992,21 @@ document.addEventListener('click',function(e){
  _swMoved=false;
  if(_swOpen&&c===_swOpen){e.stopPropagation();e.preventDefault();_swOpen.style.transition='transform .18s';_swOpen.style.transform='';_swOpen=null;}
 },true);
+
+/* long-press the home screen to edit widgets */
+var _hpT=null;
+document.addEventListener('touchstart',function(e){
+ if(tab!=='stats'||HOMEEDIT)return;
+ var v=document.getElementById('view');
+ if(!v||!v.contains(e.target))return;
+ _hpT=setTimeout(function(){_hpT=null;enterHomeEdit();},600);
+},{passive:true});
+['touchmove','touchend','touchcancel'].forEach(function(ev){document.addEventListener(ev,function(){if(_hpT){clearTimeout(_hpT);_hpT=null;}},{passive:true});});
+document.addEventListener('dblclick',function(e){
+ if(tab!=='stats'||HOMEEDIT)return;
+ var v=document.getElementById('view');
+ if(v&&v.contains(e.target))enterHomeEdit();
+});
 
 renderAll();
 hydratePhotos(function(){renderAll();});
