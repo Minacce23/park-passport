@@ -1735,7 +1735,7 @@ function viewFriends(){
    var isNew=p&&p.last&&p.last.date&&p.last.date>((so.seenLast||{})[f.code]||'');
    var num=function(v){return (st&&v!=null)?v:'&ndash;';};
    return '<div class="frcard2" onclick="openFriendSheet(\''+f.code+'\')">'+
-    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div><div class="frlast">'+((p&&p.fav)||f.fav?'Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b>':(p&&p.last&&p.last.name?'Last: <b>'+esc(p.last.name)+'</b>'+(p.last.date?' &middot; '+fmt(p.last.date):''):(st?'':'Tap to load stats')))+'</div></div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
+    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div>'+(((p&&p.fav)||f.fav)?'<div class="frlast">Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b></div>':'')+'</div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
     '<div class="frgrid"><div class="ftile ft1"><div class="fnum">'+num(st&&st.experiences)+'</div><div class="flbl">Experiences</div></div><div class="ftile ft2"><div class="fnum">'+num(st&&st.visits)+'</div><div class="flbl">Visit days</div></div><div class="ftile ft3"><div class="fnum">'+num(st&&st.coasters)+'</div><div class="flbl">Coasters</div></div></div>'+
    '</div>';
   }).join('');
