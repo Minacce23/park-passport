@@ -1322,7 +1322,7 @@ function addFriend(){
  if((so.blocked||[]).some(function(b){return b.code===code;})){alert('You have blocked this code. Unblock it in the menu first.');return;}
  var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
  fetchProfile(code,function(p){so.friends.push({code:code,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav});FRCACHE[code]=p;so.seenLast=so.seenLast||{};so.seenLast[code]=(p.last&&p.last.date)||'';save();createFriendLink(code,p.uid);closeSheet();go('friends');},
-  function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
+  function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&(e.status===404||e.status===403)?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
 }
 function removeFriend(code){
  if(!confirm('Remove this friend from your list?'))return;
@@ -1549,7 +1549,7 @@ function blockCode(){
   pushProfile(function(){openBlocked();renderAll();},function(){openBlocked();renderAll();});
  },function(e){
   if(btn){btn.disabled=false;btn.textContent='Block';}
-  alert(e&&e.status===404?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');
+  alert(e&&(e.status===404||e.status===403)?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');
  });
 }
 function unblockCode(code){
