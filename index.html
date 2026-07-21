@@ -1703,12 +1703,7 @@ function friendLeadersHTML(){
   }
   tiles+='<div class="stat lstat"><div class="num" style="font-size:'+fs+'">'+val+'</div><div class="lbl">'+c[1]+'</div><div class="lwho'+(best.name==='You'?' me':'')+'">'+esc(best.name)+'</div></div>';
  });
- var favs=[];
- if(so.fav)favs.push({n:'You',f:so.fav,me:true});
- so.friends.forEach(function(fr){var p2=FRCACHE[fr.code];var fv=(p2&&p2.fav)||fr.fav||'';if(fv)favs.push({n:fr.name,f:fv});});
- var favHtml='';
- if(favs.length){favHtml='<h2 class="sec">Favorite rides</h2><div class="card" style="padding:8px 14px">'+favs.map(function(x){return '<div class="row" style="border:none;padding:6px 0"><div class="main" style="font-weight:700;font-size:14px;'+(x.me?'color:#5B3E86':'')+'">'+esc(x.n)+'</div><div style="font-weight:800;font-size:13.5px;color:var(--ink);text-align:right">'+esc(x.f)+'</div></div>';}).join('')+'</div>';}
- return '<h2 class="sec">Leaderboard</h2><div class="grid">'+tiles+'</div>'+favHtml;
+ return '<h2 class="sec">Leaderboard</h2><div class="grid">'+tiles+'</div>';
 }
 function viewFriends(){
  var so=state.social;var h='';
@@ -1740,7 +1735,7 @@ function viewFriends(){
    var isNew=p&&p.last&&p.last.date&&p.last.date>((so.seenLast||{})[f.code]||'');
    var num=function(v){return (st&&v!=null)?v:'&ndash;';};
    return '<div class="frcard2" onclick="openFriendSheet(\''+f.code+'\')">'+
-    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div><div class="frlast">'+(p&&p.last&&p.last.name?'Last: <b>'+esc(p.last.name)+'</b>'+(p.last.date?' &middot; '+fmt(p.last.date):''):(st?'':'Tap to load stats'))+'</div></div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
+    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div><div class="frlast">'+((p&&p.fav)||f.fav?'Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b>':(p&&p.last&&p.last.name?'Last: <b>'+esc(p.last.name)+'</b>'+(p.last.date?' &middot; '+fmt(p.last.date):''):(st?'':'Tap to load stats')))+'</div></div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
     '<div class="frgrid"><div class="ftile ft1"><div class="fnum">'+num(st&&st.experiences)+'</div><div class="flbl">Experiences</div></div><div class="ftile ft2"><div class="fnum">'+num(st&&st.visits)+'</div><div class="flbl">Visit days</div></div><div class="ftile ft3"><div class="fnum">'+num(st&&st.coasters)+'</div><div class="flbl">Coasters</div></div></div>'+
    '</div>';
   }).join('');
