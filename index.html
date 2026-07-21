@@ -1284,7 +1284,7 @@ function turnOnSharing(){
  var btn=document.getElementById('fr_go');if(btn){btn.disabled=true;btn.textContent='Setting up...';}
  fbJson('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+FB.key,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
  .then(function(j){
-  state.social={uid:j.localId,refreshToken:j.refreshToken,idToken:j.idToken,tokenExp:Date.now()+3300000,name:nm,code:'',friends:[],lastSeen:new Date().toISOString(),seenLast:{},icon:Object.keys(PARKICONS)[Math.floor(Math.random()*Object.keys(PARKICONS).length)],color:'grape'};
+  state.social={uid:j.localId,refreshToken:j.refreshToken,idToken:j.idToken,tokenExp:Date.now()+3300000,name:nm,code:'',friends:[],pending:[],requests:[],lastSeen:new Date().toISOString(),seenLast:{},icon:Object.keys(PARKICONS)[Math.floor(Math.random()*Object.keys(PARKICONS).length)],color:'grape'};
   var tries=0;
   function attempt(){
    var code=newFriendCode();
@@ -1320,8 +1320,10 @@ function addFriend(){
  if(code===so.code){alert("That's your own code");return;}
  if(so.friends.some(function(f){return f.code===code;})){alert('Already added');return;}
  if((so.blocked||[]).some(function(b){return b.code===code;})){alert('You have blocked this code. Unblock it in the menu first.');return;}
+ if((so.pending||[]).some(function(x){return x.code===code;})){alert('Request already sent. They just need to accept it.');return;}
+ if((so.requests||[]).some(function(x){return x.code===code;})){acceptRequest(code);closeSheet();go('friends');return;}
  var btn=document.getElementById('fr_add');if(btn){btn.disabled=true;btn.textContent='Looking...';}
- fetchProfile(code,function(p){so.friends.push({code:code,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav});FRCACHE[code]=p;so.seenLast=so.seenLast||{};so.seenLast[code]=(p.last&&p.last.date)||'';save();createFriendLink(code,p.uid);closeSheet();go('friends');},
+ fetchProfile(code,function(p){so.pending=so.pending||[];so.pending.push({code:code,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav,uid:p.uid});FRCACHE[code]=p;save();createFriendLink(code,p.uid,'req');closeSheet();go('friends');},
   function(e){if(btn){btn.disabled=false;btn.textContent='Add';}alert(e&&(e.status===404||e.status===403)?'No one found with that code. Double-check it.':'Could not look that up. Check your connection.');});
 }
 function removeFriend(code){
@@ -1477,7 +1479,9 @@ function openAvatarPicker(){
 function setAvatarColor(c){var so=state.social;if(!so)return;var u=colorUnlocks()[c];if(u&&!u.ok){alert('This wax unlocks at '+u.req+'. You are at '+(u.have||0)+'.');return;}so.color=c;save();openAvatarPicker();pushProfile(null,function(){});}
 function setAvatar(k){var so=state.social;if(!so)return;so.icon=k;save();openAvatarPicker();pushProfile(null,function(){});}
 function hasFriendNews(){
- var so=state.social;if(!so||!so.friends||!so.friends.length)return false;
+ var so=state.social;if(!so)return false;
+ if((so.requests||[]).length)return true;
+ if(!so.friends||!so.friends.length)return false;
  var seen=so.seenLast||{};
  return so.friends.some(function(f){var p=FRCACHE[f.code];return p&&p.last&&p.last.date&&p.last.date>(seen[f.code]||'');});
 }
@@ -1545,6 +1549,8 @@ function blockCode(){
  fetchProfile(code,function(p){
   so.blocked.push({code:code,uid:p.uid||'',name:p.name});
   so.friends=so.friends.filter(function(f){return f.code!==code;});
+  so.requests=(so.requests||[]).filter(function(x){return x.code!==code;});
+  so.pending=(so.pending||[]).filter(function(x){return x.code!==code;});
   save();
   pushProfile(function(){openBlocked();renderAll();},function(){openBlocked();renderAll();});
  },function(e){
@@ -1559,17 +1565,18 @@ function unblockCode(code){
  save();pushProfile(function(){openBlocked();},function(){openBlocked();});
 }
 function fbLinkUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/links/'+encodeURIComponent(id);}
-function createFriendLink(toCode,toUid){
+function createFriendLink(toCode,toUid,kind){
  var so=state.social;if(!so||!toUid)return;
  fbToken(function(tk){
   fbJson(fbLinkUrl(toCode+'__'+so.code)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-   body:JSON.stringify({fields:{to:{stringValue:toCode},toUid:{stringValue:toUid},from:{stringValue:so.code},fromUid:{stringValue:so.uid}}})}).catch(function(){});
+   body:JSON.stringify({fields:{to:{stringValue:toCode},toUid:{stringValue:toUid},from:{stringValue:so.code},fromUid:{stringValue:so.uid},kind:{stringValue:kind||'req'}}})}).catch(function(){});
  },function(){});
 }
 function deleteFriendLink(id){fbToken(function(tk){fetch(fbLinkUrl(id),{method:'DELETE',headers:{'Authorization':'Bearer '+tk}}).catch(function(){});},function(){});}
 function checkFriendLinks(){
  var so=state.social;if(!so||!so.code)return;
  if(navigator.onLine===false)return;
+ so.pending=so.pending||[];so.requests=so.requests||[];
  fbToken(function(tk){
   fbJson('https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents:runQuery',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
    body:JSON.stringify({structuredQuery:{from:[{collectionId:'links'}],where:{fieldFilter:{field:{fieldPath:'toUid'},op:'EQUAL',value:{stringValue:so.uid}}}}})})
@@ -1578,21 +1585,62 @@ function checkFriendLinks(){
     if(!row.document)return;
     var f=row.document.fields||{};
     var from=(f.from&&f.from.stringValue)||'';
+    var fromUid=(f.fromUid&&f.fromUid.stringValue)||'';
+    var kind=(f.kind&&f.kind.stringValue)||'req';
     var lid=row.document.name.split('/').pop();
-    if(!from){deleteFriendLink(lid);return;}
+    if(!from||from===so.code){deleteFriendLink(lid);return;}
     if((so.blocked||[]).some(function(b){return b.code===from;})){deleteFriendLink(lid);return;}
-    if(from===so.code||so.friends.some(function(x){return x.code===from;})){deleteFriendLink(lid);return;}
-    fetchProfile(from,function(p){
-     if(so.friends.some(function(x){return x.code===from;}))return;
-     so.friends.push({code:from,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav});
-     FRCACHE[from]=p;
+    if(kind==='accept'){
+     var pi=-1;so.pending.forEach(function(x,ix){if(x.code===from)pi=ix;});
+     if(pi>-1){
+      var pd=so.pending[pi];so.pending.splice(pi,1);
+      if(!so.friends.some(function(x){return x.code===from;}))so.friends.push({code:pd.code,name:pd.name,icon:pd.icon,color:pd.color,photo:pd.photo,fav:pd.fav});
+      so.seenLast=so.seenLast||{};so.seenLast[from]='';
+      save();renderNav();if(tab==='friends')renderAll();
+     }
+     deleteFriendLink(lid);return;
+    }
+    if(so.friends.some(function(x){return x.code===from;})){deleteFriendLink(lid);return;}
+    var pi2=-1;so.pending.forEach(function(x,ix){if(x.code===from)pi2=ix;});
+    if(pi2>-1){
+     var pd2=so.pending[pi2];so.pending.splice(pi2,1);
+     so.friends.push({code:pd2.code,name:pd2.name,icon:pd2.icon,color:pd2.color,photo:pd2.photo,fav:pd2.fav});
      so.seenLast=so.seenLast||{};so.seenLast[from]='';
+     save();createFriendLink(from,fromUid||pd2.uid||'','accept');
+     renderNav();if(tab==='friends')renderAll();
+     deleteFriendLink(lid);return;
+    }
+    if(so.requests.some(function(x){return x.code===from;})){deleteFriendLink(lid);return;}
+    fetchProfile(from,function(p){
+     if(so.requests.some(function(x){return x.code===from;})||so.friends.some(function(x){return x.code===from;}))return;
+     so.requests.push({code:from,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav,uid:p.uid||fromUid});
+     FRCACHE[from]=p;
      save();renderNav();if(tab==='friends')renderAll();
      deleteFriendLink(lid);
     },function(){});
    });
   }).catch(function(){});
  },function(){});
+}
+function acceptRequest(code){
+ var so=state.social;if(!so)return;
+ var i=-1;(so.requests||[]).forEach(function(x,ix){if(x.code===code)i=ix;});
+ if(i<0)return;
+ var rq=so.requests[i];so.requests.splice(i,1);
+ if(!so.friends.some(function(x){return x.code===code;}))so.friends.push({code:rq.code,name:rq.name,icon:rq.icon,color:rq.color,photo:rq.photo,fav:rq.fav});
+ so.seenLast=so.seenLast||{};so.seenLast[code]='';
+ save();createFriendLink(code,rq.uid||'','accept');
+ renderNav();renderAll();
+}
+function declineRequest(code){
+ var so=state.social;if(!so)return;
+ so.requests=(so.requests||[]).filter(function(x){return x.code!==code;});
+ save();renderNav();renderAll();
+}
+function cancelRequest(code){
+ var so=state.social;if(!so)return;
+ so.pending=(so.pending||[]).filter(function(x){return x.code!==code;});
+ save();deleteFriendLink(code+'__'+so.code);renderAll();
 }
 function keepParkPrefix(el){
  var v=(el.value||'').toUpperCase();
@@ -1672,6 +1720,13 @@ function viewFriends(){
   '<div class="pt-s" style="margin:8px 0 0">Favorite ride: <b>'+(so.fav?esc(so.fav):'not set')+'</b> <button class="nmedit" onclick="editFavRide()" aria-label="Edit favorite"><svg viewBox="0 0 24 24"><path d="M4.5 19.5l1-4L16 5a2.1 2.1 0 0 1 3 3L8.5 18.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M14 7l3 3" stroke="currentColor" stroke-width="1.9"/></svg></button></div>'+
   '<div class="pt-btns" style="margin-top:11px"><button class="pt-primary" onclick="shareCode()">Share my code</button></div></div>';
  h='<button class="fraddbtn" onclick="openAddFriend()" aria-label="Add a friend"><svg viewBox="0 0 24 24"><circle cx="10" cy="8.6" r="3.4" fill="none" stroke="#1B1A17" stroke-width="1.8"/><path d="M4 19c.6-3.2 3-5 6-5 1.8 0 3.3.6 4.4 1.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><path d="M17.6 13.6v6M14.6 16.6h6" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg></button>'+h;
+ if((so.requests||[]).length){
+  h+='<h2 class="sec">Friend requests</h2>';
+  h+=so.requests.map(function(rq){return '<div class="frcard2" style="cursor:default"><div class="frhead"><span class="frav2">'+avatarAny(rq)+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(rq.name)+'</div><div class="frlast">wants to be friends</div></div></div><div class="pt-btns" style="margin-top:10px"><button class="pt-primary" onclick="acceptRequest('+jsarg(rq.code)+')">Accept</button><button class="pt-ghost" onclick="declineRequest('+jsarg(rq.code)+')">Decline</button></div></div>';}).join('');
+ }
+ if((so.pending||[]).length){
+  h+='<h2 class="sec">Sent requests</h2><div class="card">'+so.pending.map(function(pd){return '<div class="checkitem"><div class="nm"><b>'+esc(pd.name)+'</b><br><span class="cnt">Waiting for them to accept</span></div><button class="xbtn" onclick="cancelRequest('+jsarg(pd.code)+')">&times;</button></div>';}).join('')+'</div>';
+ }
  h+=friendLeadersHTML();
  h+='<h2 class="sec" style="display:flex;justify-content:space-between;align-items:center">Friends<span style="flex:1"></span>'+(so.friends.length?'<button class="btn ghost" style="flex:none;width:auto;padding:5px 12px;font-size:12px" onclick="refreshFriends()">Refresh</button>':'')+'</h2>';
  h+='<div id="fr_list">';
