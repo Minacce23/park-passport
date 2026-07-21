@@ -1691,12 +1691,15 @@ function refreshFeed(force){
     FEEDCACHE=all.slice(0,60);
     var so2=state.social;
     if(so2){Object.keys(LIKEPEND).forEach(function(pid){
+     var e=LIKEPEND[pid];
+     if(!e||typeof e!=='object'){delete LIKEPEND[pid];return;}
+     if(Date.now()-e.t>15000){delete LIKEPEND[pid];return;}
      FEEDCACHE.forEach(function(p2){
       if(p2.id!==pid)return;
       p2.likes=p2.likes||[];
       var has=p2.likes.indexOf(so2.uid)>-1;
-      if(LIKEPEND[pid]&&!has)p2.likes.push(so2.uid);
-      if(!LIKEPEND[pid]&&has)p2.likes=p2.likes.filter(function(u){return u!==so2.uid;});
+      if(e.on&&!has)p2.likes.push(so2.uid);
+      if(!e.on&&has)p2.likes=p2.likes.filter(function(u){return u!==so2.uid;});
      });
     });}
     if(tab==='feed')renderAll();
@@ -1769,13 +1772,13 @@ function toggleLike(id){
  p.likes=p.likes||[];
  var had=p.likes.indexOf(so.uid)>-1;
  if(had)p.likes=p.likes.filter(function(u){return u!==so.uid;});else p.likes.push(so.uid);
- LIKEPEND[id]=!had;
+ LIKEPEND[id]={on:!had,t:Date.now()};
  if(tab==='feed')renderAll();
  fbToken(function(tk){
   var url=fbPostUrl(id)+'?updateMask.fieldPaths=likes.'+encodeURIComponent(so.uid);
   var body=had?{fields:{}}:{fields:{likes:{mapValue:{fields:(function(){var o={};o[so.uid]={integerValue:'1'};return o;})()}}}};
   fbJson(url,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(body)})
-  .then(function(){delete LIKEPEND[id];})
+  .then(function(){if(LIKEPEND[id])LIKEPEND[id].t=Date.now();})
   .catch(function(){
    delete LIKEPEND[id];
    if(had){if(p.likes.indexOf(so.uid)<0)p.likes.push(so.uid);}else{p.likes=p.likes.filter(function(u){return u!==so.uid;});}
