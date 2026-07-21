@@ -2066,9 +2066,9 @@ function downloadCatalog(park){
  var ow=SEED.variantOwners||{};
  var rows=[head];
  SEED.attractions.filter(function(a){return a.park===park;}).forEach(function(a){
-  rows.push(['Ride','',a.name,'','','','','',park,'','']);
+  rows.push(['Catalog','',a.name,'','','','','',park,'','']);
   Object.keys(ow).filter(function(v){return ow[v]===a.name;}).forEach(function(v){
-   rows.push(['Ride','',a.name,v,'','','','',park,'','']);
+   rows.push(['Catalog','',a.name,v,'','','','',park,'','']);
   });
  });
  if(rows.length<2){alert('No attractions found for '+park+'.');return;}
@@ -2210,7 +2210,7 @@ function dupDesc(c){var e=c.entry;var nm=(c.type==='meet')?e.character:e.attract
  if(vl&&vl!=='Standard')bits.push(vl);
  if(e.park)bits.push(e.park);
  var w=e.with_||e.party;if(w)bits.push(w);
- var tlab=(c.type==='meet')?'Meet':((c.type==='score')?'Score':((c.type==='draw')?'Drawing':'Ride'));
+ var tlab=(c.type==='meet')?'Meet':((c.type==='score')?'Score':((c.type==='draw')?'Drawing':'Experience'));
  return '<div class="nm">'+esc(nm)+'</div><div class="cnt">'+esc(fmt(c.date)+(bits.length?' · '+bits.join(' · '):'')+' · '+tlab)+'</div>';
 }
 function showDupReview(){var pi=_pendingImport;if(!pi)return;var cands=pi.cands;var rows='';
