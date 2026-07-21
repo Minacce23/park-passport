@@ -1100,7 +1100,7 @@ function sealIconify(raw,wax,dk){
  var inner=raw.replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'').replace(/<ellipse[^>]*\/>/,'');
  function tone(col){return inner.replace(/stroke="#1B1A17"/g,'stroke="'+col+'"').replace(/fill="#1B1A17"/g,'fill="'+col+'"').replace(/fill="#(?!1B1A17)[0-9A-Fa-f]{6}"/g,'fill="none"');}
  var lt='rgba(255,255,255,.55)';
- return '<svg class="statico sealico" viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="'+wax+'"/>'+
+ return '<svg class="statico sealico" viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="#F4EFDE" transform="translate(32 32) scale(1.09) translate(-32 -32)"/><path d="'+SEAL_PATH+'" fill="'+wax+'"/>'+
   '<circle cx="33" cy="33.4" r="20.5" fill="none" stroke="'+lt+'" stroke-width="2.2"/>'+
   '<circle cx="32" cy="32" r="20.5" fill="none" stroke="'+dk+'" stroke-width="2.2"/>'+
   '<g transform="translate(33 33.4) scale(1.25) translate(-12 -12)">'+tone(lt)+'</g>'+
@@ -1354,7 +1354,7 @@ function avatarSVG(k,c){
  inner=inner.replace(/<ellipse[^>]*\/>/,'');
  function tone(col){return inner.replace(/stroke="#1B1A17"/g,'stroke="'+col+'"').replace(/fill="#1B1A17"/g,'fill="'+col+'"').replace(/fill="#(?!1B1A17)[0-9A-Fa-f]{6}"/g,'fill="none"');}
  var lt='rgba(255,255,255,.55)';
- return '<svg viewBox="0 0 64 64" class="avseal"><path d="'+SEAL_PATH+'" fill="'+wax[0]+'"/>'+
+ return '<svg viewBox="0 0 64 64" class="avseal"><path d="'+SEAL_PATH+'" fill="#F4EFDE" transform="translate(32 32) scale(1.07) translate(-32 -32)"/><path d="'+SEAL_PATH+'" fill="'+wax[0]+'"/>'+
   '<circle cx="33.2" cy="33.6" r="21" fill="none" stroke="'+lt+'" stroke-width="2.4"/>'+
   '<circle cx="32" cy="32" r="21" fill="none" stroke="'+wax[1]+'" stroke-width="2.4"/>'+
   '<g transform="translate(33.2 33.6) scale(1.3) translate(-12 -12)">'+tone(lt)+'</g>'+
@@ -1664,7 +1664,7 @@ function openFriendSheet(code){
  var f=null;so.friends.forEach(function(x){if(x.code===code)f=x;});if(!f)return;
  var p=FRCACHE[code];var st=(p&&p.stats)||{};
  var fi=so.friends.indexOf(f);
- var h='<div style="display:flex;gap:12px;align-items:center;margin-bottom:4px"><span class="frav2" style="width:52px;height:52px">'+avatarAny({icon:(p&&p.icon)||f.icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div><h3 style="margin:0">'+esc(f.name)+'</h3><div class="muted" style="font-size:12.5px">'+(p&&p.last&&p.last.name?'Last experience: <b>'+esc(p.last.name)+'</b>'+(p.last.date?' ('+fmt(p.last.date)+')':''):'')+'</div></div></div>';
+ var h='<div style="display:flex;gap:12px;align-items:center;margin-bottom:4px"><span class="frav2" style="width:52px;height:52px">'+avatarAny({icon:(p&&p.icon)||f.icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div><h3 style="margin:0">'+esc(f.name)+'</h3></div></div>';
  h+='<div class="grid" style="margin-top:12px">'+
   statTile(IC.rides,(st.experiences!=null?st.experiences:'&ndash;'),'Experiences','')+
   statTile(IC.top,(st.unique!=null?st.unique:'&ndash;'),'Unique attractions','')+
