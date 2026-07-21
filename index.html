@@ -1095,18 +1095,20 @@ var BCOL={exp:'#E7BCE3',vis:'#B5D0B5',exr:'#F5F0A0',met:'#C3C8EC',scr:'#F0E952',
 function bGlyph(e){return e?'<svg viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M12 3.6l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg>':'<svg viewBox="0 0 24 24" style="width:24px;height:24px"><rect x="6.2" y="10.4" width="11.6" height="9" rx="2.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9 10.4V8.5a3 3 0 0 1 6 0v1.9" fill="none" stroke="#1B1A17" stroke-width="1.7"/><circle cx="12" cy="14.8" r="1.4" fill="#1B1A17"/></svg>';}
 var BADGE_MEDAL='<svg class="statico" viewBox="0 0 24 24"><ellipse cx="12" cy="20.8" rx="7" ry="2" fill="#9A6BD4"/><path d="M9 12.5L7.6 20l4.4-2.3L16.4 20 15 12.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="8.6" r="5.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 6l.8 1.7 1.9.2-1.4 1.3.4 1.9-1.7-1-1.7 1 .4-1.9-1.4-1.3 1.9-.2z" fill="#1B1A17"/></svg>';
 var SEAL_PATH='M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z';
-function sealIconify(raw){
+function sealIconify(raw,wax,dk){
+ wax=wax||'#B388E6';dk=dk||'#5B3E86';
  var inner=raw.replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'').replace(/<ellipse[^>]*\/>/,'');
  function tone(col){return inner.replace(/stroke="#1B1A17"/g,'stroke="'+col+'"').replace(/fill="#1B1A17"/g,'fill="'+col+'"').replace(/fill="#(?!1B1A17)[0-9A-Fa-f]{6}"/g,'fill="none"');}
- var lt='rgba(255,255,255,.6)';
- return '<svg class="statico sealico" viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="#F4EFDE"/>'+
+ var lt='rgba(255,255,255,.55)';
+ return '<svg class="statico sealico" viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="'+wax+'"/>'+
   '<circle cx="33" cy="33.4" r="20.5" fill="none" stroke="'+lt+'" stroke-width="2.2"/>'+
-  '<circle cx="32" cy="32" r="20.5" fill="none" stroke="#1B1A17" stroke-width="2.2"/>'+
+  '<circle cx="32" cy="32" r="20.5" fill="none" stroke="'+dk+'" stroke-width="2.2"/>'+
   '<g transform="translate(33 33.4) scale(1.25) translate(-12 -12)">'+tone(lt)+'</g>'+
-  '<g transform="translate(32 32) scale(1.25) translate(-12 -12)">'+tone('#1B1A17')+'</g></svg>';
+  '<g transform="translate(32 32) scale(1.25) translate(-12 -12)">'+tone(dk)+'</g></svg>';
 }
-['rides','visits','meets','score','coaster','top'].forEach(function(k){if(IC[k])IC[k]=sealIconify(IC[k]);});
-BADGE_MEDAL=sealIconify(BADGE_MEDAL);
+var ICWAX={rides:['#B388E6','#5B3E86'],visits:['#A9C8A9','#2E4A2E'],meets:['#E7BCE3','#8F3F7D'],score:['#F0E952','#6E6820'],coaster:['#B388E6','#5B3E86'],top:['#F0E952','#6E6820']};
+['rides','visits','meets','score','coaster','top'].forEach(function(k){if(IC[k])IC[k]=sealIconify(IC[k],ICWAX[k][0],ICWAX[k][1]);});
+BADGE_MEDAL=sealIconify(BADGE_MEDAL,'#B388E6','#5B3E86');
 
 var SEAL_STAR='M 0.0 -10.5 L 2.6 -3.6 L 10.0 -3.2 L 4.2 1.4 L 6.2 8.5 L 0.0 4.4 L -6.2 8.5 L -4.2 1.4 L -10.0 -3.2 L -2.6 -3.6 Z';
 var BDARK={exp:'#8F3F7D',vis:'#3E5A3E',exr:'#857D18',met:'#4A3F8F',scr:'#857D18',vrs:'#4A3F8F',aca:'#8F3F7D',spc:'#857D18',st:'#2C2566',cst:'#5B3E86',prk:'#2E4A2E'};
