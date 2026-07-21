@@ -514,7 +514,7 @@ function openVisit(date){curDay=date;
  if(scores.length){h+='<h2 class="sec">Scores ('+scores.length+')</h2><div class="card">';
   scores.forEach(function(s){h+='<div class="row" style="cursor:pointer" onclick="editScore('+state.scores.indexOf(s)+')"><div class="main"><div class="t">'+fmtN(s.score)+'</div><div class="s">'+shortRide(s.attraction)+(s.with_?' &middot; '+s.with_:'')+'</div></div>'+(s.rank?'<span class="pill">'+s.rank+'</span>':'')+'</div>';});h+='</div>';}
  if(!rides.length&&!meets.length&&!scores.length)h+='<div class="muted">No rides or meets logged this day.</div>';
- h+='<div class="linkrow"><button onclick="quickAddRide()"><b>+ Quick add</b></button><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
+ h+='<div class="linkrow"><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
 function delRideSwipe(i){
  var r=state.rides[i];if(!r)return;
@@ -725,7 +725,7 @@ function savePhoto(){if(!pendingPhoto){alert('Pick a photo first');return;}var t
 function openAdd(){
  sheet('<h3>Add to your trip</h3><div class="actionlist">'+
   '<button onclick="formRide()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#A9AFE2"/><rect x="3.6" y="7" width="16.8" height="10" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9.4 7v10" stroke="#1B1A17" stroke-width="1.5" stroke-dasharray="2 2.2" fill="none"/><path d="M13 10.4h4.6M13 13.6h3.2" stroke="#1B1A17" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>')+'</span><b>Log an experience</b></button>'+
-  '<button onclick="quickAddRide()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#F0E952"/><path d="M13.4 3.6L6.8 13h4.2l-1.6 6.6L16.6 10h-4.4l1.2-6.4z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg>')+'</span><b>Quick add experience</b></button>'+
+  
   (GENERIC?'<button onclick="formVariant()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E7BCE3"/><path d="M12 3.8l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.6 4.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="#1B1A17"/></svg>')+'</span><b>Add a variant</b></button>':'')+
   '<button onclick="formVisit()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B5D0B5"/><path d="M8 19.4V4.4" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M8 5h9.6l-2.6 3 2.6 3H8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg>')+'</span><b>Add a visit day</b></button>'+
   '<button onclick="formMeet()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.4" rx="7" ry="2" fill="#D9A3D4"/><path d="M12 18.2S4.4 13.6 4.4 8.9C4.4 6.2 6.5 4.6 8.6 4.6c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 4.2 1.6 4.2 4.3 0 4.7-7.6 9.3-7.6 9.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Log a character meet</b></button>'+
@@ -857,7 +857,7 @@ function formRide(d,qa){pendingPhoto=null;d=d||today();
  var wi=visitWith(d)||(qa?(L.with_||''):'');
  var ac=qa?(L.access||'Standby'):'Standby';
  var wf=qa?{lineStart:(waitsOn()?nowHM():'')}:undefined;
- sheet('<h3>'+(qa?'Quick add experience':'Log an experience')+'</h3>'+
+ sheet('<h3>'+(qa?'Log another experience':'Log an experience')+'</h3>'+
   (qa?'<p class="muted" style="margin:0 0 12px;line-height:1.5">Carried over from your last experience. Just pick the attraction.'+(waitsOn()?' Line start is set to now.':'')+'</p>':'')+
   attrField('',pk)+
   '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="setDateQuick(1)">Yesterday</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
