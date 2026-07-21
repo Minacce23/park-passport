@@ -1664,7 +1664,7 @@ function fbPostUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB
 function decPost(doc){
  var f=doc.fields||{};
  var g=function(k){return (f[k]&&f[k].stringValue)||'';};
- return {id:doc.name.split('/').pop(),author:g('author'),authorUid:g('authorUid'),name:g('name')||'Explorer',icon:g('icon')||'ferris',color:g('color')||'grape',photo:g('photo'),caption:g('caption'),created:g('created')};
+ return {id:doc.name.split('/').pop(),author:g('author'),authorUid:g('authorUid'),name:g('name')||'Explorer',icon:g('icon')||'ferris',color:g('color')||'grape',avphoto:g('avphoto'),photo:g('photo'),caption:g('caption'),created:g('created')};
 }
 function fetchPostsBy(code,cb){
  fbToken(function(tk){
@@ -1678,11 +1678,19 @@ function refreshFeed(force){
  var so=state.social;if(!so||!so.code||FEEDBUSY)return;
  if(!force&&Date.now()-FEEDAT<30000)return;
  FEEDBUSY=true;FEEDAT=Date.now();
- fetchPostsBy(so.code,function(posts){
-  FEEDBUSY=false;
-  if(posts===null)return;
-  FEEDCACHE=posts.sort(function(a,b){return (b.created||'').localeCompare(a.created||'');});
-  if(tab==='feed')renderAll();
+ var codes=[so.code].concat((so.friends||[]).map(function(f){return f.code;}));
+ var all=[],left=codes.length;
+ codes.forEach(function(c){
+  fetchPostsBy(c,function(posts){
+   if(posts)all=all.concat(posts);
+   left--;
+   if(!left){
+    FEEDBUSY=false;
+    all.sort(function(a,b){return (b.created||'').localeCompare(a.created||'');});
+    FEEDCACHE=all.slice(0,60);
+    if(tab==='feed')renderAll();
+   }
+  });
  });
 }
 function openComposer(){
@@ -1717,7 +1725,7 @@ function publishPost(){
  var id=so.code+'_'+Date.now();
  fbToken(function(tk){
   fbJson(fbPostUrl(id)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
-   body:JSON.stringify({fields:{authorUid:{stringValue:so.uid},author:{stringValue:so.code},name:{stringValue:so.name},icon:{stringValue:so.icon||'ferris'},color:{stringValue:so.color||'grape'},photo:{stringValue:POSTPHOTO},caption:{stringValue:cap},created:{stringValue:new Date().toISOString()}}})})
+   body:JSON.stringify({fields:{authorUid:{stringValue:so.uid},author:{stringValue:so.code},name:{stringValue:so.name},icon:{stringValue:so.icon||'ferris'},color:{stringValue:so.color||'grape'},avphoto:{stringValue:so.photo||''},photo:{stringValue:POSTPHOTO},caption:{stringValue:cap},created:{stringValue:new Date().toISOString()}}})})
   .then(function(){POSTPHOTO=null;closeSheet();refreshFeed(true);})
   .catch(function(){if(btn){btn.disabled=false;btn.textContent='Send it';}alert('Could not send your postcard. Check your connection and try again.');});
  },function(){if(btn){btn.disabled=false;btn.textContent='Send it';}alert('Could not send your postcard. Check your connection and try again.');});
@@ -1744,7 +1752,7 @@ function postCard(p){
     '<div class="pcmsg">'+(p.caption?esc(p.caption):'<span class="pcnomsg">No message, just the view.</span>')+'</div>'+
     '<div class="pcdivider"></div>'+
     '<div class="pcright">'+
-     '<div class="pcstamp">'+avatarAny(p)+'</div>'+
+     '<div class="pcstamp">'+avatarAny({icon:p.icon,color:p.color,photo:p.avphoto||null})+'</div>'+
      '<div class="pcfrom">FROM</div>'+
      '<div class="pcname">'+esc(p.name)+'</div>'+
      '<div class="pcline"></div>'+
@@ -1762,7 +1770,7 @@ function viewFeed(){
  setTimeout(function(){try{refreshFeed();}catch(e){}},50);
  var h='<div class="linkrow" style="margin:0 0 12px"><button onclick="openComposer()"><b>+ Send a postcard</b></button></div>';
  if(!FEEDCACHE.length){
-  h+='<div class="emptyc"><div class="et">Your mailbox is empty</div><div class="es">Send the first postcard from your latest park day. Friends&#39; postcards arrive here soon.</div></div>';
+  h+='<div class="emptyc"><div class="et">Your mailbox is empty</div><div class="es">Send the first postcard from your latest park day. Your friends&#39; postcards land here too.</div></div>';
   return h;
  }
  h+=FEEDCACHE.map(postCard).join('');
