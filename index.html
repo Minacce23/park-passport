@@ -1709,27 +1709,122 @@ function refreshFeed(force){
 }
 function openComposer(){
  var so=state.social;if(!so||!so.code){alert('Turn on sharing in the Friends tab first.');return;}
- POSTPHOTO=null;
+ POSTPHOTO=null;RAWP=[];
  sheet('<h3>Send a postcard</h3>'+
-  '<label>The front (your photo)</label><input type="file" accept="image/*" id="po_file" onchange="handlePostPhoto(this)"><div id="po_prev"></div>'+
+  '<label>The front (one photo, or up to 6 for a collage)</label><input type="file" accept="image/*" multiple id="po_file" onchange="handlePostPhoto(this)">'+
+  '<div id="po_thumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>'+
+  '<div id="po_prev"></div>'+
+  '<div id="po_shufrow" style="display:none;margin-top:8px"><button class="btn ghost" style="width:100%" onclick="rebuildPostcard()">Shuffle the layout</button></div>'+
   '<label>The message (optional)</label><input id="po_cap" maxlength="140" placeholder="Wish you were here...">'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" id="po_go" onclick="publishPost()">Send it</button></div>');
 }
+var RAWP=[];
 function handlePostPhoto(input){
- var f=input.files&&input.files[0];if(!f)return;
- var r=new FileReader();
- r.onload=function(e){var img=new Image();img.onload=function(){
-  var MAX=1000,w=img.width,h=img.height;
-  if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}else if(h>=w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-  var cv=document.createElement('canvas');cv.width=w;cv.height=h;
-  cv.getContext('2d').drawImage(img,0,0,w,h);
-  var q=0.72,out=cv.toDataURL('image/jpeg',q);
-  while(out.length>380000&&q>0.4){q-=0.12;out=cv.toDataURL('image/jpeg',q);}
-  POSTPHOTO=out;
-  var pv=document.getElementById('po_prev');
-  if(pv)pv.innerHTML='<img src="'+POSTPHOTO+'" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-top:8px">';
- };img.src=e.target.result;};
- r.readAsDataURL(f);
+ var files=Array.prototype.slice.call(input.files||[]);input.value='';
+ if(!files.length)return;
+ if(RAWP.length>=6){alert('A postcard fits 6 photos at most.');return;}
+ files=files.slice(0,6-RAWP.length);
+ var left=files.length;
+ files.forEach(function(f){
+  var r=new FileReader();
+  r.onload=function(e){var img=new Image();img.onload=function(){
+   var MAX=1200,w=img.width,h=img.height,sc=Math.min(1,MAX/Math.max(w,h));
+   var cv=document.createElement('canvas');cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);
+   cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+   var im2=new Image();im2.onload=function(){RAWP.push(im2);left--;if(left===0)rebuildPostcard();};
+   im2.src=cv.toDataURL('image/jpeg',0.86);
+  };img.src=e.target.result;};
+  r.readAsDataURL(f);
+ });
+}
+function removePostPhoto(i){RAWP.splice(i,1);rebuildPostcard();}
+function jpegBudget(cv){
+ var q=0.72,out=cv.toDataURL('image/jpeg',q);
+ while(out.length>380000&&q>0.4){q-=0.12;out=cv.toDataURL('image/jpeg',q);}
+ return out;
+}
+function rebuildPostcard(){
+ var tb=document.getElementById('po_thumbs');
+ if(tb)tb.innerHTML=RAWP.map(function(im,i){return '<div style="position:relative"><img src="'+im.src+'" style="width:52px;height:52px;object-fit:cover;border-radius:10px;display:block"><button onclick="removePostPhoto('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--ink);color:var(--bg);font-size:13px;line-height:1;padding:0">&times;</button></div>';}).join('');
+ var sr=document.getElementById('po_shufrow');if(sr)sr.style.display=RAWP.length>1?'block':'none';
+ var pv=document.getElementById('po_prev');
+ if(!RAWP.length){POSTPHOTO=null;if(pv)pv.innerHTML='';return;}
+ if(RAWP.length===1){
+  var im=RAWP[0],MAX=1000,w=im.width,h=im.height,sc=Math.min(1,MAX/Math.max(w,h));
+  var cv=document.createElement('canvas');cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);
+  cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+  POSTPHOTO=jpegBudget(cv);
+ }else{
+  POSTPHOTO=bakeCollage();
+ }
+ if(pv)pv.innerHTML='<img src="'+POSTPHOTO+'" style="width:100%;max-height:340px;object-fit:contain;border-radius:14px;margin-top:8px">';
+}
+function collageSlots(n){
+ var L={
+  2:[{x:.36,y:.29,w:.66,h:.36,r:-4},{x:.63,y:.69,w:.66,h:.36,r:3}],
+  3:[{x:.33,y:.22,w:.58,h:.30,r:-5},{x:.68,y:.51,w:.58,h:.30,r:4},{x:.36,y:.80,w:.58,h:.30,r:-3}],
+  4:[{x:.30,y:.21,w:.52,h:.28,r:-4},{x:.72,y:.32,w:.50,h:.28,r:5},{x:.30,y:.63,w:.50,h:.28,r:3},{x:.71,y:.77,w:.52,h:.28,r:-4}],
+  5:[{x:.63,y:.15,w:.54,h:.24,r:3},{x:.23,y:.29,w:.46,h:.24,r:-6},{x:.55,y:.48,w:.62,h:.28,r:-2},{x:.26,y:.74,w:.48,h:.26,r:4},{x:.72,y:.83,w:.46,h:.26,r:-3}],
+  6:[{x:.28,y:.14,w:.48,h:.22,r:-4},{x:.72,y:.20,w:.48,h:.22,r:3},{x:.30,y:.47,w:.50,h:.24,r:2},{x:.72,y:.52,w:.48,h:.24,r:-5},{x:.28,y:.81,w:.48,h:.22,r:4},{x:.70,y:.85,w:.48,h:.22,r:-2}]
+ };
+ return L[n].map(function(o){return {x:o.x+(Math.random()-.5)*.05,y:o.y+(Math.random()-.5)*.05,w:o.w+(Math.random()-.5)*.06,h:o.h,r:o.r+(Math.random()-.5)*6};});
+}
+function scallopClip(g,rx,ry){
+ var N=11,xp=0,yp=0;
+ g.beginPath();
+ for(var i=0;i<=N;i++){
+  var a0=(i/N)*2*Math.PI,x0=Math.cos(a0)*rx,y0=Math.sin(a0)*ry;
+  if(i===0){g.moveTo(x0,y0);}else{g.quadraticCurveTo(xp,yp,x0,y0);}
+  var am=((i+.5)/N)*2*Math.PI;
+  xp=Math.cos(am)*rx*1.22;yp=Math.sin(am)*ry*1.22;
+ }
+ g.closePath();
+}
+function bakeCollage(){
+ var W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ var g=cv.getContext('2d');
+ var papers=['#EFEAD9','#E9E4F0','#E4E9F2','#F2E7E3','#E6EDE4'];
+ g.fillStyle=papers[Math.floor(Math.random()*papers.length)];g.fillRect(0,0,W,H);
+ var n=RAWP.length,slots=collageSlots(n);
+ var order=RAWP.map(function(_,i){return i;});
+ for(var i=order.length-1;i>0;i--){var k=Math.floor(Math.random()*(i+1)),t=order[i];order[i]=order[k];order[k]=t;}
+ var shapes=slots.map(function(){return 'rect';});
+ if(n>=3){
+  var a=Math.floor(Math.random()*n),b=Math.floor(Math.random()*n);
+  shapes[a]='scallop';if(b!==a&&n>=4)shapes[b]='circle';
+ }
+ slots.forEach(function(sl,i){drawSlot(g,RAWP[order[i]],sl,shapes[i],W,H);});
+ return jpegBudget(cv);
+}
+function drawSlot(g,img,sl,shape,W,H){
+ var cx=sl.x*W,cy=sl.y*H,w=sl.w*W,h=sl.h*H;
+ g.save();g.translate(cx,cy);g.rotate(sl.r*Math.PI/180);
+ g.shadowColor='rgba(27,26,23,.30)';g.shadowBlur=24;g.shadowOffsetY=10;
+ var bw,bh;
+ if(shape==='rect'){
+  var b=Math.round(W*.014);
+  g.fillStyle='#FDFBF4';g.fillRect(-w/2-b,-h/2-b,w+2*b,h+2*b);
+  g.shadowColor='transparent';
+  g.beginPath();g.rect(-w/2,-h/2,w,h);g.clip();
+  bw=w;bh=h;
+ }else if(shape==='circle'){
+  var r=Math.min(w,h*1.25)/2*1.12;
+  g.beginPath();g.arc(0,0,r,0,2*Math.PI);
+  g.fillStyle='#FDFBF4';g.fill();
+  g.shadowColor='transparent';
+  g.clip();
+  bw=r*2;bh=r*2;
+ }else{
+  var rx=w/2,ry=h/2*1.12;
+  scallopClip(g,rx,ry);
+  g.fillStyle='#FDFBF4';g.fill();
+  g.shadowColor='transparent';
+  g.clip();
+  bw=rx*2.44;bh=ry*2.44;
+ }
+ var iw=img.width,ih=img.height,sc=Math.max(bw/iw,bh/ih);
+ g.drawImage(img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc);
+ g.restore();
 }
 function publishPost(){
  var so=state.social;if(!so)return;
@@ -1775,7 +1870,7 @@ function toggleLike(id){
  LIKEPEND[id]={on:!had,t:Date.now()};
  if(tab==='feed')renderAll();
  fbToken(function(tk){
-  var url=fbPostUrl(id)+'?updateMask.fieldPaths=likes.'+encodeURIComponent(so.uid);
+  var url=fbPostUrl(id)+'?updateMask.fieldPaths='+encodeURIComponent('likes.`'+so.uid+'`');
   var body=had?{fields:{}}:{fields:{likes:{mapValue:{fields:(function(){var o={};o[so.uid]={integerValue:'1'};return o;})()}}}};
   fbJson(url,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(body)})
   .then(function(){if(LIKEPEND[id])LIKEPEND[id].t=Date.now();})
@@ -1783,9 +1878,9 @@ function toggleLike(id){
    delete LIKEPEND[id];
    if(had){if(p.likes.indexOf(so.uid)<0)p.likes.push(so.uid);}else{p.likes=p.likes.filter(function(u){return u!==so.uid;});}
    if(tab==='feed')renderAll();
-   alert('Heart could not save ('+((e&&e.status)||'network')+'). Tell Kennedy this number.');
+   alert('Could not save your heart ('+((e&&e.status)||'network')+'). Check your connection and try again.');
   });
- },function(){delete LIKEPEND[id];alert('Heart could not save (no session). Try closing and reopening the app.');});
+ },function(){delete LIKEPEND[id];alert('Could not save your heart. Try closing and reopening the app.');});
 }
 function fbNoteUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/notes/'+encodeURIComponent(id);}
 function decNote(doc){
@@ -2082,7 +2177,7 @@ function openMenu(){
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21c</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21e</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
