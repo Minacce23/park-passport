@@ -119,6 +119,7 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
   <h1><svg class="hseal" viewBox="0 0 64 64" aria-hidden="true"><path d="M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z" fill="#B388E6"/><circle cx="32" cy="32" r="21" fill="none" stroke="#5B3E86" stroke-width="2.6"/><g fill="none" stroke="#5B3E86" stroke-width="2" transform="translate(32 32)"><circle r="13"/><path d="M0 -13V13M-11.3 -6.5L11.3 6.5M-11.3 6.5L11.3 -6.5"/><circle r="3.4" fill="#B388E6" stroke="none"/></g></svg><span>Park Passport</span></h1>
   
   <button class="hdr-act" id="hdrAct" aria-label="Chart"></button>
+  <button class="hdr-menu" id="hdrSearch" aria-label="Search" onclick="openSearch()"><svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L20 20"/></svg></button>
   <button class="hdr-menu" id="hdrMenu" aria-label="Menu" onclick="openMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
  </header>
  <div id="chips" class="chips"></div>
@@ -334,6 +335,54 @@ function togglePass(p){state.passes=getPasses();if(state.passes[p]){state.passes
 function passManager(){var ps=getPasses();var keys=Object.keys(ps);var h='<h3>Annual passes</h3>';if(!keys.length){h+='<p class="muted" style="line-height:1.5;margin:0 0 12px">Track an annual pass and the app shows when it pays for itself. Add the pass cost, an average single-ticket price, and the date you got it, and your visits do the math.</p>';}else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Use the switch to show or hide a pass on your Stats page. Handy when a pass expires.</p><div class="card">'+keys.map(function(p){var i=passInfo(p);var d=i.savings>=0?money(i.savings)+' saved':i.more+' to break even';return '<div class="checkitem" style="cursor:pointer" onclick="formPass('+jsarg(p)+')"><div class="nm">'+esc(p)+'</div><div class="cnt">'+d+'</div><span class="switch'+(ps[p].off?'':' on')+'" onclick="event.stopPropagation();togglePass('+jsarg(p)+')" style="margin-left:9px"><span class="knob"></span></span></div>';}).join('')+'</div>';}h+='<div class="linkrow"><button onclick="formPass()">+ Add a pass</button></div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function statSheet(title,body){sheet('<h3>'+title+'</h3>'+body+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function showExtinct(){var ext=attractionsScoped().filter(function(a){return a.status==='Extinct';});var cnt={};fRides().forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var got=ext.filter(function(a){return cnt[a.name];}).length;var body='<div class="muted" style="margin:0 4px 10px">You experienced '+got+' of '+ext.length+' now-defunct attractions.</div><div class="card">';ext.forEach(function(a){var c=cnt[a.name]||0;var pk=a.park==='California Adventure'?'DCA':(a.park==='Disneyland'?'DL':a.park);body+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+' <span class="cnt">'+pk+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});body+='</div>';statSheet('Defunct attractions',body);}
+function openParkPage(pk){
+ var rides=(state.rides||[]).filter(function(r){var p2=r.park||pOf(r.attraction);return p2===pk||p2==='Both Parks';});
+ var cnt={},dset={},line=0;
+ rides.forEach(function(r){if(r.attraction)cnt[r.attraction]=(cnt[r.attraction]||0)+1;if(r.date)dset[r.date]=1;if(r.line!=null)line+=r.line;});
+ (state.visits||[]).forEach(function(v){if(v.date&&(v.park===pk||v.park==='Both Parks'))dset[v.date]=1;});
+ var days=Object.keys(dset).sort();
+ var uniq=Object.keys(cnt).length;
+ var total=0;try{attractionsOn().forEach(function(a){if((a.park===pk||a.park==='Both Parks')&&a.status!=='Extinct')total++;});}catch(e){}
+ var h='<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><span style="width:44px;height:44px;flex:none">'+parkIconSVG(pk)+'</span><h3 style="margin:0">'+esc(pk)+'</h3></div>';
+ h+='<div class="frstat"><span>Experiences</span><b>'+rides.length+'</b></div>';
+ h+='<div class="frstat"><span>Unique attractions</span><b>'+uniq+(total?' / '+total:'')+'</b></div>';
+ if(total){var pct=Math.min(100,Math.round(uniq/total*100));h+='<div class="prog" style="margin:2px 2px 10px"><div style="width:'+pct+'%"></div></div>';}
+ h+='<div class="frstat"><span>Visit days</span><b>'+days.length+'</b></div>';
+ if(days.length){h+='<div class="frstat"><span>First visit</span><b>'+fmt(days[0])+'</b></div>';
+  if(days.length>1)h+='<div class="frstat"><span>Most recent</span><b>'+fmt(days[days.length-1])+'</b></div>';}
+ if(line)h+='<div class="frstat"><span>Time in line</span><b>'+Math.floor(line/60)+'h '+(line%60)+'m</b></div>';
+ var top=Object.keys(cnt).map(function(a){return {a:a,c:cnt[a]};}).sort(function(x,y){return y.c-x.c;}).slice(0,5);
+ if(top.length){
+  h+='<div class="alabel" style="margin:12px 0 6px">Most experienced here</div><div class="card" style="margin-bottom:0">'+top.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.a)+')"><div class="nm">'+esc(x.a)+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';
+ }
+ h+='<div class="btnrow" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn primary" onclick="showByPark('+jsarg(pk)+')">All attractions</button></div>';
+ sheet(h);
+}
+function openSearch(){
+ sheet('<h3>Search your passport</h3>'+
+  '<input id="srch" placeholder="Attractions, parks, characters, days" autocomplete="off" oninput="runSearch()">'+
+  '<div id="srch_res" style="margin-top:10px"><p class="muted" style="font-size:13px;line-height:1.5">Find any attraction, park, character, or park day.</p></div>'+
+  '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+ var e=document.getElementById('srch');if(e)try{e.focus();}catch(err){}
+}
+function runSearch(){
+ var q=(val('srch')||'').toLowerCase();
+ var el=document.getElementById('srch_res');if(!el)return;
+ if(q.length<2){el.innerHTML='<p class="muted" style="font-size:13px">Type at least two letters.</p>';return;}
+ var h='';
+ var cnt={};(state.rides||[]).forEach(function(r){if(r.attraction)cnt[r.attraction]=(cnt[r.attraction]||0)+1;});
+ var pm=parkMap();Object.keys(pm).forEach(function(a){if(cnt[a]==null)cnt[a]=0;});
+ var am=Object.keys(cnt).filter(function(a){return a.toLowerCase().indexOf(q)>-1;}).sort().slice(0,6);
+ if(am.length)h+='<div class="alabel">Attractions</div><div class="card">'+am.map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+'</div>'+(cnt[a]?'<div class="cnt">&times;'+cnt[a]+'</div>':'')+'</div>';}).join('')+'</div>';
+ var pks=allParks().filter(function(p2){return p2.toLowerCase().indexOf(q)>-1;}).slice(0,4);
+ if(pks.length)h+='<div class="alabel">Parks</div><div class="card">'+pks.map(function(p2){return '<div class="checkitem" style="cursor:pointer" onclick="openParkPage('+jsarg(p2)+')"><div class="nm">'+esc(p2)+'</div></div>';}).join('')+'</div>';
+ var ch={};(state.meets||[]).forEach(function(m){if(m.character)ch[m.character]=(ch[m.character]||0)+1;});
+ var cm=Object.keys(ch).filter(function(c){return c.toLowerCase().indexOf(q)>-1;}).sort().slice(0,5);
+ if(cm.length)h+='<div class="alabel">Characters</div><div class="card">'+cm.map(function(c){return '<div class="checkitem" style="cursor:pointer" onclick="closeSheet();go(&#39;meets&#39;)"><div class="nm">'+esc(c)+'</div><div class="cnt">&times;'+ch[c]+'</div></div>';}).join('')+'</div>';
+ var dm=dayIndex().filter(function(e){return fmt(e.date).toLowerCase().indexOf(q)>-1||e.date.indexOf(q)>-1||(e.park||'').toLowerCase().indexOf(q)>-1;}).slice(0,6);
+ if(dm.length)h+='<div class="alabel">Days</div><div class="card">'+dm.map(function(e){return '<div class="checkitem" style="cursor:pointer" onclick="openDayPage('+jsarg(e.date)+')"><div class="nm">'+fmt(e.date)+(e.park?' <span class="muted">'+esc(e.park)+'</span>':'')+'</div></div>';}).join('')+'</div>';
+ el.innerHTML=h||'<p class="muted" style="font-size:13px">Nothing found for &ldquo;'+esc(q)+'&rdquo;.</p>';
+}
 function openAttraction(name){
  var rides=(state.rides||[]).filter(function(r){return r.attraction===name;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
  var scores=(state.scores||[]).filter(function(x){return x.attraction===name;});
@@ -473,7 +522,7 @@ function viewStats(s){
   var _ranked=_pon.map(function(pk,i){return {pk:pk,n:_cnt[pk],col:PCOL[i%PCOL.length]};}).sort(function(a,b){return b.n-a.n;});
   var _max=Math.max.apply(null,_ranked.map(function(x){return x.n;}))||1;
   var rows=_ranked.map(function(x){
-   return '<div class="bprow" onclick="showByPark('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+(x.pk==='California Adventure'?'Calif. Adv.':esc(x.pk))+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
+   return '<div class="bprow" onclick="openParkPage('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+(x.pk==='California Adventure'?'Calif. Adv.':esc(x.pk))+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
   }).join('');
   return '<h2 class="sec">By park</h2><div class="card" style="padding:6px 15px">'+rows+'</div>';
  };
@@ -2726,7 +2775,7 @@ function openMenu(){
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21v</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21w</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
