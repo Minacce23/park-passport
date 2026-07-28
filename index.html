@@ -417,7 +417,7 @@ function logAttraction(name){
  closeSheet();formRide();
  setTimeout(function(){var e=document.getElementById('f_attr');if(e){e.value=name;try{e.dispatchEvent(new Event('change'));}catch(err){}}},60);
 }
-function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});if(!arr.length){statSheet('Most experienced','<div class="emptyc"><div class="et">Nothing logged yet</div><div class="es">Log a ride and your most-experienced attractions show up here.</div></div>');return;}var body='<div class="card">'+arr.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';statSheet('Most experienced',body);}
+function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});if(!arr.length){statSheet('Most experienced','<div class="emptyc"><div class="et">Nothing logged yet</div><div class="es">Log an experience and your most-experienced attractions show up here.</div></div>');return;}var body='<div class="card">'+arr.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';statSheet('Most experienced',body);}
 function showByPark(pk){var cnt={};state.rides.filter(function(r){return pOf(r.attraction)===pk;}).forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});var body=arr.length?('<div class="muted" style="margin:0 4px 10px">'+arr.length+' attractions, '+arr.reduce(function(a,b){return a+b.c;},0)+' experiences.</div><div class="card">'+arr.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>'):'<div class="muted">Nothing logged at '+pk+' yet.</div>';statSheet(pk,body);}
 function showByParkDL(){showByPark(SEED.lists.parks[0]);}
 function showByParkCA(){showByPark(SEED.lists.parks[1]);}
@@ -435,7 +435,7 @@ function showCoasters(){
  h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Every unique roller coaster you have experienced counts as one credit. Mark any experience as a roller coaster when logging or editing it, or with the Coaster column in a CSV.</p>';
  h+='<div class="stat mile" style="cursor:default">'+IC.coaster+'<div><div class="se">'+done.length+' credit'+(done.length===1?'':'s')+'</div><div class="lbl" style="margin-top:2px">'+(todo.length?todo.length+' flagged, not yet ridden':'Every flagged coaster ridden')+'</div></div></div>';
  if(done.length){h+='<h2 class="sec">Credits</h2><div class="card">'+done.map(function(k){return '<div class="checkitem done" style="cursor:pointer" onclick="openAttraction('+jsarg(names[k]).replace(/"/g,'&quot;')+')"><div class="ck">&#10003;</div><div class="nm">'+esc(names[k])+' <span class="cnt">first '+fmt(first[k])+'</span></div><div class="cnt">&times;'+cnt[k]+'</div></div>';}).join('')+'</div>';}
- if(todo.length){h+='<h2 class="sec">Still to ride</h2><div class="card">'+todo.map(function(k){return '<div class="checkitem"><div class="ck"></div><div class="nm">'+esc(names[k])+'</div><button class="xbtn" onclick="setCoaster('+jsarg(names[k])+',false);save();showCoasters();renderAll()">&times;</button></div>';}).join('')+'</div>';}
+ if(todo.length){h+='<h2 class="sec">Still to experience</h2><div class="card">'+todo.map(function(k){return '<div class="checkitem"><div class="ck"></div><div class="nm">'+esc(names[k])+'</div><button class="xbtn" onclick="setCoaster('+jsarg(names[k])+',false);save();showCoasters();renderAll()">&times;</button></div>';}).join('')+'</div>';}
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
 function showWaitByDay(){var by={};state.rides.forEach(function(r){var m=(r.line!=null)?r.line:((r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null);if(m==null||!r.date)return;(by[r.date]=by[r.date]||[]).push(m);});var ds=Object.keys(by).sort().reverse();if(!ds.length){statSheet('Average wait by day','<div class="muted">No wait times logged yet.</div>');return;}var body='<div class="muted" style="margin:0 4px 10px">Days without logged waits are left out. Tap a day to see it.</div><div class="card">'+ds.map(function(d){var a=by[d];var avg=Math.round(a.reduce(function(x,y){return x+y;},0)/a.length);return '<div class="checkitem" style="cursor:pointer" onclick="closeSheet();openVisit(&#39;'+d+'&#39;)"><div class="nm">'+fmt(d)+'</div><div class="cnt">'+avg+' min avg &middot; '+a.length+' wait'+(a.length===1?'':'s')+'</div></div>';}).join('')+'</div>';statSheet('Average wait by day',body);}
@@ -694,7 +694,7 @@ function openPersonScores(name){
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
 function viewScores(){
- if(!fScores().length)return emptyState(IC.score,'No scores yet','Tap plus, then choose Log a ride score.');
+ if(!fScores().length)return emptyState(IC.score,'No scores yet','Tap plus, then log a score.');
  var out='<h2 class="sec">High scores</h2><div class="grid">';
  scoreRidesList().forEach(function(rn){
   var e=fScores().filter(function(s){return s.attraction===rn;});
@@ -749,13 +749,13 @@ function openChecklist(){sheet('<h3>Experience Checklist</h3>'+viewCheck()+'<div
 function viewCheck(){
  const cnt={}; state.rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  const active=attractionsOn().filter(a=>a.status==='Active');
- if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log a ride, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';oG+='<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(a.name)+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'<button class="xbtn" onclick="event.stopPropagation();removeExperience('+jsarg(a.name)+')">&times;</button></div>';});oG+='</div>';});return oG;}
+ if(GENERIC){var go2=attractionsOn(),grp={};go2.forEach(function(a){var k=a.park||'Other';(grp[k]=grp[k]||[]).push(a);});if(!go2.length)return emptyState(IC.rides,'No attractions yet','Log an experience, or import a park catalog CSV, and your attractions show up here grouped by park.');var doneG=go2.filter(function(a){return cnt[a.name];}).length;var oG='<div class="card">'+(doneG<go2.length?'<div class="prog"><div style="width:'+Math.round(doneG/go2.length*100)+'%"></div></div>':'')+'<div class="muted">'+doneG+' of '+go2.length+' attraction'+(go2.length===1?'':'s')+' experienced</div></div>';oG+='<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any attraction to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';var _grps=parksOn().slice();if(grp['Other']&&grp['Other'].length)_grps.push('Other');_grps.forEach(function(pk){if(!grp[pk]||!grp[pk].length)return;oG+='<h2 class="sec">'+pk+'</h2><div class="card">';grp[pk].forEach(function(a){var c=cnt[a.name]||0;oG+='<div class="checkitem '+(c?'done':'')+(isCoaster(a.name)?' iscc':'')+'" style="cursor:pointer" onclick="toggleCC(this,'+jsarg(a.name)+')"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+esc(a.name)+'<span class="ccslot">'+(isCoaster(a.name)?' <span class="pill cca">CC</span>':'')+'</span></div>'+(c>1?'<div class="cnt">&times;'+c+'</div>':'')+'<button class="xbtn" onclick="event.stopPropagation();removeExperience('+jsarg(a.name)+')">&times;</button></div>';});oG+='</div>';});return oG;}
  const done=active.filter(a=>cnt[a.name]).length;
  const pct=Math.round(done/active.length*100);
  let out='<div class="card">'+
   '<div class="prog"><div style="width:'+pct+'%"></div></div>'+
   '<div class="muted">'+done+' of '+active.length+' active attractions &middot; '+pct+'%</div></div>'+
-  '<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any ride to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';
+  '<div class="muted" style="margin:2px 4px 12px;line-height:1.5">Tap any attraction to flag it as a coaster credit (CC). Coaster credits so far: <b id="ccLive">'+coasterCreditCount()+'</b>.</div>';
  // group by park then land
  const groups={};
  attractionsOn().forEach(a=>{const k=a.park;(groups[k]=groups[k]||[]).push(a);});
@@ -831,7 +831,7 @@ function renderPhotoFields(){var ty=document.getElementById('f_ptype').value;var
 function savePhoto(){if(!pendingPhoto){alert('Pick a photo first');return;}var ty=document.getElementById('f_ptype').value;var d=val('f_date');
  if(ty==='ride'){var a=val('f_attr');if(!a){alert('Pick an attraction');return;}state.rides.push({date:d,attraction:a,park:val('f_park')||null,variant:null,with_:null,access:null,notes:null,photo:pendingPhoto,posted:null,lineStart:null,lineEnd:null,line:null});}
  else if(ty==='meet'){var c=val('f_char');if(!c){alert('Enter a character');return;}state.meets.push({date:d,character:c,park:(GENERIC?null:(SEED.lists.parks[0]||'Disneyland')),where:null,notes:null,photo:pendingPhoto});}
- else {var sa=val('f_attr');if(!sa){alert('Pick a ride');return;}var sc=val('f_score');state.scores.push({date:d,attraction:sa,score:(sc===''?0:Number(sc)),with_:null,party:null,rank:null,notes:null,photo:pendingPhoto});}
+ else {var sa=val('f_attr');if(!sa){alert('Pick an attraction');return;}var sc=val('f_score');state.scores.push({date:d,attraction:sa,score:(sc===''?0:Number(sc)),with_:null,party:null,rank:null,notes:null,photo:pendingPhoto});}
  pendingPhoto=null;save();closeSheet();go('photos');}
 function openAdd(){
  sheet('<h3>Add to your trip</h3><div class="actionlist">'+
@@ -903,7 +903,7 @@ function parkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><inpu
 function attrField(sel,park){sel=sel||'';if(GENERIC){return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Experience name" onchange="onAttrChange()" oninput="onAttrChange()"><datalist id="dl_attr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Pick or write in an experience" onchange="onAttrChange()" autocomplete="off"><datalist id="dl_attr">'+attrDataOpts(park||'')+'</datalist>';}
 function variantField(sel,attr){sel=sel||'';if(GENERIC){return '<label>Variant / special version (optional)</label><input id="f_var" list="dl_var" value="'+esc(sel)+'" placeholder="e.g. holiday overlay" autocomplete="off"><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}return '<label>Variant / special version (optional)</label><input id="f_var" list="dl_var" value="'+esc(sel)+'" placeholder="Standard, or write in a version" autocomplete="off"><datalist id="dl_var">'+variantDataOpts(attr||'')+'</datalist>';}
 function meetParkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="Park"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park">'+opts(SEED.lists.parks,sel||SEED.lists.parks[0])+'</select>';}
-function scoreRideField(sel){sel=sel||'';if(GENERIC){return '<label>Experience</label><input id="f_attr" list="dl_sr" value="'+esc(sel)+'" placeholder="Ride name"><datalist id="dl_sr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}var list=scoreRidesList().slice();if(sel&&list.indexOf(sel)<0)list.unshift(sel);return '<label>Experience</label><select id="f_attr">'+opts(list,sel)+'</select>';}
+function scoreRideField(sel){sel=sel||'';if(GENERIC){return '<label>Experience</label><input id="f_attr" list="dl_sr" value="'+esc(sel)+'" placeholder="Attraction name"><datalist id="dl_sr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}var list=scoreRidesList().slice();if(sel&&list.indexOf(sel)<0)list.unshift(sel);return '<label>Experience</label><select id="f_attr">'+opts(list,sel)+'</select>';}
 function visitWith(d){var v=state.visits.find(function(x){return x.date===d;});return (v&&v.with_)?v.with_:'';}
 function syncVisitWith(){var d=val('f_date');var pe=document.getElementById('f_park');if(pe&&!pe.value){var pp=parkOfDay(d);if(pp){pe.value=pp;if(typeof onParkChange==='function'&&pe.tagName==='SELECT')onParkChange();}}var w=visitWith(d);if(!w)return;var e=document.getElementById('f_with')||document.getElementById('f_party');if(e&&!e.value)e.value=w;}
 function rideVariants(r){if(!r)return[];if(r.variants&&r.variants.length)return r.variants.slice();return r.variant?[r.variant]:[];}
@@ -1036,7 +1036,7 @@ function formVisit(){
   '<label>Date</label><input id="f_date" placeholder="e.g. 2024-06-01 or 6/1/24" value="'+today()+'" autocomplete="off">'+
   meetParkField('')+
   '<label>What you rode that day</label>'+
-  '<div class="scorerow"><input id="bf_new" placeholder="Type a ride, then Add" autocomplete="off"><button type="button" class="btn" style="flex:none;width:auto" onclick="bfAddTyped()">Add</button></div>'+
+  '<div class="scorerow"><input id="bf_new" placeholder="Type an attraction, then Add" autocomplete="off"><button type="button" class="btn" style="flex:none;width:auto" onclick="bfAddTyped()">Add</button></div>'+
   '<div id="bf_chips" class="fchips" style="margin-top:8px"></div>'+
   '<div id="bf_known"></div>'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="bfSave()">Save day</button></div>');
@@ -1164,14 +1164,14 @@ function formScore(d,pre){pendingPhoto=null;pre=pre||null;
 function pickRideForScore(){
  var rs=state.rides.map(function(r,i){return {i:i,r:r};});
  rs.sort(function(a,b){return (b.r.date||'').localeCompare(a.r.date||'')||(b.i-a.i);});
- if(!rs.length){alert('No logged experiences yet. Log the ride first, then come back to add its score.');return;}
+ if(!rs.length){alert('No logged experiences yet. Log the experience first, then come back to add its score.');return;}
  var rows=rs.map(function(x){var r=x.r;var sub=fmt(r.date)+(r.park?' &middot; '+r.park:'')+(r.with_?' &middot; '+r.with_:'');return '<div class="checkitem" style="cursor:pointer" onclick="useRideForScore('+x.i+')"><div class="nm">'+esc(shortRide(r.attraction))+'</div><div class="cnt">'+esc(sub)+'</div></div>';}).join('');
- sheet('<h3>Link to a logged experience</h3><p class="muted" style="line-height:1.5;margin:0 0 12px">Pick the ride this score belongs to. Its date and details fill in automatically. Newest first.</p><div class="card">'+rows+'</div><div class="btnrow"><button class="btn ghost" onclick="formScore(curDay)">Back</button></div>');
+ sheet('<h3>Link to a logged experience</h3><p class="muted" style="line-height:1.5;margin:0 0 12px">Pick the attraction this score belongs to. Its date and details fill in automatically. Newest first.</p><div class="card">'+rows+'</div><div class="btnrow"><button class="btn ghost" onclick="formScore(curDay)">Back</button></div>');
 }
 function useRideForScore(i){var r=state.rides[i];if(!r)return;formScore(null,{date:r.date,attraction:r.attraction,party:r.with_||''});}
 function saveScore(){
  const a=val('f_attr');
- if(!a){alert('Pick a ride');return;}
+ if(!a){alert('Pick an attraction');return;}
  var rows=collectScoreRows();
  if(!rows.length){alert('Enter at least one score');return;}
  rows.forEach(function(r){state.scores.push({date:val('f_date'),attraction:a,score:r.score,with_:r.who||null,party:val('f_party')||null,rank:r.rank||null,notes:val('f_notes')||null,photo:pendingPhoto||null});});
@@ -1192,14 +1192,14 @@ function editScore(i){
 }
 function updateScore(i){
  const s=state.scores[i];if(!s)return;const a=val('f_attr'),sc=val('f_score');
- if(!a){alert('Pick a ride');return;}if(sc===''){alert('Enter a score');return;}
+ if(!a){alert('Pick an attraction');return;}if(sc===''){alert('Enter a score');return;}
  s.date=val('f_date');s.attraction=a;s.score=Number(sc);s.with_=val('f_with')||null;s.party=val('f_party')||null;s.rank=val('f_rank')||null;s.notes=val('f_notes')||null;s.photo=pendingPhoto||null;
  save();closeSheet();go('scores');
 }
 function delScore(i){if(!confirm('Delete this score?'))return;state.scores.splice(i,1);save();closeSheet();go('scores');}
 function scoreChartSVG(rn){
  const e=state.scores.filter(s=>s.attraction===rn && s.date && !isNaN(Number(s.score)));
- if(!e.length)return '<div class="empty">No scores for this ride yet.</div>';
+ if(!e.length)return '<div class="empty">No scores for this attraction yet.</div>';
  const players={};
  e.forEach(function(s){const p=s.with_||'?';(players[p]=players[p]||[]).push({d:s.date,v:Number(s.score)});});
  Object.keys(players).forEach(function(k){players[k].sort((a,b)=>a.d.localeCompare(b.d));});
@@ -2512,6 +2512,95 @@ function viewDays(){
  }).join('');
  return h;
 }
+function drawPostmarkCv(g,cx,cy,r,d){
+ var dt=new Date(d+'T12:00:00');
+ var mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][dt.getMonth()];
+ g.save();g.translate(cx,cy);g.rotate(-4*Math.PI/180);
+ g.strokeStyle='#C9433A';g.fillStyle='#C9433A';g.globalAlpha=.85;
+ g.lineWidth=r*.085;g.beginPath();g.arc(0,0,r,0,7);g.stroke();
+ g.lineWidth=r*.038;g.globalAlpha=.5;g.beginPath();g.arc(0,0,r*.8,0,7);g.stroke();
+ g.globalAlpha=.85;g.textAlign='center';
+ g.font='800 '+Math.round(r*.3)+'px sans-serif';g.fillText(mo,0,-r*.22);
+ g.font='900 '+Math.round(r*.52)+'px sans-serif';g.fillText(dt.getDate(),0,r*.24);
+ g.font='700 '+Math.round(r*.22)+'px sans-serif';g.fillText(dt.getFullYear(),0,r*.56);
+ g.lineWidth=r*.06;g.lineCap='round';g.globalAlpha=.6;
+ for(var i=-1;i<2;i++){g.beginPath();g.moveTo(r*1.25,i*r*.3);g.bezierCurveTo(r*1.6,i*r*.3-r*.12,r*1.95,i*r*.3+r*.12,r*2.3,i*r*.3);g.stroke();}
+ g.restore();g.globalAlpha=1;
+}
+function shareDayCard(d){
+ var rides=(state.rides||[]).filter(function(r){return r.date===d;});
+ var meets=(state.meets||[]).filter(function(m){return m.date===d;});
+ var scores=(state.scores||[]).filter(function(x){return x.date===d;});
+ var v=(state.visits||[]).find(function(x){return x.date===d;})||{};
+ var park=v.park||'';if(!park){var ps={};rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;});park=Object.keys(ps).join(' + ');}
+ var line=0,maxLine=0;rides.forEach(function(r){if(r.line!=null){line+=r.line;if(r.line>maxLine)maxLine=r.line;}});
+ var photos=[],seen={};
+ rides.concat(meets).concat(scores).forEach(function(x){if(x.photo&&!seen[x.photo]&&photos.length<3){seen[x.photo]=1;photos.push(x.photo);}});
+ var imgs=[];var left=photos.length;
+ function go2(){
+  var W=1080,H=1920,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  var g=cv.getContext('2d');
+  g.fillStyle='#EAE7DE';g.fillRect(0,0,W,H);
+  g.fillStyle='#F4EFDE';g.strokeStyle='#D9D5C7';g.lineWidth=3;
+  roundRect(g,50,50,W-100,H-100,36);g.fill();g.stroke();
+  drawPostmarkCv(g,W/2-40,265,120,d);
+  g.fillStyle='#1B1A17';g.textAlign='center';
+  var nm=park||'A park day';var fs=76;
+  g.font='900 '+fs+'px sans-serif';
+  while(g.measureText(nm).width>W-220&&fs>40){fs-=4;g.font='900 '+fs+'px sans-serif';}
+  g.fillText(nm,W/2,510);
+  var bits=[];
+  if(rides.length)bits.push(rides.length+' experience'+(rides.length===1?'':'s'));
+  if(line)bits.push(Math.floor(line/60)+'h '+(line%60)+'m in line');
+  if(meets.length)bits.push(meets.length+' character'+(meets.length===1?'':'s'));
+  if(scores.length)bits.push(scores.length+' score'+(scores.length===1?'':'s'));
+  g.fillStyle='#66645B';g.font='700 34px sans-serif';
+  g.fillText(bits.join('  \u00b7  '),W/2,575);
+  var y=640;
+  if(imgs.length){
+   var pw=imgs.length===1?620:430,ph=pw;
+   var slots=imgs.length===1?[[W/2,y+ph/2,-2]]:(imgs.length===2?[[W/2-235,y+ph/2,-3],[W/2+235,y+ph/2+26,2.5]]:[[W/2-240,y+ph/2,-3],[W/2+240,y+ph/2+30,2.5],[W/2,y+ph+230,1.5]]);
+   slots.forEach(function(sl,i){
+    if(!imgs[i])return;
+    g.save();g.translate(sl[0],sl[1]);g.rotate(sl[2]*Math.PI/180);
+    g.shadowColor='rgba(27,26,23,.28)';g.shadowBlur=26;g.shadowOffsetY=12;
+    g.fillStyle='#FDFBF4';g.fillRect(-pw/2-14,-ph/2-14,pw+28,ph+58);
+    g.shadowColor='transparent';
+    var im=imgs[i],sc=Math.max(pw/im.width,ph/im.height);
+    g.beginPath();g.rect(-pw/2,-ph/2,pw,ph);g.clip();
+    g.drawImage(im,-im.width*sc/2,-im.height*sc/2,im.width*sc,im.height*sc);
+    g.restore();
+   });
+   y+= imgs.length===3? ph+520 : ph+160;
+  }
+  var cnt={};rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});
+  var names=Object.keys(cnt).slice(0,8);
+  g.fillStyle='#1B1A17';g.font='700 36px sans-serif';
+  names.forEach(function(a){
+   var t=a+(cnt[a]>1?'  \u00d7'+cnt[a]:'');
+   if(g.measureText(t).width>W-260)t=t.slice(0,34)+'\u2026';
+   g.fillText(t,W/2,y);y+=56;
+  });
+  if(Object.keys(cnt).length>8){g.fillStyle='#66645B';g.font='700 32px sans-serif';g.fillText('+ '+(Object.keys(cnt).length-8)+' more',W/2,y);y+=56;}
+  g.fillStyle='#66645B';g.font='800 30px sans-serif';
+  var ftr='PARK PASSPORT';
+  g.save();g.translate(W/2,H-118);
+  var sp=ftr.split('').join('\u200a\u200a');
+  g.fillText(sp,0,0);g.restore();
+  try{var p2=new Path2D(SEAL_PATH);g.save();g.translate(W/2-16,H-215);g.scale(1.1,1.1);g.fillStyle='#B388E6';g.fill(p2);g.restore();
+   g.strokeStyle='#5B3E86';g.lineWidth=2.6;g.beginPath();g.arc(W/2+19,H-180,23,0,7);g.stroke();}catch(e){}
+  var out=cv.toDataURL('image/jpeg',0.9);
+  var fname='park-day-'+d+'.jpg';
+  fetch(out).then(function(r2){return r2.blob();}).then(function(blob){
+   var file=new File([blob],fname,{type:'image/jpeg'});
+   if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});}
+   else{var a=document.createElement('a');a.href=out;a.download=fname;a.click();}
+  }).catch(function(){var a=document.createElement('a');a.href=out;a.download=fname;a.click();});
+ }
+ if(!left)go2();
+ else photos.forEach(function(u,i){var im=new Image();im.onload=function(){imgs[i]=im;left--;if(!left)go2();};im.onerror=function(){left--;if(!left)go2();};im.src=u;});
+}
+function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function openDayPage(d){
  var rides=(state.rides||[]).filter(function(r){return r.date===d;});
  var meets=(state.meets||[]).filter(function(m){return m.date===d;});
@@ -2547,7 +2636,8 @@ function openDayPage(d){
   var ph=(pc.photos&&pc.photos.length)?pc.photos[0]:pc.photo;
   h+='<div class="alabel" style="margin:12px 0 6px">Postcard sent</div><div class="card" style="margin-bottom:0;display:flex;gap:10px;align-items:center">'+(ph?'<span class="dcthumb" style="transform:rotate(-2deg)"><img src="'+ph+'"></span>':'')+'<span class="muted" style="font-weight:700;font-size:13.5px;min-width:0">'+(pc.caption?esc(pc.caption):'No message, just the view.')+'</span></div>';
  }
- h+='<div class="btnrow" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn primary" onclick="closeSheet();openVisit('+jsarg(d)+')">Edit this day</button></div>';
+ h+='<button class="btn primary" style="width:100%;margin-top:14px" onclick="shareDayCard('+jsarg(d)+')">Share this day</button>';
+ h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" onclick="closeSheet();openVisit('+jsarg(d)+')">Edit this day</button></div>';
  sheet(h);
 }
 
@@ -2775,7 +2865,7 @@ function openMenu(){
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21w</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21x</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
