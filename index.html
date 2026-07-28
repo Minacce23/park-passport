@@ -15,8 +15,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
 body{font-family:-apple-system,'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:env(safe-area-inset-bottom);}
-body::before{content:"";position:fixed;inset:0;z-index:9000;pointer-events:none;display:none;
- background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+body::before{content:"";position:fixed;inset:0;z-index:15;pointer-events:none;display:block;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");}
 .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
 header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(16px + env(safe-area-inset-top)) 18px 12px;border-bottom:1.5px solid var(--line);}
 header h1{margin:0;font-size:27px;letter-spacing:-0.04em;font-weight:900;padding-right:92px;display:flex;align-items:center;gap:9px;}.hseal{width:27px;height:27px;flex:none;}
@@ -24,7 +24,7 @@ header .sub{font-size:13px;font-weight:700;color:var(--muted);margin-top:3px;pad
 main{padding:14px 14px 152px;position:relative;}
 .card{background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--line);}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.stat{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 12px;text-align:center;}.stat.st-rides{background:var(--peri);border-color:transparent;}.stat.st-visits{background:#A9C8A9;border-color:transparent;}body.theme-dark .stat .num{color:var(--ink);}body.theme-dark .stat.st-rides{background:#454F8C;}body.theme-dark .stat.st-rides .num{color:var(--peri);}body.theme-dark .stat.st-visits{background:#2E4A2E;}body.theme-dark .stat.st-visits .num{color:#A9C8A9;}.grid .grid .grid .grid body.theme-dark .stat .lbl{color:rgba(240,237,227,.78);}body.theme-dark .ft1{background:#454F8C;}body.theme-dark .ft2{background:#6E6820;}body.theme-dark .ft3{background:#8F3F7D;}body.theme-dark .ftile{color:#F0EDE3;}body.theme-dark .ft1 .fnum{color:var(--peri);}body.theme-dark .ft2 .fnum{color:var(--lemon);}body.theme-dark .ft3 .fnum{color:var(--blush);}body.theme-dark .flbl{color:rgba(240,237,227,.72);}body.theme-dark .lwho{color:#F0EDE3;}body.theme-dark .lwho.me{color:var(--grape);}.grid .stat,.grid .stat .num{color:#1B1A17;}.grid .stat .lbl{color:rgba(27,26,23,.8);}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 12px;text-align:center;}.stat.st-rides{background:var(--peri);border-color:transparent;}.stat.st-visits{background:#A9C8A9;border-color:transparent;}.stat.st-meets{background:#F2E7E3;border-color:transparent;}.stat.st-scores{background:#EFEAD9;border-color:transparent;}body.theme-dark .stat.st-meets,body.theme-dark .stat.st-scores{background:var(--card);border-color:var(--line);}body.theme-dark .stat .num{color:var(--ink);}body.theme-dark .stat.st-rides{background:#454F8C;}body.theme-dark .stat.st-rides .num{color:var(--peri);}body.theme-dark .stat.st-visits{background:#2E4A2E;}body.theme-dark .stat.st-visits .num{color:#A9C8A9;}.grid .grid .grid .grid body.theme-dark .stat .lbl{color:rgba(240,237,227,.78);}body.theme-dark .ft1{background:#454F8C;}body.theme-dark .ft2{background:#6E6820;}body.theme-dark .ft3{background:#8F3F7D;}body.theme-dark .ftile{color:#F0EDE3;}body.theme-dark .ft1 .fnum{color:var(--peri);}body.theme-dark .ft2 .fnum{color:var(--lemon);}body.theme-dark .ft3 .fnum{color:var(--blush);}body.theme-dark .flbl{color:rgba(240,237,227,.72);}body.theme-dark .lwho{color:#F0EDE3;}body.theme-dark .lwho.me{color:var(--grape);}.grid .stat,.grid .stat .num{color:#1B1A17;}.grid .stat .lbl{color:rgba(27,26,23,.8);}
 .num{color:var(--ink);font-weight:900;letter-spacing:-0.03em;}
 .stat .num{font-size:27px;font-weight:900;line-height:1;color:inherit;}
 .stat .lbl{font-size:13px;color:var(--muted);margin-top:7px;text-transform:capitalize;letter-spacing:.5px;font-weight:800;}
@@ -258,7 +258,15 @@ function fScores(){var a=actPark();return a?state.scores.filter(function(s){retu
 function dayParkSet(d){var ps={};state.rides.forEach(function(r){if(r.date===d){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?'&&pk!=='Both Parks')ps[pk]=1;}});state.meets.forEach(function(m){if(m.date===d&&m.park&&m.park!=='Both Parks')ps[m.park]=1;});state.scores.forEach(function(sc){if(sc.date===d){var pk2=pOf(sc.attraction);if(pk2&&pk2!=='?'&&pk2!=='Both Parks')ps[pk2]=1;}});var meta=visitMeta(d);if(meta&&meta.park&&meta.park!=='Both Parks')ps[meta.park]=1;return ps;}
 function fVisits(){var a=actPark();var vs=allVisits();return a?vs.filter(function(v){var ps=dayParkSet(v.date);return !!ps[a]||(v.park===a);}):vs;}
 function attractionsScoped(){var a=actPark();return attractionsOn().filter(function(x){return !a||x.park===a;});}
-function renderChips(){var el=document.getElementById('chips');if(!el)return;if(tab==='friends'||tab==='badges'||tab==='people'||tab==='feed'){el.innerHTML='';el.style.display='none';return;}el.style.display='';var ps=parksOn();if(state.actPark&&ps.indexOf(state.actPark)<0){state.actPark='';try{save();}catch(e){}}if(ps.length<1){el.innerHTML='<span class="chip add" onclick="formPark()">+ Add a park</span>';return;}var a=actPark();var h='<span class="chip'+(a===''?' on':'')+'" onclick="setActPark(&#39;&#39;)">All parks</span>';ps.forEach(function(p){h+='<span class="chip'+(a===p?' on':'')+'" onclick="setActPark(&#39;'+p.replace(/&/g,'&amp;').replace(/'/g,'&#39;')+'&#39;)">'+p+'</span>';});h+='<span class="chip add" onclick="formPark()">+ Add</span>';el.innerHTML=h;}
+function renderChips(){var el=document.getElementById('chips');if(!el)return;if(tab==='friends'||tab==='badges'||tab==='people'||tab==='feed'){el.innerHTML='';el.style.display='none';return;}el.style.display='';var ps=parksOn();if(state.actPark&&ps.indexOf(state.actPark)<0){state.actPark='';try{save();}catch(e){}}if(ps.length<1){el.innerHTML='<span class="chip add" onclick="formPark()">+ Add a park</span>';return;}var a=actPark();var h;if(ps.length>6){h='<span class="chip on" onclick="openParkPicker()">'+(a?esc(a):'All parks')+' &#9662;</span><span class="chip add" onclick="formPark()">+ Add</span>';}else{h='<span class="chip'+(a===''?' on':'')+'" onclick="setActPark(&#39;&#39;)">All parks</span>';ps.forEach(function(p){h+='<span class="chip'+(a===p?' on':'')+'" onclick="setActPark(&#39;'+p.replace(/&/g,'&amp;').replace(/'/g,'&#39;')+'&#39;)">'+p+'</span>';});h+='<span class="chip add" onclick="formPark()">+ Add</span>';}el.innerHTML=h;}
+function openParkPicker(){
+ var ps=parksOn(),a=actPark();
+ var h='<h3>Pick a park</h3><div class="card">';
+ h+='<div class="checkitem" style="cursor:pointer" onclick="setActPark(&#39;&#39;);closeSheet()"><div class="ck">'+(a===''?'&#10003;':'')+'</div><div class="nm">All parks</div></div>';
+ ps.forEach(function(p){h+='<div class="checkitem" style="cursor:pointer" onclick="setActPark('+jsarg(p)+');closeSheet()"><div class="ck">'+(a===p?'&#10003;':'')+'</div><div class="nm">'+esc(p)+'</div></div>';});
+ h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn primary" onclick="closeSheet();formPark()">Add a park</button></div>';
+ sheet(h);
+}
 function formPark(){sheet('<h3>Add a park</h3><label>Park name</label><input id="f_pname" placeholder="e.g. Sunshine Park" autocomplete="off"><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="savePark()">Add park</button></div>');}
 function savePark(){var n=(val('f_pname')||'').trim();if(!n){alert('Enter a park name');return;}state.userParks=state.userParks||[];if(allParks().indexOf(n)<0){state.userParks.push(n);assignParkIcon(n);}state.actPark=n;save();closeSheet();renderAll();window.scrollTo(0,0);}
 function attractionsOn(){return catalog().filter(function(a){return parkOn(a.park);});}
@@ -266,7 +274,9 @@ function togglePark(p){state.settings=state.settings||{};state.settings.parks=st
 function stats(){
  const rides=fRides(), ridden=new Set(rides.map(r=>r.attraction));
  var _ap0=actPark();
- const allAttr=catalog().filter(function(x){return !_ap0||x.park===_ap0;});
+ var _vp={};state.rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')_vp[pk]=1;});
+ var _vpn=Object.keys(_vp).length;
+ const allAttr=catalog().filter(function(x){return _ap0?(x.park===_ap0):(!_vpn||_vp[x.park]||x.park==='Both Parks');});
  const ext=allAttr.filter(a=>a.status==='Extinct');
  const cnt={}; rides.forEach(r=>cnt[r.attraction]=(cnt[r.attraction]||0)+1);
  let top='',topN=0; for(const k in cnt){if(cnt[k]>topN){topN=cnt[k];top=k;}}
@@ -336,6 +346,17 @@ function togglePass(p){state.passes=getPasses();if(state.passes[p]){state.passes
 function passManager(){var ps=getPasses();var keys=Object.keys(ps);var h='<h3>Annual passes</h3>';if(!keys.length){h+='<p class="muted" style="line-height:1.5;margin:0 0 12px">Track an annual pass and the app shows when it pays for itself. Add the pass cost, an average single-ticket price, and the date you got it, and your visits do the math.</p>';}else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Use the switch to show or hide a pass on your Stats page. Handy when a pass expires.</p><div class="card">'+keys.map(function(p){var i=passInfo(p);var d=i.savings>=0?money(i.savings)+' saved':i.more+' to break even';return '<div class="checkitem" style="cursor:pointer" onclick="formPass('+jsarg(p)+')"><div class="nm">'+esc(p)+'</div><div class="cnt">'+d+'</div><span class="switch'+(ps[p].off?'':' on')+'" onclick="event.stopPropagation();togglePass('+jsarg(p)+')" style="margin-left:9px"><span class="knob"></span></span></div>';}).join('')+'</div>';}h+='<div class="linkrow"><button onclick="formPass()">+ Add a pass</button></div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function statSheet(title,body){sheet('<h3>'+title+'</h3>'+body+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function showExtinct(){var ext=attractionsScoped().filter(function(a){return a.status==='Extinct';});var cnt={};fRides().forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var got=ext.filter(function(a){return cnt[a.name];}).length;var body='<div class="muted" style="margin:0 4px 10px">You experienced '+got+' of '+ext.length+' now-defunct attractions.</div><div class="card">';ext.forEach(function(a){var c=cnt[a.name]||0;var pk=a.park==='California Adventure'?'DCA':(a.park==='Disneyland'?'DL':a.park);body+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+' <span class="cnt">'+pk+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});body+='</div>';statSheet('Defunct attractions',body);}
+function showAllParksSheet(){
+ var pon=parksOn();
+ var cnt={};pon.forEach(function(pk){cnt[pk]=state.rides.filter(function(r){return pOf(r.attraction)===pk;}).length;});
+ var ranked=pon.slice().sort(function(a,b){return (cnt[b]||0)-(cnt[a]||0);});
+ var h='<h3>All parks</h3><div class="card" style="padding:6px 15px">';
+ ranked.forEach(function(pk){
+  h+='<div class="bprow" onclick="openParkPage('+jsarg(pk)+')"><span class="bpic">'+parkIconSVG(pk)+'</span><span class="bpname">'+esc(pk)+'</span><span class="bpnum"'+(cnt[pk]?'':' style="color:var(--muted)"')+'>'+(cnt[pk]||0)+'</span><span class="vchev">&rsaquo;</span></div>';
+ });
+ h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
+}
 function openParkPage(pk){
  var rides=(state.rides||[]).filter(function(r){var p2=r.park||pOf(r.attraction);return p2===pk||p2==='Both Parks';});
  var cnt={},dset={},line=0;
@@ -467,7 +488,7 @@ function backupNudge(){
   '<div class="pt-btns"><button class="pt-primary" onclick="exportData();renderAll()">Back up now</button></div></div>';
 }
 function proTipCard(){return '<div class="protip"><div class="pt-top"><span class="pt-k">Pro tip</span><button class="pt-x" onclick="dismissTip()" aria-label="Dismiss">&times;</button></div><div class="pt-t">Two ways to start</div><div class="pt-s">Log your first experience by typing its name once, it autofills after that. Or download the template from the menu, fill it in, and import your whole list at once.</div><div class="pt-btns"><button class="pt-primary" onclick="formRide()">Log my first experience</button><button class="pt-ghost" onclick="openImport()">Import a list</button></div></div>';}
-var HOMEDEF=['hero','overview','bypark','waits','pass','milestones'];
+var HOMEDEF=['hero','overview','bypark','yearstrip','waits','pass','milestones'];
 var HOMEEDIT=false;
 function homeState(){state.home=state.home||{};state.home.hidden=state.home.hidden||{};state.home.hiddenTiles=state.home.hiddenTiles||{};if(!Array.isArray(state.home.order))state.home.order=HOMEDEF.slice();return state.home;}
 function homeOrder(){var hs=homeState();var o=hs.order.filter(function(k){return HOMEDEF.indexOf(k)>-1;});HOMEDEF.forEach(function(k){if(o.indexOf(k)<0)o.push(k);});return o;}
@@ -496,8 +517,8 @@ function viewStats(s){
   var tiles=[
    ['rides',statTile(IC.rides,s.rides,'Total experiences',"go('rides')",'rides')],
    ['visits',statTile(IC.visits,s.visits,'Visit days',"go('visits')",'visits')],
-   ['meets',statTile(IC.meets,s.chars,'Character Meets',"go('meets')")],
-   ['scores',statTile(IC.score,s.scores,'Scores logged',"go('scores')")]
+   ['meets',statTile(IC.meets,s.chars,'Character Meets',"go('meets')",'meets')],
+   ['scores',statTile(IC.score,s.scores,'Scores logged',"go('scores')",'scores')]
   ];
   var cf=state.coasters||{};
   if(Object.keys(cf).length){
@@ -520,12 +541,35 @@ function viewStats(s){
   if(!_pon.length)return '';
   var _cnt={};_pon.forEach(function(pk){_cnt[pk]=state.rides.filter(function(r){return pOf(r.attraction)===pk;}).length;});
   var PCOL=['#3E5A3E','#8E96D6','#B388E6','#D9CF3F','#8F3F7D','#57554C','#D9A3D4','#7FA57F'];
-  var _ranked=_pon.map(function(pk,i){return {pk:pk,n:_cnt[pk],col:PCOL[i%PCOL.length]};}).sort(function(a,b){return b.n-a.n;});
+  var _all=_pon.map(function(pk,i){return {pk:pk,n:_cnt[pk],col:PCOL[i%PCOL.length]};}).sort(function(a,b){return b.n-a.n;});
+  var _ranked=_all.filter(function(x){return x.n>0;});
+  var _zero=_all.length-_ranked.length;
+  if(!_ranked.length)return '';
+  var _more=_ranked.length>5?_ranked.length:0;
+  if(_more)_ranked=_ranked.slice(0,5);
   var _max=Math.max.apply(null,_ranked.map(function(x){return x.n;}))||1;
   var rows=_ranked.map(function(x){
    return '<div class="bprow" onclick="openParkPage('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+(x.pk==='California Adventure'?'Calif. Adv.':esc(x.pk))+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
   }).join('');
-  return '<h2 class="sec">By park</h2><div class="card" style="padding:6px 15px">'+rows+'</div>';
+  var foot='';
+  if(_more)foot+='<div class="bprow" style="cursor:pointer;justify-content:center" onclick="showAllParksSheet()"><span class="bpname" style="flex:none;color:var(--accent)">See all '+_more+' parks &rsaquo;</span></div>';
+  if(_zero)foot+='<div class="muted" style="font-size:12px;padding:8px 2px 4px;text-align:center">'+_zero+' park'+(_zero===1?'':'s')+' not visited yet</div>';
+  return '<h2 class="sec">By park</h2><div class="card" style="padding:6px 15px">'+rows+foot+'</div>';
+ };
+ SEC.yearstrip=function(){
+  var byY={};allVisits().forEach(function(v){if(v.date)byY[v.date.slice(0,4)]=(byY[v.date.slice(0,4)]||0)+1;});
+  var ys=Object.keys(byY).sort();
+  if(ys.length<3)return '';
+  var y0=+ys[0],y1=+ys[ys.length-1];
+  if(y1-y0>60)return '';
+  var mx=0;ys.forEach(function(y){if(byY[y]>mx)mx=byY[y];});
+  var bars='';
+  for(var y=y0;y<=y1;y++){
+   var n=byY[String(y)]||0;
+   var hgt=n?Math.max(4,Math.round(Math.sqrt(n)/Math.sqrt(mx)*44)):2;
+   bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:0"><div style="width:70%;max-width:10px;height:'+hgt+'px;border-radius:3px;background:'+(n?'#A9C8A9':'var(--line)')+';margin-top:'+(46-hgt)+'px"></div>'+((y===y0||y===y1||y%10===0)?'<div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:3px">'+String(y).slice(2)+'</div>':'<div style="height:15px"></div>')+'</div>';
+  }
+  return '<h2 class="sec">Park years</h2><div class="card"><div style="display:flex;align-items:flex-end;gap:1px">'+bars+'</div><div class="muted" style="font-size:12px;margin-top:6px;text-align:center">Visit days per year, '+y0+' to '+y1+'</div></div>';
  };
  SEC.waits=function(){
   if(!waitsOn())return '';
@@ -545,7 +589,9 @@ function viewStats(s){
   var g='<h2 class="sec">Milestones &amp; badges</h2>';
   g+='<div class="grid">'+
    (GENERIC?(s.extinct?numTile(s.extinct,'Defunct experienced',"showExtinct()"):numTile(allParks().length,'Parks visited')):numTile(s.extinct,'Defunct experienced',"showExtinct()"))+
-   numTile(years, yrsN?yrsN+(yrsN===1?' year tracked':' years tracked'):'Years tracked',"showYears()")+
+   (yrsN?('<div class="stat wide" onclick="showYears()" style="cursor:pointer;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:16px">'+
+    '<svg viewBox="0 0 64 64" style="width:56px;height:56px;flex:none;color:#C9433A;opacity:.85;transform:rotate(-5deg)"><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="32" cy="32" r="22.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="32" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="currentColor" font-family="inherit" letter-spacing="1">TRACKED</text><text x="32" y="43" text-anchor="middle" font-size="15" font-weight="900" fill="currentColor" font-family="inherit">'+yrsN+'</text><text x="32" y="52" text-anchor="middle" font-size="7.5" font-weight="700" fill="currentColor" font-family="inherit">'+(yrsN===1?'YEAR':'YEARS')+'</text></svg>'+
+    '<div style="text-align:left"><div class="num" style="font-size:20px">'+years+'</div><div class="lbl" style="margin-top:3px">'+(yrsN===1?'Year tracked':'Years tracked')+'</div></div></div>'):numTile('-','Years tracked',"showYears()"))+
   '</div>';
   var _bl=badgeList(),_be=_bl.filter(function(b){return b.earned;}).length;
   g+='<div class="stat mile" onclick="openBadges()" style="cursor:pointer;margin-top:14px">'+BADGE_MEDAL+'<div style="flex:1"><div class="se">'+_be+' of '+_bl.length+' earned</div><div class="lbl" style="margin-top:2px">Tap to see your badges</div></div><span class="vchev">&rsaquo;</span></div>';
@@ -1499,7 +1545,9 @@ function viewBadges(){
 function openBadges(){go('badges');}
 var PARKICONS={ferris:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#8E96D6"/><path d="M9.6 15.8L8.2 19.4M14.4 15.8l1.4 3.6" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="10.2" r="6.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 4v12.4M5.8 10.2h12.4M7.6 5.8l8.8 8.8M16.4 5.8l-8.8 8.8" fill="none" stroke="#1B1A17" stroke-width="1.2"/><circle cx="12" cy="10.2" r="1.7" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.4"/></svg>',coaster:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#B388E6"/><rect x="3.6" y="7.8" width="5.4" height="7.2" rx="1.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M2.9 7.8h6.8" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/><rect x="9" y="10.4" width="8.4" height="4.6" rx="2.3" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M13.5 10.4V9M12.4 9h2.2" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/><circle cx="6.3" cy="17" r="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><circle cx="12.2" cy="17.3" r="1.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><circle cx="15.9" cy="17.3" r="1.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M17.4 14.6l2.6 2.9" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>',castle:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#D9CF3F"/><path d="M5 19v-6.5L7.2 10l2.2 2.5V19z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.6 19v-6.5L16.8 10l2.2 2.5V19z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 19V8.4L12 5.6l2.6 2.8V19z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 5.6V3.4" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 3.4l2.3.8-2.3.8z" fill="#1B1A17"/></svg>',carousel:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#D9A3D4"/><path d="M5 10c0-3 3.2-5 7-5s7 2 7 5z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 5V3.2M6.6 10v6.4M12 10v7.4M17.4 10v6.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><path d="M4.8 18.6h14.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg>',balloon:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E7BCE3"/><path d="M12 3.8c3 0 5 2.3 5 5 0 2.9-2.6 5.4-5 7.3-2.4-1.9-5-4.4-5-7.3 0-2.7 2-5 5-5z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M10.7 16L10.2 18M13.3 16l.5 2" fill="none" stroke="#1B1A17" stroke-width="1.3"/><rect x="9.8" y="18" width="4.4" height="2.6" rx="0.9" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.5"/></svg>',bigtop:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#F0E952"/><path d="M4.6 11.3C6.2 6.6 17.8 6.6 19.4 11.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M5.6 11.3h12.8l-1.3 7.6H6.9z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 7V4.6" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 4.6l2.3.8-2.3.8z" fill="#1B1A17"/><path d="M9.5 11.5l2.5 7.2 2.5-7.2" fill="none" stroke="#1B1A17" stroke-width="1.3"/></svg>',rocket:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#8F3F7D"/><path d="M12 3.4c2.2 1.7 3.3 4.3 3.3 7.1 0 1.9-.4 3.5-1 4.9H9.7c-.6-1.4-1-3-1-4.9 0-2.8 1.1-5.4 3.3-7.1z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="9.2" r="1.6" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M8.9 13.2l-2.3 3.4 3-.7M15.1 13.2l2.3 3.4-3-.7" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 15.4v3.2" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg>',wave:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#7FA57F"/><path d="M12 4.2c1.7 2 2.6 3.4 2.6 4.7a2.6 2.6 0 1 1-5.2 0c0-1.3.9-2.7 2.6-4.7z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M3.6 13.6c2.2 0 2.2-1.8 4.4-1.8s2.2 1.8 4.4 1.8 2.2-1.8 4.4-1.8 2.2 1.8 3.6 1.8" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/><path d="M3.6 17.4c2.2 0 2.2-1.8 4.4-1.8s2.2 1.8 4.4 1.8 2.2-1.8 4.4-1.8 2.2 1.8 3.6 1.8" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>',icecream:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="7.6" r="3.9" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M8.4 10.4h7.2L12 19.6z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M10.2 11.6l1 2.6M13.8 11.6l-1 2.6" fill="none" stroke="#1B1A17" stroke-width="1.2"/></svg>',tree:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#7FA57F"/><path d="M12 3.6l4.6 6h-2.4l3.4 4.8H6.4L9.8 9.6H7.4z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 14.6v4.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg>'};
 function parkIconKey(p){var keys=Object.keys(PARKICONS);var pi=(state.parkIcons||{})[p];if(pi&&PARKICONS[pi])return pi;var h=0;for(var i=0;i<p.length;i++)h=(h*97+p.charCodeAt(i))>>>0;return keys[h%keys.length];}
-function parkIconSVG(p){return sealIconify(PARKICONS[parkIconKey(p)]);}
+var SEALCYCLE=[['#B388E6','#5B3E86'],['#A9AFE2','#454F8C'],['#E7BCE3','#8F3F7D'],['#F0E952','#6E6820'],['#A9C8A9','#2E4A2E'],['#D9A3D4','#7A4173'],['#8E96D6','#3A4080'],['#B5D0B5','#3E5A3E']];
+function parkWax(p){var ps=allParks();var i=ps.indexOf(p);if(i<0)i=0;return SEALCYCLE[i%SEALCYCLE.length];}
+function parkIconSVG(p){var w=parkWax(p);return sealIconify(PARKICONS[parkIconKey(p)],w[0],w[1]);}
 function assignParkIcon(p){state.parkIcons=state.parkIcons||{};if(!state.parkIcons[p]){var keys=Object.keys(PARKICONS);state.parkIcons[p]=keys[Math.floor(Math.random()*keys.length)];}}
 function openParkIconPicker(p){var cur=parkIconKey(p);sheet('<h3>Pick an icon</h3><p class="muted" style="margin:0 0 10px">'+esc(p)+'</p><div class="iconpick">'+Object.keys(PARKICONS).map(function(k){return '<button type="button" class="'+(k===cur?'on':'')+'" onclick="setParkIcon('+jsarg(p)+','+jsarg(k)+')">'+sealIconify(PARKICONS[k])+'</button>';}).join('')+'</div><div class="btnrow"><button class="btn ghost" onclick="openParkToggles()">Back</button></div>');}
 function setParkIcon(p,k){state.parkIcons=state.parkIcons||{};state.parkIcons[p]=k;save();openParkToggles();}
@@ -2915,7 +2963,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22c</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22d</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
