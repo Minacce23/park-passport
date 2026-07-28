@@ -122,7 +122,7 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
  </header>
  <div id="chips" class="chips"></div>
  <main id="view"></main>
- <button class="fab" onclick="if(tab==='feed'){openComposer();}else{openAdd();}">+</button>
+ <button class="fab" onclick="if(tab==='memories'&&MEMSEG==='post'){openComposer();}else{formRide();}">+</button>
  <nav id="nav"></nav>
 </div>
 
@@ -282,14 +282,14 @@ const CHART_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="#1B1A17" stroke-w
 let chartRide=null;
 var rideQuery='';
 let tab='stats';
-const TABS=[["stats","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"7\" fill=\"url(#gStats)\"/></svg>","Stats"],["feed","<svg viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"5\" fill=\"url(#gStats)\"/></svg>","Postcards"],["variants","<svg viewBox=\"0 0 24 24\"><path d=\"M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z\" fill=\"url(#gRides)\"/></svg>","Variants"],["photos","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"6\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gMeets)\"/><rect x=\"8\" y=\"9\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gVisits)\"/></svg>","Photos"],["friends","<svg viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"url(#gStats)\"/><circle cx=\"16\" cy=\"13\" r=\"4\" fill=\"url(#gStats)\"/></svg>","Friends"]];
+const TABS=[["log","<svg viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"5\" fill=\"url(#gRides)\"/><path d=\"M12 8.5v7M8.5 12h7\" stroke=\"#1B1A17\" stroke-width=\"2\" stroke-linecap=\"round\" opacity=\".55\"/></svg>","Log"],["stats","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"7\" fill=\"url(#gStats)\"/></svg>","Stats"],["passport","<svg viewBox=\"0 0 24 24\"><path d=\"M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z\" fill=\"url(#gRides)\"/></svg>","Passport"],["memories","<svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"6\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gMeets)\"/><rect x=\"8\" y=\"9\" width=\"13\" height=\"11\" rx=\"2.5\" fill=\"url(#gVisits)\"/></svg>","Memories"],["friends","<svg viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"9\" r=\"4\" fill=\"url(#gStats)\"/><circle cx=\"16\" cy=\"13\" r=\"4\" fill=\"url(#gStats)\"/></svg>","Friends"]];
 function renderNav(){document.getElementById('nav').innerHTML=TABS.map(t=>
  '<button class="'+(tab===t[0]?'on':'')+'" onclick="go(\''+t[0]+'\')"><span class="ic">'+t[1]+'</span><span class="tlbl">'+t[2]+(t[0]==='friends'&&tab!=='friends'&&hasFriendNews()?'<span class="navdot"></span>':'')+'</span></button>').join('');}
-function go(t){if(t!=='stats')HOMEEDIT=false;tab=t;renderAll();window.scrollTo(0,0);}
+function go(t){if(t==='feed'||t==='photos'){MEMSEG=(t==='feed')?'post':'photo';t='memories';}if(t==='badges')t='passport';if(t!=='stats')HOMEEDIT=false;tab=t;renderAll();window.scrollTo(0,0);}
 
 function applyTheme(){document.body.classList.toggle('theme-dark', !!(state.settings&&state.settings.theme==='dark'));}
 function toggleTheme(){state.settings=state.settings||{};state.settings.theme=(state.settings.theme==='dark'?'warm':'dark');save();applyTheme();var sw=document.getElementById('themesw');if(sw)sw.classList.toggle('on');}
-var PAGETITLES={stats:'Stats',feed:'Postcards',visits:'Visits',rides:'Experiences',meets:'Meets',scores:'Scores',people:'People &amp; groups',variants:'Variants',badges:'Badges',photos:'Photos',gallery:'Photos',ridegallery:'Experience photos',meetgallery:'Character photos',friends:'Friends'};
+var PAGETITLES={log:'Log',passport:'Passport',memories:'Memories',stats:'Stats',feed:'Postcards',visits:'Visits',rides:'Experiences',meets:'Meets',scores:'Scores',people:'People &amp; groups',variants:'Variants',badges:'Badges',photos:'Photos',gallery:'Photos',ridegallery:'Experience photos',meetgallery:'Character photos',friends:'Friends'};
 function pageTitle(t){var n=PAGETITLES[t];return n?'<h2 class="pagetitle">'+n+'<span class="ptbar"></span></h2>':'';}
 var AS_URL='https://apps.apple.com/us/app/park-passport/id6780341927';
 function isWebVisitor(){try{return location.protocol.indexOf('http')===0&&!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));}catch(e){return false;}}
@@ -302,7 +302,7 @@ function asBanner(){
 function renderAll(){applyTheme();renderNav();renderChips();const s=stats();
  const ha=document.getElementById('hdrAct'); if(tab==='scores'){ha.style.display='block';ha.innerHTML=CHART_ICON;ha.onclick=openScoreChart;}else{ha.style.display='none';ha.onclick=null;}
  const v=document.getElementById('view');
- if(tab==='stats')v.innerHTML=asBanner()+pageTitle(tab)+viewStats(s);
+ if(tab==='stats')v.innerHTML=asBanner()+pageTitle(tab)+backupNudge()+viewStats(s);
  else if(tab==='visits')v.innerHTML=pageTitle(tab)+viewVisits();
  else if(tab==='rides')v.innerHTML=pageTitle(tab)+viewRides();
  else if(tab==='meets')v.innerHTML=pageTitle(tab)+viewMeets();
@@ -316,6 +316,9 @@ function renderAll(){applyTheme();renderNav();renderChips();const s=stats();
  else if(tab==='photos')v.innerHTML=pageTitle(tab)+viewPhotos();
  else if(tab==='friends')v.innerHTML=pageTitle(tab)+viewFriends();
  else if(tab==='feed')v.innerHTML=pageTitle(tab)+viewFeed();
+ else if(tab==='log')v.innerHTML=pageTitle(tab)+viewLog();
+ else if(tab==='passport')v.innerHTML=pageTitle(tab)+viewPassport();
+ else if(tab==='memories')v.innerHTML=pageTitle(tab)+viewMemories();
 }
 
 function getPasses(){return (state.passes&&typeof state.passes==='object')?state.passes:{};}
@@ -330,8 +333,42 @@ function togglePass(p){state.passes=getPasses();if(state.passes[p]){state.passes
 function passManager(){var ps=getPasses();var keys=Object.keys(ps);var h='<h3>Annual passes</h3>';if(!keys.length){h+='<p class="muted" style="line-height:1.5;margin:0 0 12px">Track an annual pass and the app shows when it pays for itself. Add the pass cost, an average single-ticket price, and the date you got it, and your visits do the math.</p>';}else{h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Use the switch to show or hide a pass on your Stats page. Handy when a pass expires.</p><div class="card">'+keys.map(function(p){var i=passInfo(p);var d=i.savings>=0?money(i.savings)+' saved':i.more+' to break even';return '<div class="checkitem" style="cursor:pointer" onclick="formPass('+jsarg(p)+')"><div class="nm">'+esc(p)+'</div><div class="cnt">'+d+'</div><span class="switch'+(ps[p].off?'':' on')+'" onclick="event.stopPropagation();togglePass('+jsarg(p)+')" style="margin-left:9px"><span class="knob"></span></span></div>';}).join('')+'</div>';}h+='<div class="linkrow"><button onclick="formPass()">+ Add a pass</button></div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);}
 function statSheet(title,body){sheet('<h3>'+title+'</h3>'+body+'<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');}
 function showExtinct(){var ext=attractionsScoped().filter(function(a){return a.status==='Extinct';});var cnt={};fRides().forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var got=ext.filter(function(a){return cnt[a.name];}).length;var body='<div class="muted" style="margin:0 4px 10px">You experienced '+got+' of '+ext.length+' now-defunct attractions.</div><div class="card">';ext.forEach(function(a){var c=cnt[a.name]||0;var pk=a.park==='California Adventure'?'DCA':(a.park==='Disneyland'?'DL':a.park);body+='<div class="checkitem '+(c?'done':'')+'"><div class="ck">'+(c?'&#10003;':'')+'</div><div class="nm">'+a.name+' <span class="cnt">'+pk+'</span></div>'+(c?'<div class="cnt">&times;'+c+'</div>':'')+'</div>';});body+='</div>';statSheet('Defunct attractions',body);}
-function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});if(!arr.length){statSheet('Most experienced','<div class="emptyc"><div class="et">Nothing logged yet</div><div class="es">Log a ride and your most-experienced attractions show up here.</div></div>');return;}var body='<div class="card">'+arr.map(function(x){return '<div class="checkitem"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';statSheet('Most experienced',body);}
-function showByPark(pk){var cnt={};state.rides.filter(function(r){return pOf(r.attraction)===pk;}).forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});var body=arr.length?('<div class="muted" style="margin:0 4px 10px">'+arr.length+' attractions, '+arr.reduce(function(a,b){return a+b.c;},0)+' experiences.</div><div class="card">'+arr.map(function(x){return '<div class="checkitem"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>'):'<div class="muted">Nothing logged at '+pk+' yet.</div>';statSheet(pk,body);}
+function openAttraction(name){
+ var rides=(state.rides||[]).filter(function(r){return r.attraction===name;}).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+ var scores=(state.scores||[]).filter(function(x){return x.attraction===name;});
+ var best=null;scores.forEach(function(x){var v=Number(x.score);if(!isNaN(v)&&(best===null||v>best))best=v;});
+ var vars={};rides.forEach(function(r){rideVariants(r).forEach(function(v){if(v&&v!=='Standard')vars[v]=(vars[v]||0)+1;});});
+ var photos=[],seen={};
+ rides.concat(scores).forEach(function(x){if(x.photo&&!seen[x.photo]&&photos.length<6){seen[x.photo]=1;photos.push(x.photo);}});
+ var park=pOf(name);if(park==='?')park=(rides[0]&&rides[0].park)||'';
+ var first=rides.length?rides[rides.length-1].date:null,last=rides.length?rides[0].date:null;
+ var h='<div style="display:flex;align-items:flex-start;gap:8px"><h3 style="flex:1;margin:0 0 2px">'+esc(name)+'</h3></div>';
+ h+='<div class="muted" style="font-weight:700;font-size:13px;margin-bottom:10px">'+esc(park||'')+(isCoaster(name)?' <span class="pill cca">CC</span>':'')+(isExtinct(name)?' <span class="pill ext">defunct</span>':'')+'</div>';
+ h+='<div class="frstat"><span>Times experienced</span><b>'+rides.length+'</b></div>';
+ if(first)h+='<div class="frstat"><span>First</span><b>'+fmt(first)+'</b></div>';
+ if(last&&last!==first)h+='<div class="frstat"><span>Most recent</span><b>'+fmt(last)+'</b></div>';
+ if(best!==null)h+='<div class="frstat"><span>Best score</span><b>'+best.toLocaleString()+'</b></div>';
+ var vk=Object.keys(vars);
+ if(vk.length)h+='<div class="alabel" style="margin:12px 0 6px">Variants experienced</div><div class="fchips">'+vk.map(function(v){return '<span class="fchip on" style="cursor:default">'+esc(v)+(vars[v]>1?' &times;'+vars[v]:'')+'</span>';}).join('')+'</div>';
+ if(photos.length)h+='<div class="alabel" style="margin:12px 0 6px">Photos</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+photos.map(function(u){return '<img src="'+u+'" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;display:block">';}).join('')+'</div>';
+ if(rides.length){
+  h+='<div class="alabel" style="margin:12px 0 6px">History</div><div class="card" style="margin-bottom:0">';
+  rides.slice(0,12).forEach(function(r){
+   var bits=[fmt(r.date)];if(r.access)bits.push(r.access);if(r.line)bits.push(r.line+' min wait');
+   h+='<div class="checkitem"><div class="nm" style="font-weight:700;font-size:14px">'+bits.join(' &middot; ')+'</div>'+(rideVarLabel(r)||'')+'</div>';
+  });
+  if(rides.length>12)h+='<div class="muted" style="padding:8px 0 2px;font-size:13px">+ '+(rides.length-12)+' more</div>';
+  h+='</div>';
+ }
+ h+='<div class="btnrow" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn primary" onclick="logAttraction('+jsarg(name)+')">Log it again</button></div>';
+ sheet(h);
+}
+function logAttraction(name){
+ closeSheet();formRide();
+ setTimeout(function(){var e=document.getElementById('f_attr');if(e){e.value=name;try{e.dispatchEvent(new Event('change'));}catch(err){}}},60);
+}
+function showFrequency(){var cnt={};state.rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});if(!arr.length){statSheet('Most experienced','<div class="emptyc"><div class="et">Nothing logged yet</div><div class="es">Log a ride and your most-experienced attractions show up here.</div></div>');return;}var body='<div class="card">'+arr.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>';statSheet('Most experienced',body);}
+function showByPark(pk){var cnt={};state.rides.filter(function(r){return pOf(r.attraction)===pk;}).forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});var arr=Object.keys(cnt).map(function(k){return {n:k,c:cnt[k]};}).sort(function(a,b){return b.c-a.c;});var body=arr.length?('<div class="muted" style="margin:0 4px 10px">'+arr.length+' attractions, '+arr.reduce(function(a,b){return a+b.c;},0)+' experiences.</div><div class="card">'+arr.map(function(x){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"><div class="nm">'+x.n+'</div><div class="cnt">&times;'+x.c+'</div></div>';}).join('')+'</div>'):'<div class="muted">Nothing logged at '+pk+' yet.</div>';statSheet(pk,body);}
 function showByParkDL(){showByPark(SEED.lists.parks[0]);}
 function showByParkCA(){showByPark(SEED.lists.parks[1]);}
 function showCoasters(){
@@ -347,7 +384,7 @@ function showCoasters(){
  var h='<h3>Coaster credits</h3>';
  h+='<p class="muted" style="margin:0 0 10px;line-height:1.5">Every unique roller coaster you have experienced counts as one credit. Mark any experience as a roller coaster when logging or editing it, or with the Coaster column in a CSV.</p>';
  h+='<div class="stat mile" style="cursor:default">'+IC.coaster+'<div><div class="se">'+done.length+' credit'+(done.length===1?'':'s')+'</div><div class="lbl" style="margin-top:2px">'+(todo.length?todo.length+' flagged, not yet ridden':'Every flagged coaster ridden')+'</div></div></div>';
- if(done.length){h+='<h2 class="sec">Credits</h2><div class="card">'+done.map(function(k){return '<div class="checkitem done"><div class="ck">&#10003;</div><div class="nm">'+esc(names[k])+' <span class="cnt">first '+fmt(first[k])+'</span></div><div class="cnt">&times;'+cnt[k]+'</div></div>';}).join('')+'</div>';}
+ if(done.length){h+='<h2 class="sec">Credits</h2><div class="card">'+done.map(function(k){return '<div class="checkitem done" style="cursor:pointer" onclick="openAttraction('+jsarg(names[k]).replace(/"/g,'&quot;')+')"><div class="ck">&#10003;</div><div class="nm">'+esc(names[k])+' <span class="cnt">first '+fmt(first[k])+'</span></div><div class="cnt">&times;'+cnt[k]+'</div></div>';}).join('')+'</div>';}
  if(todo.length){h+='<h2 class="sec">Still to ride</h2><div class="card">'+todo.map(function(k){return '<div class="checkitem"><div class="ck"></div><div class="nm">'+esc(names[k])+'</div><button class="xbtn" onclick="setCoaster('+jsarg(names[k])+',false);save();showCoasters();renderAll()">&times;</button></div>';}).join('')+'</div>';}
  h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
 }
@@ -365,6 +402,19 @@ function statTile(ic,n,l,oc,key){return '<div class="stat'+(key?' st-'+key:'')+'
 function numTile(n,l,oc){var w=String(n).length>6;return '<div class="stat'+(w?' wide':'')+'"'+(oc?' onclick="'+oc+'" style="cursor:pointer"':'')+'><div class="num" style="font-size:24px">'+n+'</div><div class="lbl">'+l+'</div></div>';}
 function tipSeen(){try{return localStorage.getItem('pp_tip')==='1';}catch(e){return false;}}
 function dismissTip(){try{localStorage.setItem('pp_tip','1');}catch(e){}renderAll();}
+function backupNudge(){
+ var n=(state.rides||[]).length+(state.meets||[]).length+(state.scores||[]).length;
+ if(n<25)return '';
+ var last=state.lastExport||0;
+ var STALE=45*864e5;
+ if(last&&Date.now()-last<STALE)return '';
+ if(state.buSnooze&&Date.now()-state.buSnooze<21*864e5)return '';
+ var when=last?Math.round((Date.now()-last)/864e5)+' days ago':'never';
+ return '<div class="protip"><div class="pt-top"><span class="pt-k">Keep it safe</span><button class="pt-x" onclick="state.buSnooze=Date.now();save();renderAll()" aria-label="Dismiss">&times;</button></div>'+
+  '<div class="pt-t">Back up your passport</div>'+
+  '<div class="pt-s">You have '+n+' memories in here and your last backup was '+when+'. One tap saves a copy you can re-import any time.</div>'+
+  '<div class="pt-btns"><button class="pt-primary" onclick="exportData();renderAll()">Back up now</button></div></div>';
+}
 function proTipCard(){return '<div class="protip"><div class="pt-top"><span class="pt-k">Pro tip</span><button class="pt-x" onclick="dismissTip()" aria-label="Dismiss">&times;</button></div><div class="pt-t">Two ways to start</div><div class="pt-s">Log your first experience by typing its name once, it autofills after that. Or download the template from the menu, fill it in, and import your whole list at once.</div><div class="pt-btns"><button class="pt-primary" onclick="formRide()">Log my first experience</button><button class="pt-ghost" onclick="openImport()">Import a list</button></div></div>';}
 var HOMEDEF=['hero','overview','bypark','waits','pass','milestones'];
 var HOMEEDIT=false;
@@ -384,12 +434,12 @@ function viewStats(s){
  var SEC={};
  SEC.hero=function(){
   if(GENERIC){if(s.attrTot>s.attr){return '<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+'<div class="lbl">Unique attractions experienced</div>'+
-   '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+'<div class="prog"><div style="width:'+pct+'%"></div></div></div>';}
+   '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+'<div class="prog"><div style="width:'+pct+'%"></div></div><div class="hsub" style="margin-top:6px;opacity:.85">'+s.rides+' experiences across '+s.attr+' attractions</div></div>';}
    return '<div class="hero" onclick="openChecklist()" style="cursor:pointer"><div class="htop"><span class="lbl">Unique attractions experienced</span><span class="hsub">tap to see &rsaquo;</span></div><div class="hbig hrow" style="align-items:center"><span style="display:flex;align-items:center;gap:12px">'+IC.top+'<span class="num">'+s.attr+'</span></span><span class="hpct">'+s.visits+'<span class="hsub"> visit days</span></span></div><div class="hsub" style="margin-top:7px;opacity:.8">Import your park list from the menu and this becomes a progress bar</div></div>';}
   return '<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+
    '<div class="lbl">Unique attractions experienced</div>'+
    '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+
-   '<div class="prog"><div style="width:'+pct+'%"></div></div></div>';
+   '<div class="prog"><div style="width:'+pct+'%"></div></div><div class="hsub" style="margin-top:6px;opacity:.85">'+s.rides+' experiences across '+s.attr+' attractions</div></div>';
  };
  SEC.overview=function(){
   var tiles=[
@@ -2190,6 +2240,40 @@ function welcomeCardHTML(){
  if(state.wcGone)return '';
  return '<div class="postcard pc"><div class="pcfront"><img class="postimg" src="'+WELCOME_PC+'" alt="Welcome to Postcards"><button class="xbtn pcdel" onclick="dismissWelcomeCard()">&times;</button></div></div>';
 }
+var MEMSEG='post';
+function viewLog(){
+ var d=today();
+ var h='';
+ var n=(state.rides||[]).length+(state.meets||[]).length+(state.scores||[]).length;
+ if(!n&&!tipSeen())h+=proTipCard();
+ h+='<div class="actionlist">'+
+  '<button onclick="formRide()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#A9AFE2"/><rect x="3.6" y="7" width="16.8" height="10" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9.4 7v10" stroke="#1B1A17" stroke-width="1.5" stroke-dasharray="2 2.2" fill="none"/><path d="M13 10.4h4.6M13 13.6h3.2" stroke="#1B1A17" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>')+'</span><b>Log an experience</b></button>'+
+  '<button onclick="formVisit()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B5D0B5"/><path d="M8 19.4V4.4" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M8 5h9.6l-2.6 3 2.6 3H8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg>')+'</span><b>Add a visit day</b></button>'+
+  '<button onclick="formMeet()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.4" rx="7" ry="2" fill="#D9A3D4"/><path d="M12 18.2S4.4 13.6 4.4 8.9C4.4 6.2 6.5 4.6 8.6 4.6c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 4.2 1.6 4.2 4.3 0 4.7-7.6 9.3-7.6 9.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Log a character meet</b></button>'+
+  '<button onclick="formScore()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E8D93B"/><path d="M8.2 4.6h7.6v4.6a3.8 3.8 0 0 1-7.6 0z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 6H5.6a2.6 2.6 0 0 0 2.7 2.9M15.8 6h2.6a2.6 2.6 0 0 1-2.7 2.9" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 12.8v2.4M10.2 15.2h3.6v2.4h-3.6zM9 17.6h6" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg>')+'</span><b>Log a score</b></button>'+
+ '</div>';
+ h+='<div class="linkrow" style="margin-top:10px"><button onclick="formPark()">+ Add a park</button><button onclick="formPhoto()">+ Add a photo</button>'+(GENERIC?'<button onclick="formVariant()">+ Add a variant</button>':'')+'</div>';
+ var td=[];
+ (state.rides||[]).forEach(function(r){if(r.date===d)td.push({t:'Experience',n:r.attraction});});
+ (state.meets||[]).forEach(function(m){if(m.date===d)td.push({t:'Meet',n:m.character});});
+ (state.scores||[]).forEach(function(sc){if(sc.date===d)td.push({t:'Score',n:sc.attraction});});
+ h+='<h2 class="sec" style="margin-top:18px">Logged today</h2>';
+ if(!td.length)h+='<div class="card"><span class="muted">Nothing logged today yet. Have a great park day.</span></div>';
+ else h+='<div class="card">'+td.map(function(x){return '<div class="checkitem"'+(x.t==='Experience'?' style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"':'')+'><div class="nm">'+esc(x.n)+'</div><div class="cnt muted" style="font-size:12px">'+x.t+'</div></div>';}).join('')+'</div>';
+ return h;
+}
+function viewPassport(){
+ var h='<div class="actionlist" style="margin-bottom:14px">'+
+  '<button onclick="openChecklist()"><b>Attraction checklist</b><span style="margin-left:auto" class="muted">&rsaquo;</span></button>'+
+  '<button onclick="showCoasters()"><b>Coaster credits</b><span style="margin-left:auto" class="muted">&rsaquo;</span></button>'+
+  '<button onclick="go(&#39;variants&#39;)"><b>Variants</b><span style="margin-left:auto" class="muted">&rsaquo;</span></button>'+
+ '</div>';
+ return h+viewBadges();
+}
+function viewMemories(){
+ var seg='<div class="fchips" style="margin:0 0 12px"><span class="fchip'+(MEMSEG==='post'?' on':'')+'" onclick="MEMSEG=&#39;post&#39;;renderAll()">Postcards</span><span class="fchip'+(MEMSEG==='photo'?' on':'')+'" onclick="MEMSEG=&#39;photo&#39;;renderAll()">Photos</span></div>';
+ return seg+(MEMSEG==='post'?viewFeed():viewPhotos());
+}
 function viewFeed(){
  var so=state.social;
  if(!so||!so.code){
@@ -2361,7 +2445,7 @@ function openParkToggles(){
 function openMenu(){
  sheet('<h3>Menu</h3><div class="actionlist">'+(isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
-  '<button onclick="closeSheet();go(\'badges\')"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9A6BD4"/><path d="M9.4 12.5L8.2 18.6l3.8-2 3.8 2-1.2-6.1" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="8.8" r="5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M12 6.6l.7 1.5 1.7.2-1.2 1.2.3 1.7-1.5-.9-1.5.9.3-1.7-1.2-1.2 1.7-.2z" fill="#1B1A17"/></svg>')+'</span><b>Badges</b></button>'+
+  '<button onclick="closeSheet();go(\'variants\')"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E7BCE3"/><path d="M12 3.8l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.6 4.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="#1B1A17"/></svg>')+'</span><b>Variants</b></button>'+
   '<button onclick="closeSheet();go(\'people\')"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#D9A3D4"/><circle cx="15.6" cy="10.3" r="2.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6"/><path d="M14.9 15.6c2.3-.7 4.7.4 5.4 2.8" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="9.5" r="3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.8 18.6c.5-3 2.7-4.6 5.2-4.6 2.6 0 4.3 1.4 5 3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>')+'</span><b>People &amp; Groups</b></button>'+
     '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
@@ -2378,8 +2462,9 @@ function openMenu(){
   '<button onclick="downloadTemplate()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B5D0B5"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M8.4 8h7.2M8.4 11.4h7.2M8.4 14.8h4.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg>')+'</span><b>Download CSV template</b></button>'+
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
+  '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21p</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21r</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
@@ -2571,12 +2656,14 @@ function handleRestore(input){var f=input.files&&input.files[0];if(!f)return;
  rd.readAsText(f);
 }
 function exportData(){
+ state.lastExport=Date.now();save();
  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
  a.download='disneyland-tracker-backup.json';a.click();
 }
 
 function exportCSV(){
+ state.lastExport=Date.now();save();
  var head=['Type','Date','Name','Variant','Access','Score','Player','Who with','Park','Where','Notes','Coaster'];
  var lines=[head];
  var all=[];
@@ -2854,6 +2941,8 @@ document.addEventListener('dblclick',function(e){
  if(v&&v.contains(e.target))enterHomeEdit();
 });
 
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+if(!(state.rides||[]).length&&!(state.meets||[]).length&&!(state.scores||[]).length&&!(state.visits||[]).length)tab='log';
 renderAll();
 hydratePhotos(function(){renderAll();});
 setTimeout(function(){try{if(state.social&&state.social.code&&navigator.onLine!==false){refreshFriends();checkFriendLinks();}}catch(e){}},2500);
