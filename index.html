@@ -1201,6 +1201,9 @@ function startOnboarding(){var o=document.getElementById('onboard');if(o)o.paren
 function introDone(){try{localStorage.setItem('pp_intro','1');}catch(e){}var o=document.getElementById('onboard');if(o)o.parentNode.removeChild(o);}
 function maybeOnboard(){var seen=null;try{seen=localStorage.getItem('pp_intro');}catch(e){}if(!seen)startOnboarding();}
 var BCOL={exp:'#E7BCE3',vis:'#B5D0B5',exr:'#F5F0A0',met:'#C3C8EC',scr:'#F0E952',vrs:'#A9AFE2',aca:'#D9A3D4',spc:'#E8D93B',st:'#8E96D6',cst:'#B388E6',prk:'#A9C8A9'};
+var RARCOL={c:'#A9C8A9',u:'#A9AFE2',r:'#E7BCE3',v:'#B388E6',l:'#F0E952'};
+var RARDK={c:'#2E4A2E',u:'#454F8C',r:'#8F3F7D',v:'#5B3E86',l:'#6E6820'};
+var RARNAME={c:'Common',u:'Uncommon',r:'Rare',v:'Very rare',l:'Legendary'};
 function bGlyph(e){return e?'<svg viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M12 3.6l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/></svg>':'<svg viewBox="0 0 24 24" style="width:24px;height:24px"><rect x="6.2" y="10.4" width="11.6" height="9" rx="2.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M9 10.4V8.5a3 3 0 0 1 6 0v1.9" fill="none" stroke="#1B1A17" stroke-width="1.7"/><circle cx="12" cy="14.8" r="1.4" fill="#1B1A17"/></svg>';}
 var BADGE_MEDAL='<svg class="statico" viewBox="0 0 24 24"><ellipse cx="12" cy="20.8" rx="7" ry="2" fill="#9A6BD4"/><path d="M9 12.5L7.6 20l4.4-2.3L16.4 20 15 12.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="8.6" r="5.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 6l.8 1.7 1.9.2-1.4 1.3.4 1.9-1.7-1-1.7 1 .4-1.9-1.4-1.3 1.9-.2z" fill="#1B1A17"/></svg>';
 var SEAL_PATH='M 61.9 32.0 C 62.4 34.4 61.8 37.5 60.5 39.6 C 59.2 41.8 55.7 42.8 54.3 44.9 C 52.9 46.9 53.3 50.0 52.0 52.0 C 50.7 54.0 48.6 56.0 46.4 57.0 C 44.2 57.9 41.4 57.3 39.0 58.0 C 36.6 58.8 34.4 61.1 32.0 61.5 C 29.6 61.9 26.6 61.5 24.4 60.3 C 22.3 59.1 21.1 55.8 19.1 54.4 C 17.0 53.0 14.1 53.2 12.1 51.9 C 10.1 50.6 7.9 48.6 7.0 46.5 C 6.0 44.3 7.3 41.2 6.5 38.8 C 5.7 36.4 2.7 34.4 2.2 32.0 C 1.8 29.6 2.6 26.6 3.8 24.5 C 5.1 22.3 8.5 21.3 9.8 19.2 C 11.2 17.2 10.8 14.1 12.2 12.2 C 13.5 10.2 15.7 8.4 17.8 7.5 C 20.0 6.5 22.8 7.3 25.2 6.5 C 27.5 5.6 29.6 2.9 32.0 2.4 C 34.4 1.8 37.5 2.2 39.7 3.4 C 41.8 4.6 42.9 8.2 44.9 9.7 C 46.9 11.2 49.6 11.0 51.6 12.4 C 53.7 13.7 56.0 15.4 57.0 17.6 C 58.0 19.7 56.7 22.8 57.5 25.2 C 58.3 27.6 61.4 29.6 61.9 32.0 Z';
@@ -1221,13 +1224,109 @@ BADGE_MEDAL=sealIconify(BADGE_MEDAL,'#B388E6','#5B3E86');
 
 var SEAL_STAR='M 0.0 -10.5 L 2.6 -3.6 L 10.0 -3.2 L 4.2 1.4 L 6.2 8.5 L 0.0 4.4 L -6.2 8.5 L -4.2 1.4 L -10.0 -3.2 L -2.6 -3.6 Z';
 var BDARK={exp:'#8F3F7D',vis:'#3E5A3E',exr:'#857D18',met:'#4A3F8F',scr:'#857D18',vrs:'#4A3F8F',aca:'#8F3F7D',spc:'#857D18',st:'#2C2566',cst:'#5B3E86',prk:'#2E4A2E'};
-function sealBadge(cat,earned){var wax=earned?(BCOL[cat]||'#B388E6'):'#C6C3B8';var dk=earned?(BDARK[cat]||'#5B3E86'):'#8B887C';var lt='rgba(255,255,255,.55)';
+function sealBadge(cat,earned,rar,secret){var wax=earned?(RARCOL[rar]||BCOL[cat]||'#B388E6'):'#C6C3B8';var dk=earned?(RARDK[rar]||BDARK[cat]||'#5B3E86'):'#8B887C';var lt='rgba(255,255,255,.55)';
+ if(secret&&!earned){return '<div class="bic2"><svg viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="#C6C3B8"/><circle cx="33.2" cy="33.6" r="21" fill="none" stroke="'+lt+'" stroke-width="2.6"/><circle cx="32" cy="32" r="21" fill="none" stroke="#8B887C" stroke-width="2.6"/></svg></div>';}
  var glyph;
  if(earned){glyph='<path d="'+SEAL_STAR+'" fill="'+lt+'" transform="translate(33.2 33.6)"/><path d="'+SEAL_STAR+'" fill="'+dk+'" transform="translate(32 32)"/>';}
  else{glyph='<g transform="translate(1.2 1.6)" stroke="'+lt+'" fill="none" stroke-width="2.4"><rect x="26" y="30" width="12" height="9.5" rx="2.4"/><path d="M28.8 30v-2.6a3.2 3.2 0 0 1 6.4 0V30"/></g><g stroke="'+dk+'" fill="none" stroke-width="2.4"><rect x="26" y="30" width="12" height="9.5" rx="2.4"/><path d="M28.8 30v-2.6a3.2 3.2 0 0 1 6.4 0V30"/></g>';}
  return '<div class="bic2"><svg viewBox="0 0 64 64"><path d="'+SEAL_PATH+'" fill="'+wax+'"/>'+
  '<circle cx="33.2" cy="33.6" r="21" fill="none" stroke="'+lt+'" stroke-width="2.6"/>'+
  '<circle cx="32" cy="32" r="21" fill="none" stroke="'+dk+'" stroke-width="2.6"/>'+glyph+'</svg></div>';}
+function badgeMetrics(){
+ var m={};
+ var byDay={};state.rides.forEach(function(r){if(!r.date)return;(byDay[r.date]=byDay[r.date]||[]).push(r);});
+ var days=Object.keys(byDay);
+ m.line5=0;m.line90=0;m.worthIt=0;var totalLine=0,maxDayLine=0;
+ var ropeDays={},lateDays={},bothDays=0,hydra=0;
+ var maxSameDay=0,maxPerDay=0,fullParty=0;
+ function hm(t){if(!t||t.indexOf(':')<0)return null;var a=t.split(':');return (+a[0])*60+(+a[1]);}
+ days.forEach(function(d){
+  var rs=byDay[d],t=0,att={},minT=null,maxT=null,rope=false,late=false,comp={};
+  rs.forEach(function(r){
+   if(r.line!=null){t+=r.line;if(r.line<5)m.line5++;if(r.line>=90)m.line90++;}
+   att[r.attraction]=(att[r.attraction]||0)+1;
+   var st=hm(r.lineStart);
+   if(st!=null){if(minT===null||st<minT)minT=st;if(maxT===null||st>maxT)maxT=st;if(st<540)rope=true;if(st>=1320)late=true;}
+   splitWith(r.with_).forEach(function(w){comp[w]=1;});
+  });
+  rs.forEach(function(r){if(r.line!=null&&r.line>=90&&att[r.attraction]>=2)m.worthIt=1;});
+  totalLine+=t;if(t>maxDayLine)maxDayLine=t;
+  if(rope)ropeDays[d]=1;if(late)lateDays[d]=1;if(rope&&late)bothDays++;
+  if(minT!=null&&maxT!=null&&maxT-minT>=720)hydra=1;
+  Object.keys(att).forEach(function(a){if(att[a]>maxSameDay)maxSameDay=att[a];});
+  if(rs.length>maxPerDay)maxPerDay=rs.length;
+  if(Object.keys(comp).length>=4)fullParty=1;
+ });
+ m.totalLine=totalLine;m.maxDayLine=maxDayLine;
+ m.ropeDays=Object.keys(ropeDays).length;m.lateDays=Object.keys(lateDays).length;m.bothDays=bothDays;m.hydra=hydra;
+ m.maxSameDay=maxSameDay;m.maxPerDay=maxPerDay;m.fullParty=fullParty;
+ var stby=0,paidish=0,single=0,otherPaid=0;
+ state.rides.forEach(function(r){var a=(r.access||'').toLowerCase();
+  if(!a||a==='standby'||a==='walk-on')stby++;
+  else if(a.indexOf('single')>-1)single++;
+  else if(/skip|lightning|genie|reserved|premier|express/.test(a))paidish++;
+  else otherPaid++;
+ });
+ m.standbyPure=(paidish+otherPaid===0)?stby:0;m.paidish=paidish;m.single=single;
+ var life={},habit={};
+ state.rides.forEach(function(r){if(!r.attraction)return;life[r.attraction]=(life[r.attraction]||0)+1;(habit[r.attraction]=habit[r.attraction]||{})[r.date]=1;});
+ m.lifeMax=0;Object.keys(life).forEach(function(a){if(life[a]>m.lifeMax)m.lifeMax=life[a];});
+ m.habitMax=0;Object.keys(habit).forEach(function(a){var n=Object.keys(habit[a]).length;if(n>m.habitMax)m.habitMax=n;});
+ var comps={},solo=0,plus=0;
+ state.rides.forEach(function(r){var w=String(r.with_||'');if(w.toLowerCase()==='myself')solo++;var cs=splitWith(w);if(cs.length)plus++;cs.forEach(function(c){comps[c.toLowerCase()]=1;});});
+ m.compN=Object.keys(comps).length;m.solo=solo;m.plus=plus;
+ var vd={};(state.visits||[]).forEach(function(v){if(v.date)vd[v.date]=1;});days.forEach(function(d){vd[d]=1;});
+ var vdates=Object.keys(vd).sort();
+ m.backAgain=0;m.returnSender=0;m.longHaul=0;m.sameMonth=0;
+ for(var k=1;k<vdates.length;k++){
+  var gap=(new Date(vdates[k])-new Date(vdates[k-1]))/864e5;
+  if(gap>0&&gap<=7)m.backAgain=1;
+  if(gap>=365)m.returnSender=1;
+ }
+ if(vdates.length>1&&(new Date(vdates[vdates.length-1])-new Date(vdates[0]))/864e5>=5*365.25)m.longHaul=1;
+ var my={};vdates.forEach(function(d){my[d.slice(0,7)]=1;});
+ var months={};vdates.forEach(function(d){months[d.slice(5,7)]=1;});
+ m.monthsCovered=Object.keys(months).length;
+ Object.keys(my).forEach(function(ym){var y=+ym.slice(0,4),mo=ym.slice(5,7);if(my[(y+1)+'-'+mo])m.sameMonth=1;});
+ m.unaccounted=(state.visits||[]).some(function(v){return v.date&&!byDay[v.date]&&!(state.meets||[]).some(function(x){return x.date===v.date;})&&!(state.scores||[]).some(function(x){return x.date===v.date;});})?1:0;
+ m.photoN=0;['rides','meets','scores'].forEach(function(t){(state[t]||[]).forEach(function(x){if(x&&(x.photo||x.photoKey))m.photoN++;});});
+ m.notesN=state.rides.filter(function(r){return r.notes;}).length;
+ m.filed=(m.notesN===0)?state.rides.length:0;
+ m.pcSent=state.pcSent||0;
+ m.noteTo=Object.keys(state.noteTo||{}).length;
+ var pb=0,byAttr={};
+ (state.scores||[]).slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'');}).forEach(function(sc){
+  var v=Number(String(sc.score).replace(/[^0-9.\-]/g,''));if(isNaN(v))return;
+  var k2=sc.attraction||'';
+  if(byAttr[k2]!=null&&v>byAttr[k2])pb=1;
+  if(byAttr[k2]==null||v>byAttr[k2])byAttr[k2]=v;
+ });
+ m.personalBest=pb;
+ var both=0,plain={},varied={};
+ state.rides.forEach(function(r){var vs=rideVariants(r).filter(function(v){return v&&v!=='Standard';});if(vs.length)varied[r.attraction]=1;else plain[r.attraction]=1;});
+ Object.keys(varied).forEach(function(a){if(plain[a])both=1;});
+ m.bothVersions=both;
+ m.oneLeft=0;m.nearly=0;m.cartographer=0;m.cleanSweep=0;m.hasCatalog=0;
+ try{
+  var cats={},ridden={};
+  attractionsOn().forEach(function(a){if(a.status==='Extinct')return;(cats[a.park||'Other']=cats[a.park||'Other']||{})[a.name]=1;});
+  state.rides.forEach(function(r){if(r.attraction)ridden[r.attraction]=1;});
+  Object.keys(cats).forEach(function(pk){
+   var names=Object.keys(cats[pk]);if(names.length<5)return;
+   m.hasCatalog=1;
+   var done=names.filter(function(n){return ridden[n];}).length;
+   if(names.length-done===1)m.oneLeft=1;
+   if(done/names.length>=0.95)m.nearly=1;
+   if(done>=names.length)m.cartographer=1;
+   Object.keys(byDay).forEach(function(d){
+    var dn={};byDay[d].forEach(function(r){if(cats[pk][r.attraction])dn[r.attraction]=1;});
+    if(Object.keys(dn).length>=names.length)m.cleanSweep=1;
+   });
+  });
+ }catch(e){}
+ return m;
+}
+function splitWith(w){return String(w||'').split(/[,&+]|\band\b/).map(function(t){return t.trim();}).filter(function(t){return t&&t.toLowerCase()!=='myself';});}
 function badgeList(){
  var s=stats();
  var exp=state.rides.length, vis=s.visits, chars=s.chars, explored=s.attr, scores=state.scores.length;
@@ -1238,56 +1337,111 @@ function badgeList(){
  var stCaught=stc.filter(function(x){return stsn[x.name];}).length, stFlights=(state.starTours||[]).length;
  var stRare=stc.some(function(x){return stsn[x.name]&&x.tier==='Rare';})?1:0;
  var stVR=stc.some(function(x){return stsn[x.name]&&x.tier==='Very Rare';})?1:0;
+ var m=badgeMetrics();
+ // [cat, title, desc, need, val, rarity(c/u/r/v/l), secret]
  var defs=[
-  ['exp','First stamp','Log your first experience',1,exp],
-  ['exp','Getting going','10 experiences',10,exp],
-  ['exp','Park regular','50 experiences',50,exp],
-  ['exp','Century club','100 experiences',100,exp],
-  ['exp','Seasoned explorer','250 experiences',250,exp],
-  ['vis','Day one','Your first visit day',1,vis],
-  ['vis','Frequent visitor','5 visit days',5,vis],
-  ['vis','Loyal local','10 visit days',10,vis],
-  ['vis','Park devotee','25 visit days',25,vis],
-  ['exr','Quarter explored','See 25% of attractions',Math.max(1,Math.ceil(s.attrTot*0.25)),explored],
-  ['exr','Halfway there','See half the attractions',Math.max(1,Math.ceil(s.attrTot*0.5)),explored],
-  ['exr','Done it all','Experience every attraction',s.attrTot,explored],
-  ['met','Say cheese','Meet 5 characters',5,chars],
-  ['met','Character collector','Meet 15 characters',15,chars],
-  ['met','Greet master','Meet 30 characters',30,chars],
-  ['scr','On the board','Log your first score',1,scores],
-  ['cst','First credit','Your first coaster credit',1,ccred],
-  ['cst','Coaster fan','5 coaster credits',5,ccred],
-  ['cst','Coaster head','10 coaster credits',10,ccred],
-  ['cst','Loop legend','25 coaster credits',25,ccred],
-  ['vrs','Seasonal specialist','5 special versions',5,variants],
-  ['aca','Budding artist','Draw your first character',1,draws],
-  ['aca','Sketch collector','Draw 5 characters',5,draws],
-  ['spc','Two-park fan','Experience two or more parks',2,nparks],
-  ['prk','Park hopper','Experience 3 parks',3,nparks],
-  ['prk','Park collector','Experience 5 parks',5,nparks],
-  ['prk','Globe trotter','Experience 10 parks',10,nparks],
-  ['spc','Nostalgia','Experience a defunct attraction',1,s.extinct],
-  ['st','First flight','Log a Star Tours flight',1,stFlights],
-  ['st','Scene collector','Catch 10 Star Tours scenes',10,stCaught],
-  ['st','Hyperspace half','Catch half the scenes',14,stCaught],
-  ['st','Full manifest','Catch all 28 scenes',28,stCaught],
-  ['st','Rare find','Catch a Rare scene',1,stRare],
-  ['st','Very rare find','Catch a Very Rare scene',1,stVR]
+  ['exp','First stamp','Log your first experience',1,exp,'c'],
+  ['exp','Getting going','10 experiences',10,exp,'c'],
+  ['exp','Park regular','50 experiences',50,exp,'u'],
+  ['exp','Century club','100 experiences',100,exp,'r'],
+  ['exp','Seasoned explorer','250 experiences',250,exp,'v'],
+  ['vis','Day one','Your first visit day',1,vis,'c'],
+  ['vis','Frequent visitor','5 visit days',5,vis,'c'],
+  ['vis','Loyal local','10 visit days',10,vis,'u'],
+  ['vis','Park devotee','25 visit days',25,vis,'r'],
+  ['exr','Quarter explored','See 25% of attractions',Math.max(1,Math.ceil(s.attrTot*0.25)),explored,'u'],
+  ['exr','Halfway there','See half the attractions',Math.max(1,Math.ceil(s.attrTot*0.5)),explored,'r'],
+  ['exr','Done it all','Experience every attraction',s.attrTot,explored,'l'],
+  ['met','Say cheese','Meet 5 characters',5,chars,'c'],
+  ['met','Character collector','Meet 15 characters',15,chars,'u'],
+  ['met','Greet master','Meet 30 characters',30,chars,'r'],
+  ['scr','On the board','Log your first score',1,scores,'c'],
+  ['scr','Regular contender','10 scores logged',10,scores,'u'],
+  ['scr','League of your own','50 scores logged',50,scores,'r'],
+  ['scr','Personal best','Beat your own top score on any attraction',1,m.personalBest,'u'],
+  ['cst','First credit','Your first coaster credit',1,ccred,'c'],
+  ['cst','Coaster fan','5 coaster credits',5,ccred,'u'],
+  ['cst','Coaster head','10 coaster credits',10,ccred,'r'],
+  ['cst','Loop legend','25 coaster credits',25,ccred,'v'],
+  ['vrs','Overlay hunter','Log your first special version',1,variants,'c'],
+  ['vrs','Seasonal specialist','5 special versions',5,variants,'u'],
+  ['vrs','Both versions','The standard and a special version of the same attraction',1,m.bothVersions,'u'],
+  ['aca','Budding artist','Draw your first character',1,draws,'c'],
+  ['aca','Sketch collector','Draw 5 characters',5,draws,'u'],
+  ['spc','Two-park fan','Experience two or more parks',2,0,'c'],
+  ['prk','Park hopper','Experience 3 parks',3,0,'u'],
+  ['prk','Park collector','Experience 5 parks',5,0,'r'],
+  ['prk','Globe trotter','Experience 10 parks',10,0,'v'],
+  ['spc','Nostalgia','Experience a defunct attraction',1,s.extinct,'c'],
+  ['spc','Museum piece','5 defunct attractions',5,s.extinct,'r'],
+  ['st','First flight','Log a Star Tours flight',1,stFlights,'c'],
+  ['st','Scene collector','Catch 10 Star Tours scenes',10,stCaught,'u'],
+  ['st','Hyperspace half','Catch half the scenes',14,stCaught,'r'],
+  ['st','Full manifest','Catch all 28 scenes',28,stCaught,'l'],
+  ['st','Rare find','Catch a Rare scene',1,stRare,'r'],
+  ['st','Very rare find','Catch a Very Rare scene',1,stVR,'v'],
+  ['que','Straight on','A logged wait under 5 minutes',1,m.line5,'c'],
+  ['que','Patience, certified','A single wait of 90 minutes or more',1,m.line90,'u'],
+  ['que','Worth it, apparently','Waited 90 minutes, then rode it again the same day',1,m.worthIt,'r',1],
+  ['que','The scenic route','Five cumulative hours in line in one day',300,m.maxDayLine,'r'],
+  ['que','A full day of your life','Twenty-four hours in line, all together',1440,m.totalLine,'l',1],
+  ['que','Standby purist','100 standby experiences and not one paid queue',100,m.standbyPure,'v'],
+  ['que','Diplomatic channel','25 skip-the-line experiences',25,m.paidish,'u'],
+  ['que','Beat the system','10 single-rider experiences',10,m.single,'u'],
+  ['tod','Rope drop','An experience logged before 9am',1,m.ropeDays,'c'],
+  ['tod','Dawn patrol','Rope drop on five separate days',5,m.ropeDays,'u'],
+  ['tod','Last one out','An experience logged after 10pm',1,m.lateDays,'u'],
+  ['tod','Both ends of the day','Before 9am and after 10pm on the same day',1,m.bothDays,'r'],
+  ['tod','Hydration status unknown','Twelve hours between your first and last log in one day',1,m.hydra,'v',1],
+  ['dev','Again','The same attraction twice in one day',2,m.maxSameDay,'c'],
+  ['dev','And again','The same attraction five times in one day',5,m.maxSameDay,'r'],
+  ['dev','Certified unwell','The same attraction ten times in one day',10,m.maxSameDay,'l',1],
+  ['dev','Creature of habit','The same attraction on ten separate visit days',10,m.habitMax,'r'],
+  ['dev','Structurally sound','100 lifetime experiences of a single attraction',100,m.lifeMax,'l',1],
+  ['vol','Marathon','15 experiences in one day',15,m.maxPerDay,'u'],
+  ['vol','Ultra','25 experiences in one day',25,m.maxPerDay,'r'],
+  ['vol','Suspicious activity','Forty experiences in one day. This log was reviewed. It was fine.',40,m.maxPerDay,'l',1],
+  ['com','Plus one','First experience logged with someone',1,m.plus,'c'],
+  ['com','Tour guide','Logged with five different people',5,m.compN,'u'],
+  ['com','Solo mission','Ten experiences logged as Myself',10,m.solo,'u'],
+  ['com','The full party','Four or more companions on one day',1,m.fullParty,'r'],
+  ['lng','Back again','Two visit days within one week',1,m.backAgain,'c'],
+  ['lng','Return to sender','Came back after a gap of a year or more',1,m.returnSender,'u'],
+  ['lng','The long haul','Five years between your first and most recent visit',1,m.longHaul,'v'],
+  ['lng','Same time next year','The same calendar month, two years running',1,m.sameMonth,'u'],
+  ['lng','Every month','Visit days covering all twelve calendar months',12,m.monthsCovered,'l'],
+  ['doc','First light','Your first photo attached',1,m.photoN,'c'],
+  ['doc','Archivist','25 photos attached',25,m.photoN,'r'],
+  ['doc','Wish you were here','Your first postcard sent',1,m.pcSent,'c'],
+  ['doc','Pen pal','Notes on three different friends&#39; postcards',3,m.noteTo,'u'],
+  ['doc','Extensive documentation','25 experiences with notes',25,m.notesN,'r'],
+  ['doc','Filed without comment','100 experiences logged. Not one note.',100,m.filed,'v',1],
+  ['cmp','One left','Exactly one attraction remaining in a park',1,m.oneLeft,'r'],
+  ['cmp','Nearly','95% of a park&#39;s attractions',1,m.nearly,'v'],
+  ['cmp','Cartographer','Completed a park checklist',1,m.cartographer,'l'],
+  ['cmp','Clean sweep','Every attraction in a park in a single day',1,m.cleanSweep,'l',1],
+  ['cmp','Officially unaccounted for','A visit day with zero experiences logged',1,m.unaccounted,'r',1]
  ];
  var nparks=(function(){var ps={};state.rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;});return Object.keys(ps).length;})();
  defs.forEach(function(d){if(d[0]==='prk'||d[1]==='Two-park fan')d[4]=nparks;});
- if(GENERIC)defs=defs.filter(function(d){return ['exr','aca','st'].indexOf(d[0])<0 && d[1]!=='Nostalgia';});
+ if(!m.hasCatalog)defs=defs.filter(function(d){return d[0]!=='cmp'||d[1]==='Officially unaccounted for';});
+ if(GENERIC)defs=defs.filter(function(d){return ['exr','aca','st'].indexOf(d[0])<0;});
  else if(DISGUISE)defs=defs.filter(function(d){return ['aca','st'].indexOf(d[0])<0;});
- return defs.map(function(d){var need=d[3],val=d[4];return {cat:d[0],t:d[1],d:d[2],need:need,val:val,earned:val>=need,prog:need?Math.min(1,val/need):0};});
+ return defs.map(function(d){var need=d[3],val=d[4];return {cat:d[0],t:d[1],d:d[2],need:need,val:val,earned:val>=need,prog:need?Math.min(1,val/need):0,rar:d[5]||'c',secret:!!d[6]};});
 }
 function viewBadges(){
  var list=badgeList(), earned=list.filter(function(b){return b.earned;}).length;
  var out='<div class="hero" style="cursor:default"><div class="htop"><span class="lbl">Badges earned</span><span class="hsub">keep exploring</span></div><div class="hbig"><span class="num">'+earned+'</span> <span class="hfrac">/ '+list.length+'</span></div><div class="prog"><div style="width:'+Math.round(earned/list.length*100)+'%"></div></div></div>';
+ out+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 2px 12px">'+['c','u','r','v','l'].map(function(k){return '<span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted)"><i style="width:9px;height:9px;border-radius:50%;background:'+RARCOL[k]+';border:1.5px solid '+RARDK[k]+';display:inline-block"></i>'+RARNAME[k]+'</span>';}).join('')+'</div>';
  out+='<div class="badgegrid">';
  list.forEach(function(b){
-  out+='<div class="badge '+(b.earned?'':'lock')+'">'+sealBadge(b.cat,b.earned)+'<div class="bt">'+b.t+'</div><div class="bd">'+b.d+'</div>'+
-   '<div class="bprog"><div style="width:'+(b.earned?100:Math.round(b.prog*100))+'%'+(b.earned?';background:'+(BCOL[b.cat]||'#B388E6'):'')+'"></div></div>'+
-   (b.earned?'<div class="bdone">Earned</div>':'<div class="bd" style="margin-top:4px">'+b.val+' / '+b.need+'</div>')+'</div>';
+  if(b.secret&&!b.earned){
+   out+='<div class="badge lock">'+sealBadge(b.cat,false,b.rar,true)+'<div class="bt">Sealed</div><div class="bd">Not yet earned.</div></div>';
+   return;
+  }
+  out+='<div class="badge '+(b.earned?'':'lock')+'">'+sealBadge(b.cat,b.earned,b.rar)+'<div class="bt">'+b.t+'</div><div class="bd">'+b.d+'</div>'+
+   '<div class="bprog"><div style="width:'+(b.earned?100:Math.round(b.prog*100))+'%'+(b.earned?';background:'+(RARCOL[b.rar]||'#B388E6'):'')+'"></div></div>'+
+   (b.earned?'<div class="bdone">'+(RARNAME[b.rar]||'Earned')+'</div>':'<div class="bd" style="margin-top:4px">'+b.val+' / '+b.need+'</div>')+'</div>';
  });
  return out+'</div>';
 }
@@ -2034,7 +2188,7 @@ function publishPost(){
  fbToken(function(tk){
   fbJson(fbPostUrl(id)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
    body:JSON.stringify({fields:flds})})
-  .then(function(){RAWP=[];BAKED=[];closeSheet();refreshFeed(true);})
+  .then(function(){state.pcSent=(state.pcSent||0)+1;save();RAWP=[];BAKED=[];closeSheet();refreshFeed(true);})
   .catch(function(){if(btn){btn.disabled=false;btn.textContent='Send it';}alert('Could not send your postcard. Check your connection and try again.');});
  },function(){if(btn){btn.disabled=false;btn.textContent='Send it';}alert('Could not send your postcard. Check your connection and try again.');});
 }
@@ -2181,7 +2335,10 @@ function sendNote(pid){
  fbToken(function(tk){
   fbJson(fbNoteUrl(id)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
    body:JSON.stringify({fields:{post:{stringValue:pid},uid:{stringValue:so.uid},author:{stringValue:so.code},name:{stringValue:so.name},icon:{stringValue:so.icon||'ferris'},color:{stringValue:so.color||'grape'},avphoto:{stringValue:so.photo||''},text:{stringValue:txt},created:{stringValue:new Date().toISOString()}}})})
-  .then(function(){openNotes(pid);})
+  .then(function(){
+   var pp=null;FEEDCACHE.forEach(function(x){if(x.id===pid)pp=x;});
+   if(pp&&pp.author&&pp.author!==so.code){state.noteTo=state.noteTo||{};state.noteTo[pp.author]=1;save();}
+   openNotes(pid);})
   .catch(function(){if(btn){btn.disabled=false;btn.textContent='Send';}alert('Could not send your note. Try again.');});
  },function(){if(btn){btn.disabled=false;btn.textContent='Send';}});
 }
@@ -2483,7 +2640,7 @@ function openMenu(){
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21s</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21t</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
