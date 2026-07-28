@@ -1580,7 +1580,7 @@ function decProfile(j){
 }
 function newFriendCode(){var A='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c='PARK-';for(var i=0;i<5;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
 function pushProfile(cb,fail){
- var so=state.social;if(!so)return;
+ var so=state.social;if(!so||so.paused)return;
  fbToken(function(tk){
   fbJson(fbDocUrl(so.code),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(encFields(so.name,socialSummary()))})
   .then(function(){so.lastPush=shareSnap();so.lastSync=new Date().toISOString();save();if(cb)cb();})
@@ -1588,7 +1588,7 @@ function pushProfile(cb,fail){
  },fail);
 }
 function schedSync(){
- var so=state.social;if(!so||!so.code)return;
+ var so=state.social;if(!so||!so.code||so.paused)return;
  if(typeof navigator!=='undefined'&&navigator.onLine===false)return;
  if(so.lastPush===shareSnap())return;
  if(_syncT)clearTimeout(_syncT);
@@ -1617,10 +1617,18 @@ function turnOnSharing(){
  .catch(function(){if(btn){btn.disabled=false;btn.textContent='Turn on sharing';}alert('Could not reach the sharing service. Check your connection and try again.');});
 }
 function stopSharing(){
- if(!confirm('Stop sharing? Your code stops working and friends will no longer see your stats. Your own log is not affected.'))return;
+ if(!confirm('Pause sharing? Friends will not see you until you turn it back on. Your code and friend list are kept.'))return;
  var so=state.social;
  fbToken(function(tk){fetch(fbDocUrl(so.code),{method:'DELETE',headers:{'Authorization':'Bearer '+tk}}).catch(function(){});},function(){});
- state.social=null;save();go('friends');
+ so.paused=1;save();go('friends');toast('Sharing paused');
+}
+function resumeSharing(){
+ var so=state.social;if(!so||!so.code)return;
+ fbToken(function(tk){
+  fbJson(fbDocUrl(so.code),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(encFields(so.name,socialSummary()))})
+  .then(function(){so.paused=0;so.lastPush=shareSnap();so.lastSync=new Date().toISOString();save();go('friends');toast('Sharing is back on');})
+  .catch(function(){alert('Could not turn sharing back on. Check your connection and try again.');});
+ },function(){alert('Could not turn sharing back on. Check your connection and try again.');});
 }
 function fetchProfile(code,cb,fail){
  var go=function(tk){
@@ -1649,10 +1657,32 @@ function removeFriend(code){
 }
 function refreshFriends(){
  var so=state.social;if(!so||FRBUSY)return;FRBUSY=true;FRAT=Date.now();
+ if(!so.friends.length){FRBUSY=false;return;}
+ fbToken(function(tk){
+  var docs=so.friends.map(function(f){return 'projects/'+FB.pid+'/databases/(default)/documents/profiles/'+f.code;});
+  fbJson('https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents:batchGet',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify({documents:docs})})
+  .then(function(rows){
+   (rows||[]).forEach(function(row){
+    if(row.found){
+     var code=row.found.name.split('/').pop();
+     var p=decProfile(row.found);
+     so.friends.forEach(function(f){if(f.code===code){FRCACHE[code]=p;f.gone=0;f.name=p.name;f.icon=p.icon;f.color=p.color;f.photo=p.photo;f.fav=p.fav;}});
+    }else if(row.missing){
+     var code2=String(row.missing).split('/').pop();
+     so.friends.forEach(function(f){if(f.code===code2)f.gone=1;});
+    }
+   });
+   FRBUSY=false;save();
+   if(tab==='friends'){markFriendsSeen();renderAll();}else renderNav();
+  }).catch(function(){FRBUSY=false;refreshFriendsSlow();});
+ },function(){FRBUSY=false;});
+}
+function refreshFriendsSlow(){
+ var so=state.social;if(!so||FRBUSY)return;FRBUSY=true;
  var left=so.friends.length;if(!left){FRBUSY=false;return;}
  so.friends.forEach(function(f){
-  fetchProfile(f.code,function(p){FRCACHE[f.code]=p;f.name=p.name;f.icon=p.icon;f.color=p.color;f.photo=p.photo;f.fav=p.fav;left--;if(!left){FRBUSY=false;save();if(tab==='friends'){markFriendsSeen();renderAll();}else renderNav();}},
-   function(){left--;if(!left){FRBUSY=false;if(tab==='friends'){markFriendsSeen();renderAll();}else renderNav();}});
+  fetchProfile(f.code,function(p){FRCACHE[f.code]=p;f.gone=0;f.name=p.name;f.icon=p.icon;f.color=p.color;f.photo=p.photo;f.fav=p.fav;left--;if(!left){FRBUSY=false;save();if(tab==='friends'){markFriendsSeen();renderAll();}else renderNav();}},
+   function(e){if(e&&(e.status===404||e.status===403))f.gone=1;left--;if(!left){FRBUSY=false;save();if(tab==='friends'){markFriendsSeen();renderAll();}else renderNav();}});
  });
 }
 function toast(msg){
@@ -2752,7 +2782,7 @@ function friendLeadersHTML(){
 function viewFriends(){
  var so=state.social;var h='';
  if(!so||!so.code){
-  h+='<div class="frme" style="text-align:center"><div class="frav" style="margin:0 auto 10px">'+avatarSVG('ferris')+'</div><div class="pt-t" style="font-size:20px">Share your stats, see theirs</div><div class="pt-s" style="max-width:280px;margin:4px auto 12px">Turn on sharing to get a friend code. Only your display name and headline totals are shared, never your full log. You can stop any time.</div>'+
+  h+='<div class="frme" style="text-align:center"><div class="frav" style="margin:0 auto 10px">'+avatarSVG('ferris')+'</div><div class="pt-t" style="font-size:20px">Share your stats, see theirs</div><div class="pt-s" style="max-width:280px;margin:4px auto 12px">Turn on sharing to get a friend code. Only your display name, headline totals, most recent attraction, and favorite ride are shared, never your full log. You can pause any time.</div>'+
    '<label style="text-align:left">Display name</label><input id="fr_name" placeholder="What friends will see" maxlength="24">'+
    '<div class="pt-btns" style="margin-top:12px;justify-content:center"><button class="pt-primary" id="fr_go" onclick="turnOnSharing()">Turn on sharing</button></div></div>';
   return h;
@@ -2780,12 +2810,12 @@ function viewFriends(){
    var num=function(v){return (st&&v!=null)?v:'&ndash;';};
    return '<div class="frcard2" onclick="openFriendSheet(\''+f.code+'\')">'+
     '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div>'+(((p&&p.fav)||f.fav)?'<div class="frlast">Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b></div>':'')+'</div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
-    '<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+num(st&&st.experiences)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+num(st&&st.visits)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+num(st&&st.coasters)+'</b>Coasters</span></div>'+
+    (f.gone?'<div class="frstats" style="border-top:none;padding-top:2px"><span class="fst" style="color:#B4433A">No longer sharing. You can remove them, or keep the card in case they come back.</span></div>':'<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+num(st&&st.experiences)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+num(st&&st.visits)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+num(st&&st.coasters)+'</b>Coasters</span></div>')+
    '</div>';
   }).join('');
  }
  h+='</div>';
- h+='<div class="btnrow" style="margin-top:16px"><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Stop sharing</button></div>';
+ h+='<div class="btnrow" style="margin-top:16px">'+(so.paused?'<button class="btn primary" onclick="resumeSharing()">Resume sharing</button>':'<button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Pause sharing</button>')+'</div>';
  setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000){refreshFriends();checkFriendLinks();}}catch(e){}},50);
  return h;
 }
@@ -2864,8 +2894,8 @@ function openMenu(){
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
-  '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21x</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset all data</b></button>'+
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21y</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
@@ -3058,7 +3088,9 @@ function handleRestore(input){var f=input.files&&input.files[0];if(!f)return;
 }
 function exportData(){
  state.lastExport=Date.now();save();
- const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+ var out={};Object.keys(state).forEach(function(k){out[k]=state[k];});
+ if(out.social){var so2={};Object.keys(out.social).forEach(function(k){so2[k]=out.social[k];});delete so2.refreshToken;delete so2.idToken;delete so2.uid;delete so2.tokenExp;out.social=so2;}
+ const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
  a.download='disneyland-tracker-backup.json';a.click();
 }
@@ -3080,7 +3112,14 @@ function exportCSV(){
  a.href=URL.createObjectURL(blob);a.download='park-passport-export.csv';a.click();
 }
 
-function resetData(){if(confirm('Reset to the originally imported history? Anything you added in the app will be lost.')){state=clone(SEED);save();go('stats');}}
+function resetData(){
+ if(!confirm('Reset all data? This restores the built-in starting data and erases everything you have logged since. Your sharing profile and friends are kept.'))return;
+ if(!confirm('Really reset? Consider exporting a backup first (Menu, Your data).'))return;
+ var keep=state.social;
+ state=clone(SEED);
+ state.social=keep;
+ save();go('stats');toast('Data reset');
+}
 
 function openImport(){
  sheet('<h3>Import from CSV</h3>'+
