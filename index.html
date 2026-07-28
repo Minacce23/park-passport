@@ -927,20 +927,68 @@ function updateRide(i){
  save();closeSheet();renderAll();
 }
 function delRide(i){if(!confirm('Delete this experience?'))return;state.rides.splice(i,1);save();closeSheet();renderAll();}
+var BF={typed:[]};
 function formVisit(){
+ BF={typed:[]};window.BFLIST=[];
  sheet('<h3>Add a visit day</h3>'+
-  '<label>Date</label><input type="date" id="f_date" value="'+today()+'">'+
+  '<p class="muted" style="margin:0 0 12px;line-height:1.5">Quickly backfill a past park day: date, park, and what you rode. No extras needed.</p>'+
+  '<label>Date</label><input id="f_date" placeholder="e.g. 2024-06-01 or 6/1/24" value="'+today()+'" autocomplete="off">'+
   meetParkField('')+
-  '<label>Who with (optional)</label>'+withSelect('f_vwith')+
-  '<label>Day notes (optional)</label><input id="f_notes" placeholder="e.g. Family trip">'+
-  '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveVisit()">Save visit</button></div>');
+  '<label>What you rode that day</label>'+
+  '<div class="scorerow"><input id="bf_new" placeholder="Type a ride, then Add" autocomplete="off"><button type="button" class="btn" style="flex:none;width:auto" onclick="bfAddTyped()">Add</button></div>'+
+  '<div id="bf_chips" class="fchips" style="margin-top:8px"></div>'+
+  '<div id="bf_known"></div>'+
+  '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="bfSave()">Save day</button></div>');
+ var pe=document.getElementById('f_park');
+ if(pe){pe.addEventListener('change',bfRenderKnown);pe.addEventListener('input',bfRenderKnown);}
+ var ne=document.getElementById('bf_new');
+ if(ne)ne.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();bfAddTyped();}});
+ bfRenderKnown();
 }
-function saveVisit(){
- const d=val('f_date');
- const ex=state.visits.find(v=>v.date===d);
- if(ex){ex.park=val('f_park');ex.notes=val('f_notes')||ex.notes;ex.with_=val('f_vwith')||ex.with_||null;}
- else state.visits.push({date:d,park:val('f_park')||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland')),notes:val('f_notes')||null,with_:val('f_vwith')||null});
+function bfKnownList(){
+ var park=val('f_park');if(!park)return [];
+ var pm=parkMap(),out=[];
+ Object.keys(pm).forEach(function(a){if(pm[a]===park||pm[a]==='Both Parks')out.push(a);});
+ out.sort(function(a,b){return a.localeCompare(b);});
+ return out;
+}
+function bfRenderKnown(){
+ var el=document.getElementById('bf_known');if(!el)return;
+ var keep={};
+ (window.BFLIST||[]).forEach(function(a,i){var c=document.getElementById('bf_'+i);if(c&&c.checked)keep[a]=1;});
+ var list=bfKnownList();
+ window.BFLIST=list;
+ if(!list.length){el.innerHTML='<p class="muted" style="font-size:13px;line-height:1.5;margin:8px 0 0">Pick a park you have logged before and its rides appear here as a checklist.</p>';return;}
+ el.innerHTML='<div class="alabel" style="margin:12px 0 6px">Or check off the rides you did</div>'+
+  '<div style="max-height:34vh;overflow-y:auto;border:1.5px solid var(--line);border-radius:14px;padding:4px 12px">'+
+  list.map(function(a,i){return '<label style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)"><input type="checkbox" id="bf_'+i+'"'+(keep[a]?' checked':'')+' style="flex:none"><span style="flex:1;text-align:left;font-weight:700;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0">'+esc(a)+(isExtinct(a)?' <span class="pill ext">defunct</span>':'')+'</span></label>';}).join('')+
+  '</div>';
+}
+function bfAddTyped(){
+ var e=document.getElementById('bf_new');if(!e)return;
+ var v=(e.value||'').trim();if(!v)return;
+ BF.typed.push(v);e.value='';try{e.focus();}catch(err){}
+ bfRenderChips();
+}
+function bfRenderChips(){
+ var el=document.getElementById('bf_chips');if(!el)return;
+ el.innerHTML=BF.typed.map(function(t,i){return '<span class="fchip on" onclick="BF.typed.splice('+i+',1);bfRenderChips()">'+esc(t)+' &times;</span>';}).join('');
+}
+function bfSave(){
+ var d=flexDate(val('f_date'))||'';
+ if(!d){alert('Enter a date');return;}
+ var park=val('f_park')||null;
+ var picks=[];
+ (window.BFLIST||[]).forEach(function(a,i){var c=document.getElementById('bf_'+i);if(c&&c.checked)picks.push(a);});
+ BF.typed.forEach(function(t){picks.push(t);});
+ picks.forEach(function(a){
+  state.rides.push({date:d,attraction:a,park:park,variant:null,variants:null,with_:null,access:null,notes:null,photo:null,posted:null,lineStart:null,lineEnd:null,line:null});
+ });
+ var ex=state.visits.find(function(v){return v.date===d;});
+ if(ex){if(park)ex.park=park;}
+ else state.visits.push({date:d,park:park||(GENERIC?null:(SEED.lists.parks[0]||'Disneyland')),notes:null,with_:null});
  save();closeSheet();go('visits');
+ toast(picks.length?('Day saved with '+picks.length+' experience'+(picks.length===1?'':'s')):'Visit day saved');
 }
 function cropBoxHTML(){if(!pendingPhoto)return '';return '<div class="alabel" style="margin:10px 0 6px">Thumbnail crop (drag the square)</div><div id="cropbox"><img id="cropimg" src="'+pendingPhoto+'" style="object-position:'+pendingFocus.x+'% '+pendingFocus.y+'%"></div><div class="linkrow"><button type="button" onclick="pendingPhoto=null;document.getElementById(&#39;photoPreview&#39;).innerHTML=&#39;&#39;">Remove photo</button></div>';}
 function initCrop(){var box=document.getElementById('cropbox');if(!box)return;var drag=false,sx,sy,ox,oy;
@@ -2316,7 +2364,7 @@ function openMenu(){
   (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset to imported</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21h</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21i</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
