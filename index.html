@@ -1690,6 +1690,16 @@ function toast(msg){
  requestAnimationFrame(function(){t.style.opacity='1';});
  setTimeout(function(){t.style.opacity='0';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},400);},3400);
 }
+function openMyPreview(){
+ var so=state.social;if(!so||!so.code)return;
+ var st=socialSummary();var le=lastExperience();
+ var h='<h3>What friends see</h3><p class="muted" style="margin:0 0 12px;line-height:1.5">This is your card in a friend&#39;s tab, built from exactly what the app shares.</p>';
+ h+='<div class="frcard2" style="cursor:default"><div class="frhead"><span class="frav2">'+avatarAny(so)+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(so.name)+'</div>'+(so.fav?'<div class="frlast">Favorite: <b>'+esc(so.fav)+'</b></div>':'')+'</div></div>';
+ h+='<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+(st.experiences||0)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+(st.visits||0)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+(st.coasters||0)+'</b>Coasters</span></div></div>';
+ h+='<p class="muted" style="font-size:13px;line-height:1.55;margin:12px 2px 0">Tapping your card also shows: '+(st.unique||0)+' unique attractions, '+(st.chars||st.characters||0)+' character meets, '+(st.scores||0)+' scores, your last experience'+(le?' ('+esc(le.name)+', '+fmt(le.date)+')':'')+', and your favorite ride. Nothing else leaves your phone.</p>';
+ h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
+}
 function openMyQR(){
  var so=state.social;if(!so||!so.code)return;
  var qr=qrcode(0,'M');qr.addData('PARKPASS:'+so.code);qr.make();
@@ -2682,7 +2692,7 @@ function viewLog(){
   '<button onclick="formMeet()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.4" rx="7" ry="2" fill="#D9A3D4"/><path d="M12 18.2S4.4 13.6 4.4 8.9C4.4 6.2 6.5 4.6 8.6 4.6c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 4.2 1.6 4.2 4.3 0 4.7-7.6 9.3-7.6 9.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Log a character meet</b></button>'+
   '<button onclick="formScore()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E8D93B"/><path d="M8.2 4.6h7.6v4.6a3.8 3.8 0 0 1-7.6 0z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 6H5.6a2.6 2.6 0 0 0 2.7 2.9M15.8 6h2.6a2.6 2.6 0 0 1-2.7 2.9" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 12.8v2.4M10.2 15.2h3.6v2.4h-3.6zM9 17.6h6" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg>')+'</span><b>Log a score</b></button>'+
  '</div>';
- h+='<div class="linkrow" style="margin-top:10px"><button onclick="formPark()">+ Add a park</button><button onclick="formPhoto()">+ Add a photo</button>'+(GENERIC?'<button onclick="formVariant()">+ Add a variant</button>':'')+'</div>';
+ h+='<div class="linkrow" style="margin-top:10px"><button onclick="formPark()">+ Add a park</button><button onclick="formPhoto()">+ Add a photo</button>'+(GENERIC?'<button onclick="formVariant()">+ Add a variant</button>':'')+'<button onclick="go(&#39;people&#39;)">People &amp; groups</button>'+'</div>';
  var td=[];
  (state.rides||[]).forEach(function(r){if(r.date===d)td.push({t:'Experience',n:r.attraction});});
  (state.meets||[]).forEach(function(m){if(m.date===d)td.push({t:'Meet',n:m.character});});
@@ -2789,7 +2799,7 @@ function viewFriends(){
  }
  h+='<div class="frme"><div class="frme-top"><button class="frav" onclick="openAvatarPicker()" title="Change icon">'+avatarAny(so)+'<span class="frav-edit"><svg viewBox="0 0 24 24" style="width:11px;height:11px;display:block;margin:auto"><path d="M4.5 19.5l1-4L16 5a2.1 2.1 0 0 1 3 3L8.5 18.5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M14 7l3 3" stroke="currentColor" stroke-width="2.4"/></svg></span></button><div style="min-width:0"><div class="pt-t" style="margin-bottom:1px">'+esc(so.name)+' <button class="nmedit" onclick="editShareName()" aria-label="Edit name"><svg viewBox="0 0 24 24"><path d="M4.5 19.5l1-4L16 5a2.1 2.1 0 0 1 3 3L8.5 18.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M14 7l3 3" stroke="currentColor" stroke-width="1.9"/></svg></button></div><div class="pt-k" style="margin:4px 0 1px">Your friend code</div><div class="frcode" style="font-size:22px">'+so.code+'</div></div></div>'+
   '<div class="pt-s" style="margin:8px 0 0">Favorite ride: <b>'+(so.fav?esc(so.fav):'not set')+'</b> <button class="nmedit" onclick="editFavRide()" aria-label="Edit favorite"><svg viewBox="0 0 24 24"><path d="M4.5 19.5l1-4L16 5a2.1 2.1 0 0 1 3 3L8.5 18.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M14 7l3 3" stroke="currentColor" stroke-width="1.9"/></svg></button></div>'+
-  '<div class="pt-btns" style="margin-top:11px"><button class="pt-primary" onclick="shareCode()">Share my code</button><button class="pt-ghost" onclick="openMyQR()">QR code</button><button class="pt-ghost" onclick="openFriendPostcards(state.social.code,&#39;My&#39;,&#39;self&#39;)">My postcards</button></div></div>';
+  '<div class="pt-btns" style="margin-top:11px"><button class="pt-primary" onclick="shareCode()">Share my code</button><button class="pt-ghost" onclick="openMyQR()">QR code</button><button class="pt-ghost" onclick="openFriendPostcards(state.social.code,&#39;My&#39;,&#39;self&#39;)">My postcards</button><button class="pt-ghost" onclick="openMyPreview()">Preview my card</button></div></div>';
  h='<button class="fraddbtn" onclick="openAddFriend()" aria-label="Add a friend"><svg viewBox="0 0 24 24"><circle cx="10" cy="8.6" r="3.4" fill="none" stroke="#1B1A17" stroke-width="1.8"/><path d="M4 19c.6-3.2 3-5 6-5 1.8 0 3.3.6 4.4 1.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><path d="M17.6 13.6v6M14.6 16.6h6" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg></button>'+h;
  if((so.requests||[]).length){
   h+='<h2 class="sec">Friend requests</h2>';
@@ -2798,12 +2808,16 @@ function viewFriends(){
  if((so.pending||[]).length){
   h+='<h2 class="sec">Sent requests</h2><div class="card">'+so.pending.map(function(pd){return '<div class="checkitem"><div class="nm"><b>'+esc(pd.name)+'</b><br><span class="cnt">Waiting for them to accept</span></div><button class="xbtn" onclick="cancelRequest('+jsarg(pd.code)+')">&times;</button></div>';}).join('')+'</div>';
  }
- h+=friendLeadersHTML();
  h+='<h2 class="sec" style="display:flex;justify-content:space-between;align-items:center">Friends<span style="flex:1"></span>'+(so.friends.length?'<button class="btn ghost" style="flex:none;width:auto;padding:5px 12px;font-size:12px" onclick="refreshFriends()">Refresh</button>':'')+'</h2>';
  h+='<div id="fr_list">';
  if(!so.friends.length){h+='<div class="emptyc">'+avatarSVG('balloon')+'<div class="et">No friends yet</div><div class="es">Share your code and add theirs to compare stats.</div></div>';}
  else{
-  h+=so.friends.map(function(f,fi){
+  var _sorted=so.friends.slice().sort(function(a,b){
+   var la=(FRCACHE[a.code]&&FRCACHE[a.code].last&&FRCACHE[a.code].last.date)||'';
+   var lb=(FRCACHE[b.code]&&FRCACHE[b.code].last&&FRCACHE[b.code].last.date)||'';
+   return lb.localeCompare(la);
+  });
+  h+=_sorted.map(function(f,fi){
    var p=FRCACHE[f.code];var st=p?p.stats:null;
    var icon=(p&&p.icon)||f.icon||'ferris';
    var isNew=p&&p.last&&p.last.date&&p.last.date>((so.seenLast||{})[f.code]||'');
@@ -2815,6 +2829,7 @@ function viewFriends(){
   }).join('');
  }
  h+='</div>';
+ h+=friendLeadersHTML();
  h+='<div class="btnrow" style="margin-top:16px">'+(so.paused?'<button class="btn primary" onclick="resumeSharing()">Resume sharing</button>':'<button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Pause sharing</button>')+'</div>';
  setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000){refreshFriends();checkFriendLinks();}}catch(e){}},50);
  return h;
@@ -2874,28 +2889,32 @@ function openParkToggles(){
  sheet(h);
 }
 function openMenu(){
- sheet('<h3>Menu</h3><div class="actionlist">'+(isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
-  '<button onclick="closeSheet();go(\'variants\')"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E7BCE3"/><path d="M12 3.8l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.6 4.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="#1B1A17"/></svg>')+'</span><b>Variants</b></button>'+
-  '<button onclick="closeSheet();go(\'people\')"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#D9A3D4"/><circle cx="15.6" cy="10.3" r="2.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.6"/><path d="M14.9 15.6c2.3-.7 4.7.4 5.4 2.8" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="9.5" r="3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7"/><path d="M3.8 18.6c.5-3 2.7-4.6 5.2-4.6 2.6 0 4.3 1.4 5 3.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>')+'</span><b>People &amp; Groups</b></button>'+
+ sheet('<h3>Menu</h3><div class="actionlist">'+
+  
+  
+  
     '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
   '<button onclick="resetHome()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#A9AFE2"/><path d="M5.4 12a6.6 6.6 0 1 1 1.9 4.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><path d="M5.2 12.6L5 8.6l4 .2" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Restore default home screen</b></button>'+
   '<div class="alabel">Parks</div>'+
   '<button onclick="openParkToggles()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#3E5A3E" opacity=".35"/><path d="M5 18.5V9.6l4-3 4 3v8.9M13 18.5v-6.4l3-2.2 3 2.2v6.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.4 18.5h17.2" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>')+'</span><b>Toggle parks on / off</b><span class="vchev" style="margin-left:auto">&rsaquo;</span></button>'+
-  '<div class="alabel">Tracking</div>'+
+  '<div class="alabel">Logging</div>'+
   '<div class="swrow" onclick="toggleWaits()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#8E96D6"/><circle cx="12" cy="11.2" r="7.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M12 7.4v4l2.6 1.7" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg>')+'</span><b>Wait times</b><span class="switch'+(waitsOn()?' on':'')+'" id="waitsw"><span class="knob"></span></span></div>'+
   '<div class="swrow" onclick="closeSheet();passManager()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12.5" cy="20.7" rx="7.5" ry="1.8" fill="#E8D93B"/><rect x="3.6" y="6.4" width="16.8" height="11" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M3.6 10h16.8" fill="none" stroke="#1B1A17" stroke-width="1.7"/><path d="M6.6 13.8h5" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg>')+'</span><b>Annual passes</b><span class="switch'+(passesOn()?' on':'')+'" id="passsw" onclick="event.stopPropagation();togglePasses()"><span class="knob"></span></span></div>'+
+  '<div class="alabel">Friends &amp; privacy</div>'+
   '<div class="swrow" onclick="toggleLeaders()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#B388E6"/><path d="M4 18.6v-4.2h4.6v4.2M9.8 18.6V8.8h4.4v9.8M15.4 18.6v-6.8H20v6.8" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 18.6h18" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>')+'</span><b>Friend leaderboard</b><span class="switch'+(leadersOn()?' on':'')+'" id="leadsw"><span class="knob"></span></span></div>'+
   '<button onclick="closeSheet();openBlocked()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#E7BCE3"/><circle cx="12" cy="11.5" r="7" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M7.2 6.7l9.6 9.6" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg>')+'</span><b>Blocked codes</b></button>'+
   '<div class="alabel">Your data</div>'+
   '<button onclick="openDataHub()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#D9CF3F"/><rect x="4.4" y="5" width="15.2" height="14" rx="2.2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.4 12h5.2M12 9.4v5.2" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/></svg>')+'</span><b>Import, export &amp; backups</b><span class="vchev" style="margin-left:auto">&rsaquo;</span></button>'+
   '<button onclick="downloadTemplate()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B5D0B5"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M8.4 8h7.2M8.4 11.4h7.2M8.4 14.8h4.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg>')+'</span><b>Download CSV template</b></button>'+
-  (!GENERIC?('<div class="alabel">Park catalogs</div>'+allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
+  (!GENERIC?(allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
   '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset all data</b></button>'+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.21z</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '<div class="alabel">About</div>'+
+  '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
+  (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22a</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
