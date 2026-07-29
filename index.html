@@ -156,7 +156,7 @@ body.theme-dark .mrz{background:#2A2721;}
 .tk-name{margin-top:5px;font-size:13px;font-weight:800;letter-spacing:-0.01em;color:var(--ink);}
 .tk-sub{margin-top:2px;font-size:11px;font-weight:700;color:rgba(27,26,23,.72);}
 .tk-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:12px;padding-top:8px;border-top:1.5px solid rgba(27,26,23,.35);}
-.tk-ser{font-size:11px;font-weight:800;letter-spacing:.1em;color:#C9433A;}
+.tk-ser{font-size:11px;font-weight:800;letter-spacing:.1em;color:#7C2620;}
 .tk-cls{font-size:26px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);line-height:.85;}
 .tk-type{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(27,26,23,.72);}
 .mstamp{border:1.5px solid var(--line);border-radius:18px;padding:16px;cursor:pointer;display:grid;gap:12px;background:var(--lemon);}
@@ -3019,7 +3019,7 @@ function openFriendSheet(code){
   row('Favorite ride',(p&&p.fav?esc(p.fav):'&ndash;'))+
  '</div>';
  h+='<button class="btn ghost" style="width:100%;margin-top:8px" onclick="openFriendPostcards('+jsarg(code)+','+jsarg(f.name)+',&#39;friend&#39;)">Postcards</button>';
- h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="closeSheet();removeFriend('+jsarg(code)+')">Remove friend</button></div>';
+ h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" style="color:#A93B33;border-color:#A93B33" onclick="closeSheet();removeFriend('+jsarg(code)+')">Remove friend</button></div>';
  sheet(h);
 }
 function friendLeadersHTML(){
@@ -3086,13 +3086,13 @@ function viewFriends(){
    var num=function(v){return (st&&v!=null)?v:'&ndash;';};
    return '<div class="frcard2" onclick="openFriendSheet(\''+f.code+'\')">'+
     '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div>'+(((p&&p.fav)||f.fav)?'<div class="frlast">Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b></div>':'')+'</div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
-    (f.gone?'<div class="frstats" style="border-top:none;padding-top:2px"><span class="fst" style="color:#B4433A">No longer sharing. You can remove them, or keep the card in case they come back.</span></div>':'<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+num(st&&st.experiences)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+num(st&&st.visits)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+num(st&&st.coasters)+'</b>Coasters</span></div>')+
+    (f.gone?'<div class="frstats" style="border-top:none;padding-top:2px"><span class="fst" style="color:#A93B33">No longer sharing. You can remove them, or keep the card in case they come back.</span></div>':'<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+num(st&&st.experiences)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+num(st&&st.visits)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+num(st&&st.coasters)+'</b>Coasters</span></div>')+
    '</div>';
   }).join('');
  }
  h+='</div>';
  h+=friendLeadersHTML();
- h+='<div class="btnrow" style="margin-top:16px">'+(so.paused?'<button class="btn primary" onclick="resumeSharing()">Resume sharing</button>':'<button class="btn ghost" style="color:#B4433A;border-color:#B4433A" onclick="stopSharing()">Pause sharing</button>')+'</div>';
+ h+='<div class="btnrow" style="margin-top:16px">'+(so.paused?'<button class="btn primary" onclick="resumeSharing()">Resume sharing</button>':'<button class="btn ghost" style="color:#A93B33;border-color:#A93B33" onclick="stopSharing()">Pause sharing</button>')+'</div>';
  setTimeout(function(){try{markFriendsSeen();if(Date.now()-FRAT>30000){refreshFriends();checkFriendLinks();}}catch(e){}},50);
  return h;
 }
@@ -3136,7 +3136,7 @@ function openDataHub(){
  h+='<div class="linkrow"><button onclick="openRestore()"><b>Restore from backup</b></button></div>';
  h+='<h2 class="sec">Start over</h2>';
  h+='<p class="muted" style="margin:0 0 8px;font-size:13px;line-height:1.5">Erases everything on this device and deletes your shared friend profile. Export a backup first if there is any chance you will want this data back.</p>';
- h+='<div class="linkrow"><button onclick="eraseEverything()" style="color:#B4433A"><b>Erase all data</b></button></div>';
+ h+='<div class="linkrow"><button onclick="eraseEverything()" style="color:#A93B33"><b>Erase all data</b></button></div>';
  h+='<div class="btnrow"><button class="btn ghost" onclick="openMenu()">Back</button><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
  sheet(h);
 }
@@ -3173,12 +3173,12 @@ function openMenu(){
   '<button onclick="downloadTemplate()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="7" ry="1.7" fill="#B5D0B5"/><rect x="5.4" y="3.4" width="13.2" height="15.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M8.4 8h7.2M8.4 11.4h7.2M8.4 14.8h4.4" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linecap="round"/></svg>')+'</span><b>Download CSV template</b></button>'+
   (!GENERIC?(allParks().map(function(pp){return '<button onclick="downloadCatalog(&#39;'+pp+'&#39;)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7.5" ry="1.8" fill="#E8D93B"/><path d="M3.6 7.2a2 2 0 0 1 2-2h4l2 2.4h7a1.8 1.8 0 0 1 1.8 1.8v7.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>'+pp+' catalog</b></button>';}).join('')):'')+
   '<button onclick="openDupeCheck()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="10.6" cy="9.8" r="5.6" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M14.8 14l4 4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/></svg>')+'</span><b>Check for duplicates</b></button>'+
-  '<div class="alabel" style="color:#B4433A">Danger zone</div>'+
+  '<div class="alabel" style="color:#A93B33">Danger zone</div>'+
   '<button onclick="resetData()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="21" rx="6.5" ry="1.7" fill="#D9A3D4"/><path d="M19.4 11.4a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round"/><path d="M19.8 2.8v4h-4" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</span><b>Reset all data</b></button>'+
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22q</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22r</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
@@ -3232,7 +3232,7 @@ function openVariantActions(rn,v){
  h+='<div class="actionlist">';
  h+='<button onclick="toggleExtinct('+jsarg(v)+');closeSheet();renderAll()"><b>'+(isExtinct(v)?'Remove the defunct label':'Label as defunct')+'</b></button>';
  h+='<button onclick="promoteVariant('+jsarg(rn)+','+jsarg(v)+')"><b>Make this its own ride</b></button>';
- if(!used)h+='<button onclick="delCatalogVariant('+jsarg(rn)+','+jsarg(v)+');closeSheet();renderAll()" style="color:#B4433A"><b>Remove from the list</b></button>';
+ if(!used)h+='<button onclick="delCatalogVariant('+jsarg(rn)+','+jsarg(v)+');closeSheet();renderAll()" style="color:#A93B33"><b>Remove from the list</b></button>';
  h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>';
  sheet(h);
 }
@@ -3696,7 +3696,7 @@ function showNextBadge(){
  var raysvg='<svg viewBox="0 0 100 100" style="width:100%;height:100%;color:'+wax+'"><g stroke="'+wax+'" stroke-width="2.4" stroke-linecap="round">';
  for(var r=0;r<12;r++){var a=r*30*Math.PI/180,x1=50+Math.cos(a)*34,y1=50+Math.sin(a)*34,x2=50+Math.cos(a)*46,y2=50+Math.sin(a)*46;raysvg+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/>';}
  raysvg+='</g></svg>';
- var el=document.createElement('div');el.className='bpop-scrim';
+ var el=document.createElement('div');el.className='bpop-scrim';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Badge earned: '+b.t);
  el.innerHTML='<div class="bpop-card"><div class="bpop-confetti">'+pieces+'</div>'+postmark+
   '<div class="alabel" style="margin:2px 0 0">Badge earned</div>'+
   '<div class="bpop-seal-wrap"><div class="bpop-rays">'+raysvg+'</div><div class="bpop-shock" style="color:'+wax+'"></div><div class="bpop-seal">'+sealBadge(b.cat,true,b.rar)+'</div></div>'+
@@ -3740,6 +3740,7 @@ try{normalizeSolo();}catch(e){}
 if(!(state.rides||[]).length&&!(state.meets||[]).length&&!(state.scores||[]).length&&!(state.visits||[]).length)tab='log';
 renderAll();
 document.addEventListener('keydown',function(e){
+ if(e.key==='Escape'){if(document.querySelector('.bpop-scrim')){closeBadgePop();return;}var sh=document.getElementById('sheet');if(sh&&sh.classList.contains('open')){closeSheet();return;}}
  if(e.key!=='Enter'&&e.key!==' ')return;
  var t=e.target;
  if(t&&t.getAttribute&&t.getAttribute('role')==='button'){e.preventDefault();t.click();}
