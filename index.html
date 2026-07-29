@@ -108,6 +108,31 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 .hdr-menu::before{content:"";position:absolute;inset:-5px;}
 .chip{position:relative;}.chip::before{content:"";position:absolute;inset:-5px 0;}
 .fchip{position:relative;}.fchip::before{content:"";position:absolute;inset:-4px 0;}
+.bpop-scrim{position:fixed;inset:0;z-index:500;background:rgba(27,26,23,.44);-webkit-backdrop-filter:blur(2.5px);backdrop-filter:blur(2.5px);display:flex;align-items:center;justify-content:center;padding:18px;animation:bpop-scrim .4s ease both;}
+@keyframes bpop-scrim{from{opacity:0}to{opacity:1}}
+.bpop-card{position:relative;width:100%;max-width:336px;background:var(--card);border:1.5px solid var(--line);border-radius:26px;padding:24px 24px 20px;box-shadow:0 20px 60px rgba(27,26,23,.28);animation:bpop-rise .55s .05s cubic-bezier(.2,.9,.25,1) both;}
+@keyframes bpop-rise{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+.bpop-mark{position:absolute;top:15px;right:16px;width:60px;height:34px;color:#C9433A;opacity:.72;transform:rotate(-5deg);}
+.bpop-seal-wrap{position:relative;height:180px;display:grid;place-items:center;margin:2px 0;}
+.bpop-rays{position:absolute;width:190px;height:190px;animation:bpop-rays .8s .25s cubic-bezier(.2,.9,.25,1) both;}
+@keyframes bpop-rays{0%{opacity:0;transform:scale(.7) rotate(-10deg)}100%{opacity:.5;transform:scale(1) rotate(0)}}
+.bpop-shock{position:absolute;width:150px;height:150px;border-radius:50%;border:2px solid currentColor;animation:bpop-shock 1s .3s ease-out both;}
+@keyframes bpop-shock{0%{opacity:0;transform:scale(.55)}35%{opacity:.7}100%{opacity:0;transform:scale(1.55)}}
+.bpop-seal{width:132px;height:132px;animation:bpop-press .85s .18s cubic-bezier(.2,.9,.25,1) both;}
+.bpop-seal svg{width:100%;height:100%;display:block;}
+@keyframes bpop-press{0%{opacity:0;transform:scale(1.9) rotate(-16deg)}55%{opacity:1;transform:scale(.9) rotate(4deg)}72%{transform:scale(1.06) rotate(-2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+.bpop-body{text-align:center;animation:bpop-fade .5s .5s ease both;}
+@keyframes bpop-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.bpop-title{font-size:28px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);line-height:1.12;}
+.bpop-desc{font-size:15px;color:var(--muted);line-height:1.5;margin-top:6px;}
+.bpop-pills{display:flex;justify-content:center;gap:8px;margin-top:14px;}
+.bpop-pill{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:#FBF9F0;border:1px solid var(--line);border-radius:999px;padding:5px 12px;}
+.bpop-div{height:1.5px;background:var(--line);margin:18px -4px 16px;}
+.bpop-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;animation:bpop-fade .5s .62s ease both;}
+.bpop-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:26px;}
+.bpop-conf{position:absolute;top:-16px;border-radius:2px;animation:bpop-fall linear both;}
+@keyframes bpop-fall{0%{opacity:0;transform:translateY(-30px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(620px) rotate(320deg)}}
+@media(prefers-reduced-motion:reduce){.bpop-card,.bpop-rays,.bpop-shock,.bpop-seal,.bpop-body,.bpop-btns,.bpop-conf{animation:none!important}.bpop-conf{display:none}}
 </style>
 </head>
 <body>
@@ -214,6 +239,7 @@ function save(){
  try{localStorage.setItem(LS,JSON.stringify(state,function(k,v){if(k==='photo'&&IDB_OK&&this&&this.photoKey)return undefined;return v;}));}
  catch(e){alert('Storage is full \u2014 export a backup and remove some photos.');}
  try{schedSync();}catch(e){}
+ if(!_inBadge)try{setTimeout(checkBadges,0);}catch(e){}
 }
 let pendingPhoto=null;
 var pendingFocus={x:50,y:50};
@@ -2951,7 +2977,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22h</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22i</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
@@ -3438,6 +3464,50 @@ document.addEventListener('dblclick',function(e){
 });
 
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+var _inBadge=false,BADGEQ=[];
+function checkBadges(){
+ if(_inBadge||typeof badgeList!=='function')return;
+ var list;try{list=badgeList();}catch(e){return;}
+ if(!state.seenBadges){
+  state.seenBadges={};list.forEach(function(b){if(b.earned)state.seenBadges[b.t]=1;});
+  _inBadge=true;try{save();}catch(e){}_inBadge=false;return;
+ }
+ var newly=[];
+ list.forEach(function(b){if(b.earned&&!state.seenBadges[b.t]){state.seenBadges[b.t]=1;newly.push(b);}});
+ if(!newly.length)return;
+ _inBadge=true;try{save();}catch(e){}_inBadge=false;
+ newly.forEach(function(b){BADGEQ.push(b);});
+ if(!document.querySelector('.bpop-scrim'))showNextBadge();
+}
+function showNextBadge(){
+ var b=BADGEQ.shift();if(!b)return;
+ var wax=RARCOL[b.rar]||'#B388E6';
+ var conf=['#B388E6','#F0E952','#A9AFE2','#E7BCE3','#A9C8A9','#FDFBF4'];
+ var pieces='';
+ for(var i=0;i<14;i++){
+  var c=conf[i%conf.length],left=(4+i*6.6).toFixed(0),dur=(3+Math.random()*1.3).toFixed(2),del=(Math.random()*1.1).toFixed(2),round=i%3===0?'50%':'2px',w=(7+Math.round(Math.random()*5)),h=(7+Math.round(Math.random()*8));
+  pieces+='<div class="bpop-conf" style="left:'+left+'%;width:'+w+'px;height:'+h+'px;border-radius:'+round+';background:'+c+';animation-duration:'+dur+'s;animation-delay:'+del+'s"></div>';
+ }
+ var postmark='<svg class="bpop-mark" viewBox="0 0 60 34"><circle cx="17" cy="17" r="13" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="17" y="15" text-anchor="middle" font-size="6.5" font-weight="800" fill="currentColor" font-family="inherit">PARK</text><text x="17" y="23" text-anchor="middle" font-size="6.5" font-weight="800" fill="currentColor" font-family="inherit">POST</text><path d="M33 10c3 1.6 6-1.6 9 0s6-1.6 9 0M33 17c3 1.6 6-1.6 9 0s6-1.6 9 0M33 24c3 1.6 6-1.6 9 0s6-1.6 9 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+ var raysvg='<svg viewBox="0 0 100 100" style="width:100%;height:100%;color:'+wax+'"><g stroke="'+wax+'" stroke-width="2.4" stroke-linecap="round">';
+ for(var r=0;r<12;r++){var a=r*30*Math.PI/180,x1=50+Math.cos(a)*34,y1=50+Math.sin(a)*34,x2=50+Math.cos(a)*46,y2=50+Math.sin(a)*46;raysvg+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/>';}
+ raysvg+='</g></svg>';
+ var el=document.createElement('div');el.className='bpop-scrim';
+ el.innerHTML='<div class="bpop-card"><div class="bpop-confetti">'+pieces+'</div>'+postmark+
+  '<div class="alabel" style="margin:2px 0 0">Badge earned</div>'+
+  '<div class="bpop-seal-wrap"><div class="bpop-rays">'+raysvg+'</div><div class="bpop-shock" style="color:'+wax+'"></div><div class="bpop-seal">'+sealBadge(b.cat,true,b.rar)+'</div></div>'+
+  '<div class="bpop-body"><div class="bpop-title">'+esc(b.t)+'</div><div class="bpop-desc">'+esc(b.d)+'</div>'+
+  '<div class="bpop-pills"><span class="bpop-pill">'+(RARNAME[b.rar]||'Earned')+'</span><span class="bpop-pill">'+fmt(today())+'</span></div>'+
+  '<div class="bpop-div"></div>'+
+  '<div class="bpop-btns"><button class="btn ghost" onclick="closeBadgePop()">Nice</button><button class="btn primary" onclick="closeBadgePop();go(&#39;memories&#39;);MEMSEG=&#39;post&#39;;renderAll();openComposer();">Send a postcard</button></div>'+
+  '</div>';
+ el.addEventListener('click',function(ev){if(ev.target===el)closeBadgePop();});
+ document.body.appendChild(el);
+}
+function closeBadgePop(){
+ var el=document.querySelector('.bpop-scrim');if(el&&el.parentNode)el.parentNode.removeChild(el);
+ if(BADGEQ.length)setTimeout(showNextBadge,220);
+}
 var PPERRS=[];
 function logErr(e,w){try{PPERRS.push({t:new Date().toISOString().slice(11,19),w:w||'',m:String((e&&e.message)||e).slice(0,120)});if(PPERRS.length>10)PPERRS.shift();}catch(x){}}
 window.addEventListener('error',function(ev){logErr(ev.error||ev.message,'window');});
