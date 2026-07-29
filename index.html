@@ -621,8 +621,8 @@ function viewStats(s){
  SEC.ticketbook=function(){
   var ccred=(typeof coasterCreditCount==='function')?coasterCreditCount():0;
   var items=[
-   {n:s.chars,name:'Character meets',sub:'Photos and autographs',ser:'A107116',cls:'B',type:'MEET',oc:"go('meets')"},
-   {n:s.scores,name:'Scores logged',sub:'Games and challenges',ser:'A107117',cls:'A',type:'SCORE',oc:"go('scores')"},
+   {n:s.chars,name:'Character meets',sub:'Photos and autographs',ser:'A107116',cls:'A',type:'MEET',oc:"go('meets')"},
+   {n:s.scores,name:'Scores logged',sub:'Games and challenges',ser:'A107117',cls:'B',type:'SCORE',oc:"go('scores')"},
    {n:s.attr,name:'Unique attractions',sub:'Across your parks',ser:'A107118',cls:'D',type:'TOUR',oc:"openChecklist()"},
    {n:ccred,name:'Coaster credits',sub:'First rides only',ser:'A107119',cls:'E',type:'RIDE',oc:"showCoasters()"}
   ];
@@ -699,7 +699,7 @@ function viewStats(s){
   if(_more)_ranked=_ranked.slice(0,5);
   var _max=Math.max.apply(null,_ranked.map(function(x){return x.n;}))||1;
   var rows=_ranked.map(function(x){
-   return '<div class="bprow" onclick="openParkPage('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+(x.pk==='California Adventure'?'Calif. Adv.':esc(x.pk))+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
+   return '<div class="bprow" onclick="openParkPage('+jsarg(x.pk)+')"><span class="bpic">'+parkIconSVG(x.pk)+'</span><span class="bpname">'+esc(x.pk)+'</span><span class="bpbar"><span style="background:'+x.col+';width:'+Math.max(4,Math.round(x.n/_max*100))+'%"></span></span><span class="bpnum">'+x.n+'</span><span class="vchev">&rsaquo;</span></div>';
   }).join('');
   var foot='';
   if(_more)foot+='<div class="bprow" style="cursor:pointer;justify-content:center" onclick="showAllParksSheet()"><span class="bpname" style="flex:none;color:var(--accent)">See all '+_more+' parks &rsaquo;</span></div>';
@@ -713,12 +713,15 @@ function viewStats(s){
   var y0=+ys[0],y1=+ys[ys.length-1];
   if(y1-y0>60)return '';
   var mx=0;ys.forEach(function(y){if(byY[y]>mx)mx=byY[y];});
-  var wax=['#B388E6','#A9AFE2','#E7BCE3','#F0E952','#A9C8A9'],bi=0;
+  // one wax pair per decade, so the strip reads as eras rather than confetti;
+  // the busiest year is drawn in that decade's dark partner
+  var WAXP=[['#B388E6','#5B3E86'],['#A9AFE2','#454F8C'],['#E7BCE3','#8F3F7D'],['#F0E952','#6E6820'],['#A9C8A9','#2E4A2E']];
   var bars='';
   for(var y=y0;y<=y1;y++){
    var n=byY[String(y)]||0;
    var hgt=n?Math.max(4,Math.round(Math.sqrt(n)/Math.sqrt(mx)*44)):2;
-   var col=n?(byY[String(y)]===mx?'#B388E6':wax[(bi++)%wax.length]):'var(--line)';
+   var wp=WAXP[Math.floor(y/10)%WAXP.length];
+   var col=n?(n===mx?wp[1]:wp[0]):'var(--line)';
    bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:0"><div style="width:70%;max-width:10px;height:'+hgt+'px;border-radius:3px;background:'+col+';margin-top:'+(46-hgt)+'px"></div>'+((y===y0||y===y1||y%10===0)?'<div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:3px">'+String(y).slice(2)+'</div>':'<div style="height:15px"></div>')+'</div>';
   }
   return pglabel('Park years')+'<div class="card"><div style="display:flex;align-items:flex-end;gap:1px">'+bars+'</div><div class="muted" style="font-size:12px;margin-top:6px;text-align:center">Visit days per year, '+y0+' to '+y1+'</div></div>';
