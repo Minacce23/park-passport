@@ -43,6 +43,24 @@ h2.pagetitle{font-size:24px;font-weight:900;letter-spacing:-0.04em;color:var(--i
 .prog{height:14px;background:rgba(27,26,23,.12);border-radius:10px;overflow:hidden;margin:8px 0;}
 .prog > div{height:100%;background:var(--ink);}
 .checkitem{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:15px;border-bottom:1px solid var(--line);}
+/* today's log, drawn as a route: stops on a line, the way Walt would have it */
+.rt{position:relative;}
+.rt-stop{display:flex;align-items:center;gap:11px;padding:9px 0;cursor:pointer;}
+.rt-rail{position:relative;width:18px;flex:none;align-self:stretch;display:flex;align-items:center;justify-content:center;}
+.rt-rail:before{content:'';position:absolute;left:50%;top:-9px;bottom:-9px;width:2px;margin-left:-1px;background:var(--line);}
+.rt-stop:first-child .rt-rail:before{top:50%;}
+.rt-stop:last-child .rt-rail:before{bottom:50%;}
+.rt-stop:only-child .rt-rail:before{display:none;}
+.rt-dot{position:relative;z-index:1;width:12px;height:12px;border-radius:50%;border:2.5px solid var(--card);box-sizing:content-box;}
+.rt-ico{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;}
+.rt-ico img{width:26px;height:26px;object-fit:contain;display:block;}
+.rt-ico svg{width:24px;height:24px;display:block;}
+.rt-main{flex:1;min-width:0;}
+.rt-name{font-weight:700;font-size:15px;color:var(--ink);}
+.rt-sub{font-size:12.5px;color:var(--muted);margin-top:1px;}
+.rt-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px;}
+.rt-count{font-weight:900;font-size:15px;color:var(--ink);letter-spacing:-0.02em;}
+.rt-date{font-size:12px;font-weight:700;color:var(--muted);}
 .checkitem:last-child{border-bottom:none;}
 .checkitem .ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;}
 .checkitem.done .ck{background:var(--pine);border-color:transparent;}
@@ -3041,6 +3059,30 @@ function openDayPage(d){
  sheet(h);
 }
 
+function todayStops(){
+ var d=today(), out=[];
+ (state.rides||[]).forEach(function(r,i){ if(r.date===d) out.push({kind:'ride',name:shortRide(r.attraction)||r.attraction,
+   park:r.park||pOf(r.attraction), sub:[r.with_,r.access].filter(Boolean).join(' \u00b7 '), ico:rideIcon(r.attraction), oc:'editRide('+i+')'}); });
+ (state.meets||[]).forEach(function(m,i){ if(m.date===d) out.push({kind:'meet',name:m.character||'Character',
+   park:m.park, sub:[m.where,'Character meet'].filter(Boolean).join(' \u00b7 '), ico:charSeal(m.character,24), oc:'editMeet('+i+')'}); });
+ (state.scores||[]).forEach(function(x,i){ if(x.date===d) out.push({kind:'score',name:shortRide(x.attraction)||x.attraction,
+   park:x.park||pOf(x.attraction), sub:'Score '+fmtN(x.score), ico:'', oc:'editScore('+i+')'}); });
+ return out;
+}
+function todayRoute(stops){
+ var rows=stops.map(function(st){
+  var w=parkWax(st.park||'');
+  return '<div class="rt-stop" onclick="'+st.oc+'">'+
+   '<span class="rt-rail"><span class="rt-dot" style="background:'+w[0]+';box-shadow:0 0 0 2px '+w[1]+'"></span></span>'+
+   (st.ico?'<span class="rt-ico">'+st.ico+'</span>':'<span class="rt-ico"></span>')+
+   '<span class="rt-main"><span class="rt-name">'+esc(st.name)+'</span>'+
+    (st.sub?'<div class="rt-sub">'+esc(st.sub)+'</div>':'')+'</span>'+
+   parkPill(st.park)+'</div>';
+ }).join('');
+ var nice=fmt(today());
+ return '<div class="card"><div class="rt-head"><span class="rt-count">'+stops.length+' stop'+(stops.length===1?'':'s')+' today</span>'+
+  '<span class="rt-date">'+nice+'</span></div><div class="rt">'+rows+'</div></div>';
+}
 function viewLog(){
  var d=today();
  var h='';
@@ -3053,13 +3095,11 @@ function viewLog(){
   '<button onclick="formScore()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#E8D93B"/><path d="M8.2 4.6h7.6v4.6a3.8 3.8 0 0 1-7.6 0z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 6H5.6a2.6 2.6 0 0 0 2.7 2.9M15.8 6h2.6a2.6 2.6 0 0 1-2.7 2.9" fill="none" stroke="#1B1A17" stroke-width="1.5"/><path d="M12 12.8v2.4M10.2 15.2h3.6v2.4h-3.6zM9 17.6h6" fill="none" stroke="#1B1A17" stroke-width="1.6" stroke-linejoin="round"/></svg>')+'</span><b>Log a score</b></button>'+
  '</div>';
  h+='<div class="linkrow" style="margin-top:10px"><button onclick="formPark()">+ Add a park</button><button onclick="formPhoto()">+ Add a photo</button>'+(GENERIC?'<button onclick="formVariant()">+ Add a variant</button>':'')+'<button onclick="go(&#39;people&#39;)">People</button>'+'</div>';
- var td=[];
- (state.rides||[]).forEach(function(r){if(r.date===d)td.push({t:'Experience',n:r.attraction});});
- (state.meets||[]).forEach(function(m){if(m.date===d)td.push({t:'Meet',n:m.character});});
- (state.scores||[]).forEach(function(sc){if(sc.date===d)td.push({t:'Score',n:sc.attraction});});
- var th='<h2 class="sec"'+(td.length?' style="margin-top:0"':'')+'>Logged today</h2>';
- var tb=!td.length?'<div class="card"><span class="muted">Nothing logged today yet. Have a great park day.</span></div>':'<div class="card">'+td.map(function(x){return '<div class="checkitem"'+(x.t==='Experience'?' style="cursor:pointer" onclick="openAttraction('+jsarg(x.n).replace(/"/g,'&quot;')+')"':'')+'><div class="nm">'+esc(x.n)+'</div><div class="cnt muted" style="font-size:12px">'+x.t+'</div></div>';}).join('')+'</div>';
- if(td.length)h=th+tb+'<h2 class="sec">Log something</h2>'+h;
+ var stops=todayStops();
+ var th='<h2 class="sec"'+(stops.length?' style="margin-top:0"':'')+'>Logged today</h2>';
+ var tb=stops.length?todayRoute(stops)
+  :'<div class="card"><span class="muted">No stops yet today. Log the first one and the day starts here.</span></div>';
+ if(stops.length)h=th+tb+'<h2 class="sec">Log something</h2>'+h;
  else h=h+th+tb;
  return h;
 }
