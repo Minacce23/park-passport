@@ -2230,6 +2230,103 @@ function openComposer(){
  composerSheet();
 }
 var RAWP=[],BAKED=[],PICKCAP='',PICKSEL={},PICKITEMS=[];
+function _wrapLines(g,text,maxw){
+ var words=String(text).split(' '),lines=[],cur='';
+ for(var i=0;i<words.length;i++){
+  var t=cur?cur+' '+words[i]:words[i];
+  if(g.measureText(t).width>maxw&&cur){lines.push(cur);cur=words[i];}else cur=t;
+ }
+ if(cur)lines.push(cur);return lines;
+}
+function bakeBadgePostcard(b){
+ var W=1080,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ var g=cv.getContext('2d');
+ var wax=RARCOL[b.rar]||'#B388E6',dk=RARDK[b.rar]||'#5B3E86';
+ var so=state.social,who=(so&&so.name)||'Me';
+ var park='';var last=null;
+ (state.rides||[]).forEach(function(r){if(!last||(r.date||'')>=(last.date||'')){last=r;}});
+ if(last)park=last.park||pOf(last.attraction)||'';if(park==='?')park='';
+ g.fillStyle='#EAE7DE';g.fillRect(0,0,W,H);
+ // header
+ g.save();g.translate(W/2-92,60);
+ try{var hp=new Path2D(SEAL_PATH);g.save();g.scale(0.42,0.42);g.fillStyle=wax;g.fill(hp);g.restore();}catch(e){}
+ g.restore();
+ g.fillStyle='#66645B';g.font='800 22px sans-serif';g.textAlign='left';
+ g.fillText('P A R K   P A S S P O R T', W/2-58, 90);
+ // card
+ var cx=70,cy=185,cw=W-140,ch=H-360;
+ g.save();g.translate(W/2,cy+ch/2);g.rotate(-0.8*Math.PI/180);g.translate(-W/2,-(cy+ch/2));
+ g.fillStyle='#F4EFDE';g.strokeStyle='#D9D5C7';g.lineWidth=2;
+ roundRect(g,cx,cy,cw,ch,22);g.fill();g.stroke();
+ var pad=44,lx=cx+pad,rx=cx+cw*0.62;
+ // left column
+ g.textAlign='left';
+ g.fillStyle='#66645B';g.font='800 15px sans-serif';g.fillText('P O S T C A R D', lx, cy+52);
+ g.fillStyle='#66645B';g.font='800 26px sans-serif';g.fillText('Wish you were here', lx, cy+108);
+ g.fillStyle='#1B1A17';var ts=64;g.font='900 '+ts+'px sans-serif';
+ while(g.measureText(b.t).width>rx-lx-20&&ts>34){ts-=4;g.font='900 '+ts+'px sans-serif';}
+ g.fillText(b.t, lx, cy+108+ts+14);
+ g.fillStyle='#1B1A17';g.font='400 24px sans-serif';
+ var msg=b.d+(park?(' at '+park):'')+'. Sealed and stamped in the passport.';
+ var lines=_wrapLines(g,msg,rx-lx-24);
+ var my=cy+108+ts+62;
+ lines.slice(0,5).forEach(function(ln){g.fillText(ln,lx,my);my+=34;});
+ // pills bottom-left
+ var py=cy+ch-52;
+ [ (RARNAME[b.rar]||'Earned'), b.d ].forEach(function(pt,ix){
+  g.font='800 20px sans-serif';var pw=g.measureText(pt).width+34;
+  g.fillStyle='#FBF9F0';g.strokeStyle='#D9D5C7';g.lineWidth=1.5;
+  roundRect(g, lx+(ix===0?0:0), py, pw, 40, 20);
+  if(ix===0){g._px=lx;} 
+  var px=(ix===0)?lx:(lx+g.measureText(RARNAME[b.rar]||'Earned').width+34+12);
+  roundRect(g,px,py,pw,40,20);g.fill();g.stroke();
+  g.fillStyle='#1B1A17';g.fillText(pt,px+17,py+27);
+ });
+ // divider
+ g.strokeStyle='#D9D5C7';g.lineWidth=1.5;g.beginPath();g.moveTo(rx-14,cy+34);g.lineTo(rx-14,cy+ch-34);g.stroke();
+ // right column: postmark + stamp seal
+ g.save();g.translate(rx+70,cy+80);
+ g.strokeStyle='#C9433A';g.fillStyle='#C9433A';g.globalAlpha=.72;g.lineWidth=2.2;
+ g.beginPath();g.arc(0,0,30,0,7);g.stroke();
+ g.textAlign='center';g.font='800 11px sans-serif';g.fillText('PARK',0,-3);g.fillText('POST',0,10);
+ g.globalAlpha=1;g.restore();
+ // stamp: wax seal in a stamp frame
+ var sx=cx+cw-pad-120,sy=cy+40;
+ g.fillStyle='#FDFBF4';g.strokeStyle=dk;g.lineWidth=2;
+ roundRect(g,sx,sy,120,120,6);g.fill();g.stroke();
+ try{var sp=new Path2D(SEAL_PATH);g.save();g.translate(sx+60,sy+60);g.scale(1.35,1.35);g.translate(-32,-32);g.fillStyle=wax;g.fill(sp);
+  g.restore();
+  var st=new Path2D(SEAL_STAR);g.save();g.translate(sx+60,sy+62.5);g.scale(2.1,2.1);g.fillStyle=dk;g.fill(st);g.restore();
+ }catch(e){}
+ // FROM + postmarked
+ g.textAlign='left';
+ var fy=cy+ch-150;
+ g.fillStyle='#66645B';g.font='800 13px sans-serif';g.fillText('F R O M', rx+14, fy);
+ g.fillStyle='#1B1A17';g.font='800 30px sans-serif';g.fillText(who.slice(0,16), rx+14, fy+34);
+ g.strokeStyle='#D9D5C7';g.lineWidth=1.5;
+ [0,1].forEach(function(i){g.beginPath();g.moveTo(rx+14,fy+64+i*22);g.lineTo(cx+cw-pad,fy+64+i*22);g.stroke();});
+ g.fillStyle='#66645B';g.font='800 13px sans-serif';g.fillText('P O S T M A R K E D', rx+14, fy+118);
+ g.fillStyle='#1B1A17';g.font='700 19px sans-serif';g.fillText(fmt(today())+(park?(' \u00b7 '+park):''), rx+14, fy+144);
+ g.restore();
+ // footer
+ g.fillStyle='#66645B';g.font='400 20px sans-serif';g.textAlign='center';
+ g.fillText('A keepsake from every day in the park.', W/2, H-46);
+ return cv.toDataURL('image/jpeg',0.9);
+}
+function openBadgeComposer(b){
+ var so=state.social;if(!so||!so.code){go('friends');return;}
+ var url=bakeBadgePostcard(b);
+ var park='';var last=null;(state.rides||[]).forEach(function(r){if(!last||(r.date||'')>=(last.date||'')){last=r;}});
+ if(last){park=last.park||pOf(last.attraction)||'';if(park==='?')park='';}
+ var im=new Image();
+ im.onload=function(){
+  RAWP=[im];BAKED=[];
+  PICKCAP='Just earned '+b.t+'. '+b.d+(park?(' at '+park):'')+'.';
+  go('memories');MEMSEG='post';renderAll();
+  composerSheet();
+ };
+ im.src=url;
+}
 function composerSheet(){
  sheet('<h3>Send a postcard</h3>'+
   '<label>The front (one photo, or up to 5 to swipe through)</label><input type="file" accept="image/*" multiple id="po_file" onchange="handlePostPhoto(this)">'+
@@ -2977,7 +3074,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22i</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22k</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
@@ -3479,8 +3576,11 @@ function checkBadges(){
  newly.forEach(function(b){BADGEQ.push(b);});
  if(!document.querySelector('.bpop-scrim'))showNextBadge();
 }
+var _bpopCur=null;
+function _bpopSend(){var b=_bpopCur;closeBadgePop();if(b)openBadgeComposer(b);}
 function showNextBadge(){
  var b=BADGEQ.shift();if(!b)return;
+ _bpopCur=b;
  var wax=RARCOL[b.rar]||'#B388E6';
  var conf=['#B388E6','#F0E952','#A9AFE2','#E7BCE3','#A9C8A9','#FDFBF4'];
  var pieces='';
@@ -3499,7 +3599,7 @@ function showNextBadge(){
   '<div class="bpop-body"><div class="bpop-title">'+esc(b.t)+'</div><div class="bpop-desc">'+esc(b.d)+'</div>'+
   '<div class="bpop-pills"><span class="bpop-pill">'+(RARNAME[b.rar]||'Earned')+'</span><span class="bpop-pill">'+fmt(today())+'</span></div>'+
   '<div class="bpop-div"></div>'+
-  '<div class="bpop-btns"><button class="btn ghost" onclick="closeBadgePop()">Nice</button><button class="btn primary" onclick="closeBadgePop();go(&#39;memories&#39;);MEMSEG=&#39;post&#39;;renderAll();openComposer();">Send a postcard</button></div>'+
+  '<div class="bpop-btns"><button class="btn ghost" onclick="closeBadgePop()">Nice</button><button class="btn primary" onclick="_bpopSend()">Send a postcard</button></div>'+
   '</div>';
  el.addEventListener('click',function(ev){if(ev.target===el)closeBadgePop();});
  document.body.appendChild(el);
