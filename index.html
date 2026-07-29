@@ -133,6 +133,51 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 .bpop-conf{position:absolute;top:-16px;border-radius:2px;animation:bpop-fall linear both;}
 @keyframes bpop-fall{0%{opacity:0;transform:translateY(-30px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(620px) rotate(320deg)}}
 @media(prefers-reduced-motion:reduce){.bpop-card,.bpop-rays,.bpop-shock,.bpop-seal,.bpop-body,.bpop-btns,.bpop-conf{animation:none!important}.bpop-conf{display:none}}
+.hcard{background:var(--card);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;}
+.hcard-top{display:flex;gap:14px;padding:16px 16px 14px;}
+.hcard-seal{width:86px;flex:none;display:grid;gap:7px;justify-items:center;align-content:start;}
+.hcard-seal svg{width:86px;height:86px;display:block;}
+.hlab{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+.hname{font-size:25px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);line-height:1.1;}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:12px;}
+.hnum{font-size:27px;font-weight:900;letter-spacing:-0.04em;color:var(--ink);line-height:1.1;}
+.mrz{padding:8px 16px 12px;border-top:1.5px dashed var(--line);background:#FBF9F0;}
+body.theme-dark .mrz{background:#2A2721;}
+.mrz div{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+.tkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tk{position:relative;box-sizing:border-box;border:1.5px solid var(--line);border-radius:18px;padding:12px 12px 11px 26px;min-width:0;cursor:pointer;transition:transform .18s ease;}
+.tk:nth-child(1){transform:rotate(-1.2deg);}.tk:nth-child(2){transform:rotate(1deg);}.tk:nth-child(3){transform:rotate(.8deg);}.tk:nth-child(4){transform:rotate(-1deg);}
+.tk-perf{position:absolute;left:18px;top:0;bottom:0;width:1.5px;background:repeating-linear-gradient(180deg,rgba(27,26,23,.35) 0 5px,transparent 5px 10px);}
+.tk-n1,.tk-n2{position:absolute;left:18px;width:18px;height:18px;margin-left:-9px;box-sizing:border-box;border-radius:50%;border:1.5px solid var(--line);background:var(--bg);}
+.tk-n1{top:-9px;clip-path:inset(50% 0 0 0);}.tk-n2{bottom:-9px;clip-path:inset(0 0 50% 0);}
+.tk-good{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(27,26,23,.8);}
+.tk-rule1{height:1.5px;background:rgba(27,26,23,.8);margin:5px 0 2px;}.tk-rule2{height:1.5px;background:rgba(27,26,23,.35);margin-bottom:10px;}
+.tk-num{font-size:34px;font-weight:900;letter-spacing:-0.045em;color:var(--ink);line-height:1;}
+.tk-name{margin-top:5px;font-size:13px;font-weight:800;letter-spacing:-0.01em;color:var(--ink);}
+.tk-sub{margin-top:2px;font-size:11px;font-weight:700;color:rgba(27,26,23,.72);}
+.tk-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:12px;padding-top:8px;border-top:1.5px solid rgba(27,26,23,.35);}
+.tk-ser{font-size:11px;font-weight:800;letter-spacing:.1em;color:#C9433A;}
+.tk-cls{font-size:26px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);line-height:.85;}
+.tk-type{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(27,26,23,.72);}
+.mstamp{border:1.5px solid var(--line);border-radius:18px;padding:16px;cursor:pointer;display:grid;gap:12px;background:var(--lemon);}
+body.theme-dark .mstamp{background:#6E6820;}
+.mstamp-top{display:flex;align-items:center;gap:14px;}
+.mstamp-seal{width:54px;height:54px;flex:none;}
+.mstamp-seal svg{width:100%;height:100%;display:block;}
+.mstamp-fav{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(27,26,23,.8);}
+.mstamp-nm{font-size:22px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);line-height:1.15;}
+.mstamp-big{font-size:40px;font-weight:900;letter-spacing:-0.05em;color:var(--ink);line-height:.9;}
+.mstamp-bar{flex:1;height:10px;border-radius:999px;background:rgba(27,26,23,.16);overflow:hidden;}
+.mstamp-bar>span{display:block;height:100%;border-radius:999px;background:var(--ink);}
+body.theme-dark .mstamp .mstamp-fav,body.theme-dark .mstamp .mstamp-nm,body.theme-dark .mstamp .mstamp-big{color:#F0EDE3;}
+body.theme-dark .mstamp-bar{background:rgba(240,237,227,.2);}
+.bcardsum{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px 16px;display:grid;gap:14px;}
+.bcardsum-row{display:flex;align-items:center;gap:10px;}
+.bcardsum-seals{display:flex;gap:8px;}
+.bcardsum-seals .bic2{width:44px;height:44px;}
+.bcardsum-count{flex:1;text-align:right;}
+.bcardsum-num{font-size:21px;font-weight:900;letter-spacing:-0.03em;color:var(--ink);}
+.bcardsum-num span{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -525,7 +570,7 @@ function backupNudge(){
   '<div class="pt-btns"><button class="pt-primary" onclick="exportData();renderAll()">Back up now</button></div></div>';
 }
 function proTipCard(){return '<div class="protip"><div class="pt-top"><span class="pt-k">Pro tip</span><button class="pt-x" onclick="dismissTip()" aria-label="Dismiss">&times;</button></div><div class="pt-t">Two ways to start</div><div class="pt-s">Log your first experience by typing its name once, it autofills after that. Or download the template from the menu, fill it in, and import your whole list at once.</div><div class="pt-btns"><button class="pt-primary" onclick="formRide()">Log my first experience</button><button class="pt-ghost" onclick="openImport()">Import a list</button></div></div>';}
-var HOMEDEF=['hero','overview','bypark','yearstrip','waits','pass','milestones'];
+var HOMEDEF=['holder','ticketbook','moststamped','badges','bypark','yearstrip'];
 var HOMEEDIT=false;
 function homeState(){state.home=state.home||{};state.home.hidden=state.home.hidden||{};state.home.hiddenTiles=state.home.hiddenTiles||{};if(!Array.isArray(state.home.order))state.home.order=HOMEDEF.slice();return state.home;}
 function homeOrder(){var hs=homeState();var o=hs.order.filter(function(k){return HOMEDEF.indexOf(k)>-1;});HOMEDEF.forEach(function(k){if(o.indexOf(k)<0)o.push(k);});return o;}
@@ -535,12 +580,71 @@ function moveWidget(k,dir){var hs=homeState();var o=homeOrder();var i=o.indexOf(
 function hideWidget(k){homeState().hidden[k]=1;save();renderAll();}
 function hideTile(k){homeState().hiddenTiles[k]=1;save();renderAll();}
 function resetHome(){if(!confirm('Restore the default home screen? All widgets come back in their original order.'))return;delete state.home;save();closeSheet();HOMEEDIT=false;go('stats');}
+function holderName(){return (state.holderName&&String(state.holderName).trim())||((state.social&&state.social.name)?state.social.name:'Explorer');}
+function setHolderName(){var v=prompt('Name on your passport:',holderName());if(v===null)return;state.holderName=String(v).trim().slice(0,24);save();renderAll();}
+function mrzPad(str,n){str=String(str).toUpperCase().replace(/[^A-Z0-9]/g,'<');while(str.length<n)str+='<';return str.slice(0,n);}
 function viewStats(s){
  var pct=s.attrTot?Math.round(s.attr/s.attrTot*100):0;
  var years='-', yrsN=0;
  if(s.firstDate){var y0=+s.firstDate.slice(0,4), y1=+s.lastDate.slice(0,4); yrsN=y1-y0+1; years=(y0===y1?(''+y0):y0+'-'+y1);}
  var hs=homeState();
  var SEC={};
+ SEC.holder=function(){
+  var nm=holderName();
+  var since=s.firstDate?s.firstDate.slice(0,4):'&ndash;';
+  var np=allParks().length;
+  var mrz1='PP<PARK<'+mrzPad(nm,18);
+  var mrz2=mrzPad(String(s.rides),3,'0')+'<'+('00'+s.visits).slice(-3)+'<'+('0'+np).slice(-2)+'<'+(s.firstDate?s.firstDate.replace(/-/g,''):'00000000')+'<'+(yrsN||0)+'<<<'+badgeList().filter(function(b){return b.earned;}).length;
+  mrz1=mrz1.replace(/</g,'&lt;');mrz2=mrz2.replace(/</g,'&lt;');
+  return '<div class="alabel" style="color:var(--accent);margin:0 2px 8px">Page 01 &middot; Holder</div>'+
+   '<div class="hcard"><div class="hcard-top">'+
+    '<div class="hcard-seal">'+avatarSVG('ferris','grape')+'<div class="hlab">Holder</div></div>'+
+    '<div style="flex:1;min-width:0">'+
+     '<div onclick="setHolderName()" style="cursor:pointer"><div class="hlab">Name</div><div class="hname">'+esc(nm)+'</div></div>'+
+     '<div class="hgrid">'+
+      '<div><div class="hlab">Experiences</div><div class="hnum">'+s.rides+'</div></div>'+
+      '<div><div class="hlab">Visit days</div><div class="hnum">'+s.visits+'</div></div>'+
+      '<div><div class="hlab">Parks</div><div class="hnum">'+('0'+np).slice(-2)+'</div></div>'+
+      '<div><div class="hlab">Holder since</div><div class="hnum" style="font-size:22px">'+since+'</div></div>'+
+     '</div></div></div>'+
+    '<div class="mrz"><div>'+mrz1+'</div><div>'+mrz2+'</div></div></div>';
+ };
+ SEC.ticketbook=function(){
+  var ccred=(typeof coasterCreditCount==='function')?coasterCreditCount():0;
+  var items=[
+   {n:s.chars,name:'Character meets',sub:'Photos and autographs',ser:'A107116',cls:'B',type:'MEET',oc:"go('meets')"},
+   {n:s.scores,name:'Scores logged',sub:'Games and challenges',ser:'A107117',cls:'A',type:'SCORE',oc:"go('scores')"},
+   {n:s.attr,name:'Unique attractions',sub:'Across your parks',ser:'A107118',cls:'D',type:'TOUR',oc:"openChecklist()"},
+   {n:ccred,name:'Coaster credits',sub:'First rides only',ser:'A107119',cls:'E',type:'RIDE',oc:"showCoasters()"}
+  ];
+  var pastels=['var(--blush)','var(--lemon)','var(--peri)','var(--pine)'];
+  var cards=items.map(function(it,i){
+   return '<div class="tk" style="background:'+pastels[i]+'" onclick="'+it.oc+'"><span class="tk-perf"></span><span class="tk-n1"></span><span class="tk-n2"></span>'+
+    '<div class="tk-good">Good for one</div><div class="tk-rule1"></div><div class="tk-rule2"></div>'+
+    '<div class="tk-num">'+it.n+'</div><div class="tk-name">'+it.name+'</div><div class="tk-sub">'+it.sub+'</div>'+
+    '<div class="tk-foot"><div class="tk-ser">'+it.ser+'</div><div style="display:grid;justify-items:center;gap:1px"><div class="tk-cls">'+it.cls+'</div><div class="tk-type">'+it.type+'</div></div></div></div>';
+  }).join('');
+  return '<div class="alabel" style="color:var(--accent);margin:0 2px 10px">Page 03 &middot; Ticket book</div><div class="tkgrid">'+cards+'</div>';
+ };
+ SEC.moststamped=function(){
+  if(!s.top||!s.topN)return '';
+  var pct=s.rides?Math.round(s.topN/s.rides*100):0;
+  return '<div class="alabel" style="color:var(--accent);margin:0 2px 8px">Page 04 &middot; Most stamped</div>'+
+   '<div class="mstamp" onclick="openAttraction('+jsarg(s.top).replace(/"/g,'&quot;')+')">'+
+    '<div class="mstamp-top"><span class="mstamp-seal">'+sealBadge('spc',true,'v')+'</span>'+
+     '<div style="flex:1;min-width:0"><div class="mstamp-fav">Your favorite</div><div class="mstamp-nm">'+esc(shortRide(s.top))+'</div></div>'+
+     '<div style="text-align:right"><div class="mstamp-big">'+s.topN+'</div><div class="mstamp-fav" style="letter-spacing:0">rides</div></div></div>'+
+    '<div style="display:flex;align-items:center;gap:10px"><div class="mstamp-bar"><span style="width:'+Math.max(4,pct)+'%"></span></div><div style="font-size:12px;font-weight:800;color:rgba(27,26,23,.8);white-space:nowrap">'+pct+'% of everything</div></div>'+
+   '</div>';
+ };
+ SEC.badges=function(){
+  var bl=badgeList(),earned=bl.filter(function(b){return b.earned;}).length;
+  var seals='<span class="bcardsum-seals">'+['v','c','u','r'].map(function(r){return sealBadge('spc',true,r);}).join('')+'</span>';
+  return '<h2 class="sec">Badges</h2><div class="bcardsum">'+
+   '<div class="bcardsum-row">'+seals+'<div class="bcardsum-count"><div class="bcardsum-num">'+earned+'<span>/'+bl.length+'</span></div><div style="font-size:12px;font-weight:700;color:var(--muted)">Earned</div></div></div>'+
+   '<div class="bprog"><div style="width:'+Math.round(earned/bl.length*100)+'%;background:var(--grape)"></div></div>'+
+   '<button class="btn ghost" style="width:100%" onclick="go(&#39;passport&#39;)">See your badges</button></div>';
+ };
  SEC.hero=function(){
   if(GENERIC){if(s.attrTot>s.attr){return '<div class="hero" onclick="openChecklist()" style="cursor:pointer">'+'<div class="lbl">Unique attractions experienced</div>'+
    '<div class="hbig hrow"><span><span class="num">'+s.attr+'</span> <span class="hfrac">/ '+s.attrTot+'</span></span><span class="hpct">'+pct+'% <span class="hsub">explored &rsaquo;</span></span></div>'+'<div class="prog"><div style="width:'+pct+'%"></div></div><div class="hsub" style="margin-top:6px;opacity:.85">'+s.rides+' experiences across '+s.attr+' attractions</div></div>';}
@@ -3074,7 +3178,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22k</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.22n</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
