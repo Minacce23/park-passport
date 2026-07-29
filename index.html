@@ -784,7 +784,19 @@ function allVisits(){
 }
 
 function emptyState(icon,title,sub,btns){return '<div class="emptyc">'+icon+'<div class="et">'+title+'</div><div class="es">'+sub+'</div>'+(btns?'<div class="pt-btns" style="justify-content:center;margin-top:14px">'+btns+'</div>':'')+'</div>';}
-function meetMark(m){if(m&&m.photo){var f=(m.focus&&typeof m.focus.x==='number')?m.focus:{x:50,y:50};return '<span class="mk mkimg"><img src="'+m.photo+'" style="object-position:'+f.x+'% '+f.y+'%"></span>';}return '<span class="mk"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.4" rx="7" ry="2" fill="#D9A3D4"/><path d="M12 18.2S4.4 13.6 4.4 8.9C4.4 6.2 6.5 4.6 8.6 4.6c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 4.2 1.6 4.2 4.3 0 4.7-7.6 9.3-7.6 9.3z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg></span>';}
+function charNames(){var m={},o=[];(state.meets||[]).forEach(function(x){var c=(x.character||'').trim();if(!c)return;var k=c.toLowerCase();if(!m[k]){m[k]=c;o.push(k);}});return o.map(function(k){return m[k];}).sort(function(a,b){return a.toLowerCase().localeCompare(b.toLowerCase());});}
+function charList(){return '<datalist id="dl_char">'+charNames().map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>';}
+var CHARWAX=[['#B388E6','#5B3E86'],['#A9AFE2','#454F8C'],['#E7BCE3','#8F3F7D'],['#F0E952','#6E6820'],['#A9C8A9','#2E4A2E']];
+function charWax(n){var s=String(n||'').toLowerCase(),h=0,i;for(i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return CHARWAX[h%CHARWAX.length];}
+function charSeal(n,size){var w=charWax(n),ini=(String(n||'').trim().charAt(0)||'?').toUpperCase(),sz=size||32;
+ return '<svg viewBox="0 0 64 64" style="width:'+sz+'px;height:'+sz+'px;display:block" aria-hidden="true">'+
+  '<path d="'+SEAL_PATH+'" fill="'+w[0]+'"/>'+
+  '<circle cx="33.2" cy="33.6" r="21" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.6"/>'+
+  '<circle cx="32" cy="32" r="21" fill="none" stroke="'+w[1]+'" stroke-width="2.6"/>'+
+  '<text x="33.2" y="41.5" text-anchor="middle" font-size="23" font-weight="900" fill="rgba(255,255,255,.55)" font-family="inherit">'+esc(ini)+'</text>'+
+  '<text x="32" y="40" text-anchor="middle" font-size="23" font-weight="900" fill="'+w[1]+'" font-family="inherit">'+esc(ini)+'</text>'+
+ '</svg>';}
+function meetMark(m){if(m&&m.photo){var f=(m.focus&&typeof m.focus.x==='number')?m.focus:{x:50,y:50};return '<span class="mk mkimg"><img src="'+m.photo+'" style="object-position:'+f.x+'% '+f.y+'%"></span>';}return '<span class="mk">'+charSeal(m&&m.character,32)+'</span>';}
 function dayAvgWait(date){if(!waitsOn())return '';var ms=[];state.rides.filter(function(r){return r.date===date;}).forEach(function(r){var m=(r.line!=null)?r.line:((r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null);if(m!=null)ms.push(m);});if(!ms.length)return '';var avg=Math.round(ms.reduce(function(a,b){return a+b;},0)/ms.length);return '<span class="muted" style="font-size:13px"><svg style="width:12px;height:12px;vertical-align:-1.5px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 7v5l3.4 2.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> avg '+avg+' min</span>';}
 function dayIcons(date){var seen={},out='',n=0,extra=0;state.rides.filter(function(r){return r.date===date;}).forEach(function(r){if(seen[r.attraction])return;seen[r.attraction]=1;var u=(SEED.rideIcons||{})[r.attraction];if(u){if(n<7){out+='<img class="vmini" src="'+u+'">';n++;}else extra++;}});if(extra)out+='<span class="vmore">+'+extra+'</span>';return out?'<div class="vicons">'+out+'</div>':'';}
 function viewVisits(){
@@ -849,11 +861,82 @@ function rideListHTML(){
  return head+out;
 }
 function filterRides(v){rideQuery=v||'';var l=document.getElementById('ridelist');if(l)l.innerHTML=rideListHTML();}
+function meetGroups(){
+ var g={},order=[];
+ byDateDesc(fMeets(),'date').forEach(function(m){
+  var c=(m.character||'').trim(), k=c.toLowerCase()||'?';
+  if(!g[k]){g[k]={name:c||'Unnamed',n:0,first:m.date||'',last:m.date||'',parks:{},photo:null,focus:null,items:[],spell:{}};order.push(k);}
+  var e=g[k];
+  if(c)e.spell[c]=(e.spell[c]||0)+1;
+  e.n++; e.items.push(m);
+  if(m.date){ if(!e.last||m.date>e.last)e.last=m.date; if(!e.first||m.date<e.first)e.first=m.date; }
+  if(m.park)e.parks[m.park]=1;
+  if(!e.photo&&m.photo){e.photo=m.photo;e.focus=m.focus||null;}
+ });
+ return order.map(function(k){
+  var e=g[k], sp=Object.keys(e.spell||{});
+  if(sp.length){
+   // the spelling used most often wins; a capitalised variant breaks ties
+   sp.sort(function(x,y){
+    var d=e.spell[y]-e.spell[x]; if(d)return d;
+    var cx=/^[A-Z]/.test(x)?0:1, cy=/^[A-Z]/.test(y)?0:1; if(cx!==cy)return cx-cy;
+    return x.localeCompare(y);
+   });
+   e.name=sp[0]; e.variants=sp.length;
+  }
+  return e;
+ }).sort(function(a,b){
+  return (b.n-a.n)||String(b.last||'').localeCompare(String(a.last||''));
+ });
+}
+function meetSpan(e){
+ if(!e.first&&!e.last)return '';
+ var fy=String(e.first||'').slice(0,4), ly=String(e.last||'').slice(0,4);
+ if(e.n===1)return fmt(e.last);
+ return (fy&&ly&&fy!==ly)?(fy+' to '+ly):fmt(e.last);
+}
+function meetFace(e){
+ if(e.photo){var f=(e.focus&&typeof e.focus.x==='number')?e.focus:{x:50,y:50};
+  return '<span class="mk mkimg" style="width:44px;height:44px"><img src="'+e.photo+'" style="object-position:'+f.x+'% '+f.y+'%"></span>';}
+ return '<span class="mk" style="width:44px;height:44px">'+charSeal(e.name,44)+'</span>';
+}
 function viewMeets(){
- const ms=byDateDesc(fMeets(),'date');
- if(!ms.length)return emptyState(IC.meets,'No character meets yet','Tap plus, then choose Log a character meet.');
- return ms.map(m=>'<div class="card" style="cursor:pointer" onclick="editMeet('+state.meets.indexOf(m)+')"><div class="row">'+meetMark(m)+'<div class="main"><div class="t">'+esc(m.character)+'</div>'+
-  '<div class="s">'+fmt(m.date)+(m.where?' &middot; '+m.where:'')+(m.notes?' &middot; '+m.notes:'')+'</div></div>'+parkPill(m.park)+'</div></div>').join('');
+ var gs=meetGroups();
+ if(!gs.length)return emptyState(IC.meets,'No character meets yet','Tap plus, then choose Log a character meet.',
+   '<button class="pt-primary" onclick="formMeet()">Log a character meet</button>');
+ var total=gs.reduce(function(a,e){return a+e.n;},0);
+ var repeat=gs.filter(function(e){return e.n>1;}).length;
+ var head='<div class="alabel" style="color:var(--accent);margin:0 4px 10px">'+gs.length+' character'+(gs.length===1?'':'s')+
+   ' &middot; '+total+' meet'+(total===1?'':'s')+(repeat?(' &middot; '+repeat+' met again'):'')+'</div>';
+ return head+gs.map(function(e){
+  var pk=Object.keys(e.parks);
+  return '<div class="card" style="cursor:pointer;padding:12px 14px" onclick="openCharacter('+jsarg(e.name)+')">'+
+   '<div class="row" style="border:none;padding:0">'+meetFace(e)+
+    '<div class="main"><div class="t">'+esc(e.name)+'</div>'+
+     '<div class="s">'+(e.n>1?('<b>'+e.n+' meets</b> &middot; '):'')+meetSpan(e)+'</div></div>'+
+    pk.map(function(x){return parkPill(x);}).join('')+
+    '<span class="vchev">&rsaquo;</span>'+
+   '</div></div>';
+ }).join('');
+}
+function openCharacter(name){
+ var key=String(name||'').toLowerCase();
+ var g=meetGroups().filter(function(e){return e.name.toLowerCase()===key;})[0];
+ if(!g)return;
+ var h='<div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">'+meetFace(g)+
+  '<div><h3 style="margin:0">'+esc(g.name)+'</h3>'+
+  '<div class="muted" style="font-size:13px">'+g.n+' meet'+(g.n===1?'':'s')+' &middot; '+meetSpan(g)+'</div></div></div>';
+ h+='<h2 class="sec">Every meet</h2><div class="card">';
+ g.items.forEach(function(m){
+  h+='<div class="row" style="cursor:pointer" onclick="editMeet('+state.meets.indexOf(m)+')">'+
+   '<div class="main"><div class="t">'+fmt(m.date)+'</div>'+
+   ((m.where||m.notes)?('<div class="s">'+[m.where,m.notes].filter(Boolean).map(esc).join(' &middot; ')+'</div>'):'')+
+   '</div>'+parkPill(m.park)+'<span class="vchev">&rsaquo;</span></div>';
+ });
+ h+='</div>';
+ h+='<div class="linkrow"><button onclick="closeSheet();formMeet()">+ Log another meet</button></div>';
+ h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+ sheet(h);
 }
 
 function fmtN(n){return (n===null||n===undefined||n==='')?'':Number(n).toLocaleString();}
@@ -1018,7 +1101,7 @@ function formPhoto(){pendingPhoto=null;
  renderPhotoFields();}
 function renderPhotoFields(){var ty=document.getElementById('f_ptype').value;var h='';
  if(ty==='ride'){h=parkField('')+attrField('','');}
- else if(ty==='meet'){h='<label>Character</label><input id="f_char" placeholder="e.g. a character">';}
+ else if(ty==='meet'){h='<label>Character</label><input id="f_char" list="dl_char" placeholder="e.g. a character">'+charList();}
  else {h=scoreRideField('')+'<label>Score (optional)</label><input type="number" inputmode="numeric" id="f_score" placeholder="e.g. 162600">';}
  document.getElementById('photoFields').innerHTML=h;}
 function savePhoto(){if(!pendingPhoto){alert('Pick a photo first');return;}var ty=document.getElementById('f_ptype').value;var d=val('f_date');
@@ -1267,7 +1350,7 @@ function meetPhotoField(){return '<label>Photo (optional)</label><input type="fi
 function formMeet(d){pendingPhoto=null;pendingFocus={x:50,y:50};
  sheet('<h3>Log a character meet</h3>'+
   '<label>Date</label><input type="date" id="f_date" value="'+(d||today())+'">'+
-  '<label>Character</label><input id="f_char" placeholder="e.g. a character">'+
+  '<label>Character</label><input id="f_char" list="dl_char" placeholder="e.g. a character">'+charList()+
   meetParkField('')+
   '<label>Where (optional)</label><input id="f_where">'+
   '<label>Notes (optional)</label><input id="f_notes">'+
@@ -1291,7 +1374,7 @@ function formScoreOn(){formScore(curDay);}
 function editMeet(i){var m=state.meets[i];if(!m)return;pendingPhoto=m.photo||null;pendingFocus=(m.focus&&typeof m.focus.x==='number')?{x:m.focus.x,y:m.focus.y}:{x:50,y:50};
  sheet('<h3>Edit character meet</h3>'+
   '<label>Date</label><input type="date" id="f_date" value="'+(m.date||'')+'">'+
-  '<label>Character</label><input id="f_char" value="'+esc(m.character)+'">'+
+  '<label>Character</label><input id="f_char" list="dl_char" value="'+esc(m.character)+'">'+charList()+
   meetParkField(m.park)+
   '<label>Where (optional)</label><input id="f_where" value="'+esc(m.where)+'">'+
   '<label>Notes (optional)</label><input id="f_notes" value="'+esc(m.notes)+'">'+
