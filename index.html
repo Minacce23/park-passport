@@ -2397,7 +2397,7 @@ function decPost(doc){
  var g=function(k){return (f[k]&&f[k].stringValue)||'';};
  var lk=(f.likes&&f.likes.mapValue&&f.likes.mapValue.fields)||{};
  var mp=(f.morep&&f.morep.arrayValue&&f.morep.arrayValue.values)||[];
- return {id:doc.name.split('/').pop(),author:g('author'),authorUid:g('authorUid'),name:g('name')||'Explorer',icon:g('icon')||'ferris',color:g('color')||'grape',avphoto:g('avphoto'),photo:g('photo'),photos:[g('photo')].concat(mp.map(function(v){return v.stringValue||'';})).filter(function(x){return x;}),caption:g('caption'),created:g('created'),likes:Object.keys(lk)};
+ return {id:doc.name.split('/').pop(),author:g('author'),authorUid:g('authorUid'),name:g('name')||'Explorer',icon:g('icon')||'ferris',color:g('color')||'grape',avphoto:g('avphoto'),photo:g('photo'),photos:[g('photo')].concat(mp.map(function(v){return v.stringValue||'';})).filter(function(x){return x;}),pdate:g('pdate'),caption:g('caption'),created:g('created'),likes:Object.keys(lk)};
 }
 function fetchPostsBy(code,cb){
  fbToken(function(tk){
@@ -2447,10 +2447,10 @@ function refreshFeed(force){
 }
 function openComposer(){
  var so=state.social;if(!so||!so.code){alert('Turn on sharing in the Friends tab first.');return;}
- RAWP=[];BAKED=[];PICKCAP='';
+ RAWP=[];BAKED=[];PICKCAP='';POSTDATE='';
  composerSheet();
 }
-var RAWP=[],BAKED=[],PICKCAP='',PICKSEL={},PICKITEMS=[];
+var RAWP=[],BAKED=[],PICKCAP='',PICKSEL={},PICKITEMS=[],POSTDATE='';
 function _wrapLines(g,text,maxw){
  var words=String(text).split(' '),lines=[],cur='';
  for(var i=0;i<words.length;i++){
@@ -2555,6 +2555,7 @@ function composerSheet(){
   '<div id="po_thumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>'+
   '<div id="po_prev"></div>'+
   '<label>The message (optional)</label><input id="po_cap" maxlength="140" placeholder="Wish you were here...">'+
+  '<label>Postcard date</label><input type="date" id="po_date" value="'+(POSTDATE||today())+'"><div class="muted" style="font-size:12px;margin-top:4px">Auto-fills from a photo you pick from your passport. Change it for a throwback.</div>'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" id="po_go" onclick="publishPost()">Send it</button></div>');
  var c=document.getElementById('po_cap');if(c)c.value=PICKCAP;
  rebuildPostcard();
@@ -2612,6 +2613,7 @@ function pcDots(el){
 }
 function openPassportPicker(){
  var c=document.getElementById('po_cap');PICKCAP=c?c.value:PICKCAP;
+ var dd=document.getElementById('po_date');if(dd&&dd.value)POSTDATE=dd.value;
  PICKSEL={};PICKITEMS=[];
  var seen={};
  ['rides','meets','scores'].forEach(function(t){
@@ -2638,6 +2640,8 @@ function togglePick(i){
 function pickDone(){
  var keys=Object.keys(PICKSEL);
  if(!keys.length){composerSheet();return;}
+ var dts=keys.map(function(k){return PICKITEMS[k].date||'';}).filter(Boolean).sort();
+ if(dts.length)POSTDATE=dts[0];
  var left=keys.length;
  keys.forEach(function(k){
   var im=new Image();
@@ -2651,7 +2655,7 @@ function publishPost(){
  var cap=(document.getElementById('po_cap')||{}).value||'';cap=cap.trim().slice(0,140);
  var btn=document.getElementById('po_go');if(btn){btn.disabled=true;btn.textContent='Sending...';}
  var id=so.code+'_'+Date.now();
- var flds={authorUid:{stringValue:so.uid},author:{stringValue:so.code},name:{stringValue:so.name},icon:{stringValue:so.icon||'ferris'},color:{stringValue:so.color||'grape'},avphoto:{stringValue:so.photo||''},photo:{stringValue:BAKED[0]},caption:{stringValue:cap},created:{stringValue:localISO()}};
+ var flds={authorUid:{stringValue:so.uid},author:{stringValue:so.code},name:{stringValue:so.name},icon:{stringValue:so.icon||'ferris'},color:{stringValue:so.color||'grape'},avphoto:{stringValue:so.photo||''},photo:{stringValue:BAKED[0]},caption:{stringValue:cap},pdate:{stringValue:((document.getElementById('po_date')||{}).value||today())},created:{stringValue:localISO()}};
  if(BAKED.length>1)flds.morep={arrayValue:{values:BAKED.slice(1).map(function(u){return {stringValue:u};})}};
  fbToken(function(tk){
   fbJson(fbPostUrl(id)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
@@ -2747,7 +2751,7 @@ function archBack(){
 function archCard(p){
  var so=state.social;
  var mine=so&&p.author===so.code;
- var when=p.created?fmt(p.created.slice(0,10)):'';
+ var when=(p.pdate||p.created)?fmt((p.pdate||p.created).slice(0,10)):'';
  var ph=(p.photos&&p.photos.length)?p.photos:(p.photo?[p.photo]:[]);
  var front='';
  if(ph.length===1)front='<div class="pcfront"><img class="postimg" src="'+ph[0]+'" loading="lazy">'+(mine?'<button class="xbtn pcdel" onclick="deletePost('+jsarg(p.id)+')">&times;</button>':'')+'</div>';
@@ -2847,7 +2851,7 @@ function avatarStamp(o){
 function postCard(p){
  var so=state.social;
  var mine=so&&p.author===so.code;
- var when=p.created?fmt(p.created.slice(0,10)):'';
+ var when=(p.pdate||p.created)?fmt((p.pdate||p.created).slice(0,10)):'';
  var postmark='<svg class="pcmark" viewBox="0 0 60 34"><circle cx="17" cy="17" r="13" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="17" y="15" text-anchor="middle" font-size="6.5" font-weight="800" fill="currentColor" font-family="inherit">PARK</text><text x="17" y="23" text-anchor="middle" font-size="6.5" font-weight="800" fill="currentColor" font-family="inherit">POST</text><path d="M33 10c3 1.6 6-1.6 9 0s6-1.6 9 0M33 17c3 1.6 6-1.6 9 0s6-1.6 9 0M33 24c3 1.6 6-1.6 9 0s6-1.6 9 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
  return '<div class="postcard pc">'+
   (function(){var ph=(p.photos&&p.photos.length)?p.photos:(p.photo?[p.photo]:[]);
@@ -3050,7 +3054,7 @@ function openDayPage(d){
  else if(rides.length)h+='<div class="alabel" style="margin:12px 0 6px">With</div><div class="fchips"><span class="fchip" style="cursor:default">Solo day</span></div>';
  if(v.notes)h+='<div class="alabel" style="margin:12px 0 6px">Day note</div><div class="card" style="margin-bottom:0"><span style="font-weight:700">&ldquo;'+esc(v.notes)+'&rdquo;</span></div>';
  var so=state.social,pc=null;
- if(so&&so.code)FEEDCACHE.forEach(function(p){if(!pc&&p.author===so.code&&(p.created||'').slice(0,10)===d)pc=p;});
+ if(so&&so.code)FEEDCACHE.forEach(function(p){if(!pc&&p.author===so.code&&((p.pdate||p.created)||'').slice(0,10)===d)pc=p;});
  if(pc){
   var ph=(pc.photos&&pc.photos.length)?pc.photos[0]:pc.photo;
   h+='<div class="alabel" style="margin:12px 0 6px">Postcard sent</div><div class="card" style="margin-bottom:0;display:flex;gap:10px;align-items:center">'+(ph?'<span class="dcthumb" style="transform:rotate(-2deg)"><img src="'+ph+'"></span>':'')+'<span class="muted" style="font-weight:700;font-size:13.5px;min-width:0">'+(pc.caption?esc(pc.caption):'No message, just the view.')+'</span></div>';
@@ -3316,7 +3320,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.23a</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.23b</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
