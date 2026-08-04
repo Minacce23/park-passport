@@ -309,6 +309,7 @@ function save(){
  try{localStorage.setItem(LS,JSON.stringify(state,function(k,v){if(k==='photo'&&IDB_OK&&this&&this.photoKey)return undefined;return v;}));}
  catch(e){alert('Storage is full \u2014 export a backup and remove some photos.');}
  try{schedSync();}catch(e){}
+ try{schedDaySync();}catch(e){}
  if(!_inBadge)try{setTimeout(checkBadges,0);}catch(e){}
 }
 let pendingPhoto=null;
@@ -2210,6 +2211,7 @@ function markFeedSeen(){
 function hasFriendNews(){
  var so=state.social;if(!so)return false;
  if((so.requests||[]).length)return true;
+ if(SHAREDDAYS&&(so.dayInvites||[]).length)return true;
  if(!so.friends||!so.friends.length)return false;
  var seen=so.seenLast||{};
  return so.friends.some(function(f){var p=FRCACHE[f.code];return p&&p.last&&p.last.date&&p.last.date>(seen[f.code]||'');});
@@ -2287,6 +2289,101 @@ function unblockCode(code){
  save();pushProfile(function(){openBlocked();},function(){openBlocked();});
 }
 function fbLinkUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/links/'+encodeURIComponent(id);}
+var SHAREDDAYS=true;
+function fbDayUrl(id){return 'https://firestore.googleapis.com/v1/projects/'+FB.pid+'/databases/(default)/documents/days/'+encodeURIComponent(id);}
+function sharedDayId(a,b,date){var arr=[a,b].sort();return arr[0]+'__'+arr[1]+'_'+date;}
+function activeSharedDay(date){var so=state.social;if(!so||!so.sharedDays)return null;var r=null;so.sharedDays.forEach(function(x){if(x.date===date&&x.status==='active')r=x;});return r;}
+function collectMyDayEntries(date){
+ var out=[];
+ (state.rides||[]).forEach(function(r){if(r.date===date&&r.attraction)out.push({kind:'ride',name:r.attraction,sub:[r.access,r.with_].filter(Boolean).join(' \u00b7 ')});});
+ (state.meets||[]).forEach(function(m){if(m.date===date&&m.character)out.push({kind:'meet',name:m.character,sub:m.where||''});});
+ (state.scores||[]).forEach(function(x){if(x.date===date&&x.attraction)out.push({kind:'score',name:x.attraction,sub:'',sc:String(x.score||'')});});
+ return out;
+}
+function pushDayEntries(date){
+ var sd=activeSharedDay(date);if(!sd)return;
+ if(navigator.onLine===false)return;
+ var so=state.social;
+ var entries=collectMyDayEntries(date);
+ fbToken(function(tk){
+  var vals=entries.map(function(e){var f={kind:{stringValue:e.kind},name:{stringValue:e.name},sub:{stringValue:e.sub||''}};if(e.sc)f.sc={stringValue:e.sc};return {mapValue:{fields:f}};});
+  var body={fields:{}};body.fields['e_'+so.uid]={arrayValue:{values:vals}};
+  fbJson(fbDayUrl(sd.dayId)+'?updateMask.fieldPaths=e_'+so.uid,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(body)}).catch(function(){});
+ },function(){});
+}
+var _daySyncT=null;
+function schedDaySync(){
+ var so=state.social;if(!so||!so.sharedDays)return;
+ if(!so.sharedDays.some(function(x){return x.status==='active';}))return;
+ if(navigator.onLine===false)return;
+ if(_daySyncT)clearTimeout(_daySyncT);
+ _daySyncT=setTimeout(function(){_daySyncT=null;(state.social.sharedDays||[]).forEach(function(x){if(x.status==='active')pushDayEntries(x.date);});},3000);
+}
+function pullDayEntries(date){
+ var sd=activeSharedDay(date);if(!sd)return;
+ if(navigator.onLine===false)return;
+ var so=state.social;
+ fbToken(function(tk){
+  fbJson(fbDayUrl(sd.dayId),{headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk}}).then(function(doc){
+   var f=(doc&&doc.fields)||{};var out=[];
+   Object.keys(f).forEach(function(k){
+    if(k.slice(0,2)!=='e_'||k==='e_'+so.uid)return;
+    var vals=(f[k].arrayValue&&f[k].arrayValue.values)||[];
+    vals.forEach(function(v){var e=v.mapValue&&v.mapValue.fields;if(!e)return;out.push({kind:(e.kind&&e.kind.stringValue)||'',name:(e.name&&e.name.stringValue)||'',sub:(e.sub&&e.sub.stringValue)||'',sc:(e.sc&&e.sc.stringValue)||''});});
+   });
+   var changed=JSON.stringify(sd.pulled||[])!==JSON.stringify(out);
+   sd.pulled=out;sd.pulledAt=Date.now();
+   if(changed){save();if(tab==='memories'||tab==='friends')renderAll();}
+  }).catch(function(){});
+ },function(){});
+}
+function pullAllSharedDays(){var so=state.social;if(!so||!so.sharedDays)return;so.sharedDays.forEach(function(x){if(x.status==='active')pullDayEntries(x.date);});}
+function connectDay(friendCode,date,park){
+ var so=state.social;if(!so||!so.code)return;
+ var fr=FRCACHE[friendCode];var fuid=(fr&&fr.uid)||'';var fname=(fr&&fr.name)||friendCode;
+ if(!fuid){var f2=(so.friends||[]).filter(function(x){return x.code===friendCode;})[0];if(f2)fname=f2.name;}
+ if(!fuid){alert('Could not reach that friend right now. Try again when you are online.');return;}
+ var did=sharedDayId(so.code,friendCode,date);
+ fbToken(function(tk){
+  fbJson(fbDayUrl(did),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+   body:JSON.stringify({fields:{
+    members:{arrayValue:{values:[{stringValue:so.code},{stringValue:friendCode}]}},
+    memberUids:{arrayValue:{values:[{stringValue:so.uid},{stringValue:fuid}]}},
+    date:{stringValue:date},park:{stringValue:park||''},status:{stringValue:'pending'},
+    fromCode:{stringValue:so.code},fromUid:{stringValue:so.uid},fromName:{stringValue:so.name||''}
+   }})})
+  .then(function(){
+   // invite the friend via the links channel (kind dayinvite)
+   fbJson(fbLinkUrl('day_'+did+'__'+so.code)+'?currentDocument.exists=false',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+    body:JSON.stringify({fields:{to:{stringValue:friendCode},toUid:{stringValue:fuid},from:{stringValue:so.code},fromUid:{stringValue:so.uid},kind:{stringValue:'dayinvite'},dayId:{stringValue:did},date:{stringValue:date},park:{stringValue:park||''}}})}).catch(function(){});
+   so.sharedDays=so.sharedDays||[];
+   if(!so.sharedDays.some(function(x){return x.dayId===did;}))so.sharedDays.push({dayId:did,date:date,park:park||'',friend:friendCode,friendName:fname,status:'pending',role:'from'});
+   save();if(tab==='memories'||tab==='visits')renderAll();
+   toast('Asked '+fname+' to share this day');
+  }).catch(function(){alert('Could not start the shared day. Check your connection and try again.');});
+ },function(){alert('Could not start the shared day. Check your connection and try again.');});
+}
+function acceptDayInvite(dayId){
+ var so=state.social;if(!so)return;
+ var inv=(so.dayInvites||[]).filter(function(x){return x.dayId===dayId;})[0];if(!inv)return;
+ fbToken(function(tk){
+  fbJson(fbDayUrl(dayId)+'?updateMask.fieldPaths=status',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+   body:JSON.stringify({fields:{status:{stringValue:'active'}}})})
+  .then(function(){
+   createFriendLink(inv.from,inv.fromUid,'dayaccept');
+   so.dayInvites=(so.dayInvites||[]).filter(function(x){return x.dayId!==dayId;});
+   so.sharedDays=so.sharedDays||[];
+   if(!so.sharedDays.some(function(x){return x.dayId===dayId;}))so.sharedDays.push({dayId:dayId,date:inv.date,park:inv.park||'',friend:inv.from,friendName:inv.fromName||inv.from,status:'active',role:'to'});
+   save();renderNav();if(tab==='friends'||tab==='memories')renderAll();
+   toast('Sharing this day with '+(inv.fromName||inv.from));
+  }).catch(function(){alert('Could not connect the day. Try again.');});
+ },function(){});
+}
+function declineDayInvite(dayId){
+ var so=state.social;if(!so)return;
+ so.dayInvites=(so.dayInvites||[]).filter(function(x){return x.dayId!==dayId;});
+ save();renderNav();if(tab==='friends')renderAll();
+}
 function createFriendLink(toCode,toUid,kind){
  var so=state.social;if(!so||!toUid)return;
  fbToken(function(tk){
@@ -2328,6 +2425,22 @@ function checkFriendLinks(){
      },function(){});
      return;
     }
+    if(kind==='dayinvite'){
+     var did=(f.dayId&&f.dayId.stringValue)||'';var ddate=(f.date&&f.date.stringValue)||'';var dpark=(f.park&&f.park.stringValue)||'';
+     if(did){so.dayInvites=so.dayInvites||[];
+      if(!so.dayInvites.some(function(x){return x.dayId===did;})){
+       fetchProfile(from,function(p){so.dayInvites.push({dayId:did,date:ddate,park:dpark,from:from,fromUid:fromUid,fromName:(p&&p.name)||from});save();renderNav();if(tab==='friends')renderAll();},
+        function(){so.dayInvites.push({dayId:did,date:ddate,park:dpark,from:from,fromUid:fromUid,fromName:from});save();renderNav();if(tab==='friends')renderAll();});
+      }
+     }
+     deleteFriendLink(lid);return;
+    }
+    if(kind==='dayaccept'){
+     so.sharedDays=so.sharedDays||[];
+     so.sharedDays.forEach(function(x){if(x.friend===from&&x.status==='pending')x.status='active';});
+     save();if(tab==='memories'||tab==='friends')renderAll();
+     deleteFriendLink(lid);return;
+    }
     if(kind==='accept'){
      var pi=-1;so.pending.forEach(function(x,ix){if(x.code===from)pi=ix;});
      if(pi>-1){
@@ -2357,6 +2470,7 @@ function checkFriendLinks(){
      deleteFriendLink(lid);
     },function(){});
    });
+   pullAllSharedDays();
   }).catch(function(){});
  },function(){});
 }
@@ -3041,32 +3155,59 @@ function shareDayCard(d){
  else photos.forEach(function(u,i){var im=new Image();im.onload=function(){imgs[i]=im;left--;if(!left)go2();};im.onerror=function(){left--;if(!left)go2();};im.src=u;});
 }
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function wtag(n){return ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap">with '+esc(n)+'</span>';}
 function openDayPage(d){
  var rides=(state.rides||[]).filter(function(r){return r.date===d;});
  var meets=(state.meets||[]).filter(function(m){return m.date===d;});
  var scores=(state.scores||[]).filter(function(x){return x.date===d;});
  var v=(state.visits||[]).find(function(x){return x.date===d;})||{};
+ var sd=SHAREDDAYS?activeSharedDay(d):null;
+ if(sd)pullDayEntries(d);
+ var fname=sd?(sd.friendName||sd.friend):'';
+ var pulled=sd?(sd.pulled||[]):[];
+ var pRides=pulled.filter(function(e){return e.kind==='ride';});
+ var pMeets=pulled.filter(function(e){return e.kind==='meet';});
+ var pScores=pulled.filter(function(e){return e.kind==='score';});
  var park=v.park||'';if(!park){var ps={};rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;});park=Object.keys(ps).join(' + ');}
  var line=0,maxLine=0;rides.forEach(function(r){if(r.line!=null){line+=r.line;if(r.line>maxLine)maxLine=r.line;}});
  var photos=[],seen={};
  rides.concat(meets).concat(scores).forEach(function(x){if(x.photo&&!seen[x.photo]&&photos.length<8){seen[x.photo]=1;photos.push(x.photo);}});
  var comps={};rides.forEach(function(r){splitWith(r.with_).forEach(function(c){comps[c]=1;});});
+ if(fname)comps[fname]=1;
+ var lc=function(s){return String(s||'').toLowerCase();};
+ var cnt={},order=[];rides.forEach(function(r){if(!(r.attraction in cnt)){cnt[r.attraction]=0;order.push(r.attraction);}cnt[r.attraction]++;});
+ var mineRideLC={};order.forEach(function(a){mineRideLC[lc(a)]=1;});
+ var fRideName={};pRides.forEach(function(e){if(e.name)fRideName[lc(e.name)]=1;});
+ var fOnlyRides=[],seenR={};pRides.forEach(function(e){if(e.name&&!mineRideLC[lc(e.name)]&&!seenR[lc(e.name)]){seenR[lc(e.name)]=1;fOnlyRides.push(e.name);}});
+ var meetLC={};meets.forEach(function(m){if(m.character)meetLC[lc(m.character)]=1;});
+ var fMeetName={};pMeets.forEach(function(e){if(e.name)fMeetName[lc(e.name)]=1;});
+ var fOnlyMeets=[],seenM={};pMeets.forEach(function(e){if(e.name&&!meetLC[lc(e.name)]&&!seenM[lc(e.name)]){seenM[lc(e.name)]=1;fOnlyMeets.push(e.name);}});
  var h='<div class="dpmark">'+dayMark(d)+'</div>';
  h+='<h3 style="text-align:center;margin:0 0 2px">'+esc(park||'A park day')+'</h3>';
+ var nRide=rides.length+fOnlyRides.length,nMeet=meets.length+fOnlyMeets.length,nScore=scores.length+pScores.length;
  var bits=[];
- if(rides.length)bits.push(rides.length+' experience'+(rides.length===1?'':'s'));
+ if(nRide)bits.push(nRide+' experience'+(nRide===1?'':'s'));
  if(line)bits.push(Math.floor(line/60)+'h '+(line%60)+'m in line');
  if(maxLine)bits.push('longest wait '+maxLine+' min');
- if(meets.length)bits.push(meets.length+' character'+(meets.length===1?'':'s'));
- if(scores.length)bits.push(scores.length+' score'+(scores.length===1?'':'s'));
+ if(nMeet)bits.push(nMeet+' character'+(nMeet===1?'':'s'));
+ if(nScore)bits.push(nScore+' score'+(nScore===1?'':'s'));
  if(bits.length)h+='<div class="muted" style="text-align:center;font-size:13px;font-weight:700;margin-bottom:12px">'+bits.join(' &middot; ')+'</div>';
  if(photos.length)h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 2px 14px">'+photos.map(function(u){return '<div class="pprint"><img src="'+u+'" loading="lazy"></div>';}).join('')+'</div>';
- if(rides.length){
-  var cnt={};rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});
-  h+='<div class="alabel" style="margin:8px 0 6px">Attractions</div><div class="card" style="margin-bottom:0">'+Object.keys(cnt).map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+'</div>'+(cnt[a]>1?'<div class="cnt">&times;'+cnt[a]+'</div>':'')+'</div>';}).join('')+'</div>';
+ if(order.length||fOnlyRides.length){
+  var rowsA=order.map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+(fRideName[lc(a)]?wtag(fname):'')+'</div>'+(cnt[a]>1?'<div class="cnt">&times;'+cnt[a]+'</div>':'')+'</div>';}).join('');
+  rowsA+=fOnlyRides.map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+wtag(fname)+'</div></div>';}).join('');
+  h+='<div class="alabel" style="margin:8px 0 6px">Attractions</div><div class="card" style="margin-bottom:0">'+rowsA+'</div>';
  }
- if(meets.length)h+='<div class="alabel" style="margin:12px 0 6px">Characters</div><div class="card" style="margin-bottom:0">'+meets.map(function(m){return '<div class="checkitem"><div class="nm">'+esc(m.character)+'</div></div>';}).join('')+'</div>';
- if(scores.length)h+='<div class="alabel" style="margin:12px 0 6px">Scores</div><div class="card" style="margin-bottom:0">'+scores.map(function(x){return '<div class="checkitem"><div class="nm">'+esc(x.attraction)+'</div><div class="cnt">'+esc(String(x.score))+'</div></div>';}).join('')+'</div>';
+ if(meets.length||fOnlyMeets.length){
+  var rowsM=meets.map(function(m){return '<div class="checkitem"><div class="nm">'+esc(m.character)+(fMeetName[lc(m.character)]?wtag(fname):'')+'</div></div>';}).join('');
+  rowsM+=fOnlyMeets.map(function(c){return '<div class="checkitem"><div class="nm">'+esc(c)+wtag(fname)+'</div></div>';}).join('');
+  h+='<div class="alabel" style="margin:12px 0 6px">Characters</div><div class="card" style="margin-bottom:0">'+rowsM+'</div>';
+ }
+ if(scores.length||pScores.length){
+  var rowsS=scores.map(function(x){return '<div class="checkitem"><div class="nm">'+esc(x.attraction)+'</div><div class="cnt">'+esc(String(x.score))+'</div></div>';}).join('');
+  rowsS+=pScores.map(function(e){return '<div class="checkitem"><div class="nm">'+esc(e.name)+wtag(fname)+'</div>'+(e.sc?'<div class="cnt">'+esc(e.sc)+'</div>':'')+'</div>';}).join('');
+  h+='<div class="alabel" style="margin:12px 0 6px">Scores</div><div class="card" style="margin-bottom:0">'+rowsS+'</div>';
+ }
  var ck=Object.keys(comps);
  if(ck.length)h+='<div class="alabel" style="margin:12px 0 6px">With</div><div class="fchips">'+ck.map(function(c){return '<span class="fchip" style="cursor:default">'+esc(c)+'</span>';}).join('')+'</div>';
  else if(rides.length)h+='<div class="alabel" style="margin:12px 0 6px">With</div><div class="fchips"><span class="fchip" style="cursor:default">Solo day</span></div>';
@@ -3077,9 +3218,44 @@ function openDayPage(d){
   var ph=(pc.photos&&pc.photos.length)?pc.photos[0]:pc.photo;
   h+='<div class="alabel" style="margin:12px 0 6px">Postcard sent</div><div class="card" style="margin-bottom:0;display:flex;gap:10px;align-items:center">'+(ph?'<span class="dcthumb" style="transform:rotate(-2deg)"><img src="'+ph+'"></span>':'')+'<span class="muted" style="font-weight:700;font-size:13.5px;min-width:0">'+(pc.caption?esc(pc.caption):'No message, just the view.')+'</span></div>';
  }
+ if(SHAREDDAYS&&so&&so.code){
+  if(sd){
+   h+='<div class="alabel" style="margin:14px 0 6px">Shared day</div><div class="card" style="margin-bottom:0;display:flex;align-items:center;gap:10px"><span style="flex:1;font-weight:700;font-size:13.5px;line-height:1.45">Shared with '+esc(fname)+'. Anything you both log on this day shows up here.</span><button class="xbtn" onclick="disconnectDay('+jsarg(d)+')" aria-label="Stop sharing this day">&times;</button></div>';
+  }else{
+   var pend=(so.sharedDays||[]).filter(function(x){return x.date===d&&x.status==='pending';})[0];
+   if(pend)h+='<div class="alabel" style="margin:14px 0 6px">Shared day</div><div class="card" style="margin-bottom:0;display:flex;align-items:center;gap:10px"><span style="flex:1;font-weight:700;font-size:13.5px">Waiting for '+esc(pend.friendName||pend.friend)+' to accept.</span><button class="xbtn" onclick="cancelDayShare('+jsarg(d)+')" aria-label="Cancel">&times;</button></div>';
+   else if((so.friends||[]).some(function(f){return !f.gone;}))h+='<button class="btn ghost" style="width:100%;margin-top:14px" onclick="openDayShare('+jsarg(d)+')">Who were you with?</button>';
+  }
+ }
  h+='<button class="btn primary" style="width:100%;margin-top:14px" onclick="shareDayCard('+jsarg(d)+')">Share this day</button>';
  h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" onclick="closeSheet();openVisit('+jsarg(d)+')">Edit this day</button></div>';
  sheet(h);
+}
+function openDayShare(d){
+ var so=state.social;if(!so)return;
+ var v=(state.visits||[]).find(function(x){return x.date===d;})||{};
+ var park=v.park||'';if(!park){var ps={};(state.rides||[]).forEach(function(r){if(r.date===d){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;}});park=Object.keys(ps).join(' + ');}
+ var fr=(so.friends||[]).filter(function(f){return !f.gone;});
+ if(!fr.length){alert('Add a friend first, then you can share a day with them.');return;}
+ var h='<h3>Who were you with?</h3><p class="muted" style="margin:0 0 12px;line-height:1.5">Pick a friend to share '+esc(park||fmt(d))+' with. They get a request to connect the day. Once they accept, anything either of you logs on this date shows up for you both.</p><div class="card">';
+ h+=fr.map(function(f){return '<div class="checkitem" style="cursor:pointer" onclick="closeSheet();connectDay('+jsarg(f.code)+','+jsarg(d)+','+jsarg(park)+')"><div class="nm">'+esc(f.name)+'</div><div class="cnt" style="color:var(--accent)">Share &rsaquo;</div></div>';}).join('');
+ h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>';
+ sheet(h);
+}
+function disconnectDay(d){
+ var so=state.social;if(!so)return;
+ var sd=(so.sharedDays||[]).filter(function(x){return x.date===d;})[0];if(!sd)return;
+ if(!confirm('Stop sharing this day with '+(sd.friendName||sd.friend)+'? Their entries are removed from this day on your device. Your own log is not affected.'))return;
+ so.sharedDays=(so.sharedDays||[]).filter(function(x){return x!==sd;});
+ try{fbToken(function(tk){var body={fields:{}};body.fields['e_'+so.uid]={arrayValue:{values:[]}};fbJson(fbDayUrl(sd.dayId)+'?updateMask.fieldPaths=e_'+so.uid,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(body)}).catch(function(){});},function(){});}catch(e){}
+ save();closeSheet();if(tab==='memories')renderAll();toast('Stopped sharing this day');
+}
+function cancelDayShare(d){
+ var so=state.social;if(!so)return;
+ var sd=(so.sharedDays||[]).filter(function(x){return x.date===d&&x.status==='pending';})[0];if(!sd)return;
+ so.sharedDays=(so.sharedDays||[]).filter(function(x){return x!==sd;});
+ try{deleteFriendLink('day_'+sd.dayId+'__'+so.code);}catch(e){}
+ save();closeSheet();if(tab==='memories')renderAll();toast('Cancelled');
 }
 
 function todayStops(){
@@ -3228,6 +3404,10 @@ function viewFriends(){
   h+='<h2 class="sec">Friend requests</h2>';
   h+=so.requests.map(function(rq){return '<div class="frcard2" style="cursor:default"><div class="frhead"><span class="frav2">'+avatarAny(rq)+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(rq.name)+'</div><div class="frlast">wants to be friends</div></div></div><div class="pt-btns" style="margin-top:10px"><button class="pt-primary" onclick="acceptRequest('+jsarg(rq.code)+')">Accept</button><button class="pt-ghost" onclick="declineRequest('+jsarg(rq.code)+')">Decline</button></div></div>';}).join('');
  }
+ if(SHAREDDAYS&&(so.dayInvites||[]).length){
+  h+='<h2 class="sec">Shared day invites</h2>';
+  h+=so.dayInvites.map(function(iv){var fp=FRCACHE[iv.from]||{};return '<div class="frcard2" style="cursor:default"><div class="frhead"><span class="frav2">'+avatarAny({icon:fp.icon||'ferris',color:fp.color||'grape',photo:fp.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(iv.fromName||iv.from)+'</div><div class="frlast">wants to share '+esc(iv.park||fmt(iv.date))+'</div></div></div><div class="pt-btns" style="margin-top:10px"><button class="pt-primary" onclick="acceptDayInvite('+jsarg(iv.dayId)+')">Connect day</button><button class="pt-ghost" onclick="declineDayInvite('+jsarg(iv.dayId)+')">Decline</button></div></div>';}).join('');
+ }
  if((so.pending||[]).length){
   h+='<h2 class="sec">Sent requests</h2><div class="card">'+so.pending.map(function(pd){return '<div class="checkitem"><div class="nm"><b>'+esc(pd.name)+'</b><br><span class="cnt">Waiting for them to accept</span></div><button class="xbtn" onclick="cancelRequest('+jsarg(pd.code)+')">&times;</button></div>';}).join('')+'</div>';
  }
@@ -3338,7 +3518,7 @@ function openMenu(){
   '<div class="alabel">About</div>'+
   '<button onclick="closeSheet();startOnboarding()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#C3C8EC"/><circle cx="12" cy="11" r="7.5" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/><path d="M9.9 9.1a2.3 2.3 0 1 1 3 2.7c-.8.3-1.1.7-1.1 1.4" fill="none" stroke="#1B1A17" stroke-width="1.8" stroke-linecap="round"/><circle cx="11.8" cy="15.2" r="1.1" fill="#1B1A17"/></svg>')+'</span><b>How it works</b></button>'+
   (isWebVisitor()?'<button onclick="window.open(AS_URL)"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B388E6"/><path d="M12 3.6v9.4M12 3.6L8.6 7M12 3.6L15.4 7" fill="none" stroke="#1B1A17" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 8.3)"/><rect x="5.4" y="9.4" width="13.2" height="9.6" rx="2" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8"/></svg>')+'</span><b>Get the iOS app</b></button>':'')+
-  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.23f</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+  '</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">Build 2026.07.23h</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
 }
 function photoList(arr){var seen={},out=[];arr.forEach(function(x){if(x.photo&&!seen[x.photo]){seen[x.photo]=1;out.push(x.photo);}});return out;}
 function photoFolderCard(label,gallery,photos,icon){var cover=photos.length?'<img src="'+photos[0]+'" style="width:54px;height:54px;border-radius:14px;object-fit:cover;flex:none">':'<span style="width:54px;height:54px;border-radius:14px;background:#F4EFDE;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none">'+icon+'</span>';return '<div class="vcard" onclick="go(&#39;'+gallery+'&#39;)">'+cover+'<div class="vmain"><div class="vdate">'+label+'</div><div class="vnote">'+photos.length+' photo'+(photos.length===1?'':'s')+'</div></div><div class="vchev">&rsaquo;</div></div>';}
