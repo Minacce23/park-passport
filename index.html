@@ -1210,6 +1210,14 @@ function withChips(sel){
  var h='<label>Who with</label>';
  if(ppl.length)h+='<div class="fchips" id="withChips">'+ppl.map(function(p){return '<span class="fchip'+(p===sel?' on':'')+'" onclick="pickChip(this,&#39;f_with&#39;)" data-v="'+esc(p)+'">'+esc(p)+'</span>';}).join('')+'</div>';
  h+='<input id="f_with" value="'+esc(sel||'')+'" placeholder="Leave blank if it&#39;s just you" autocomplete="off" oninput="syncWithChips(this.value)">';
+ if(SHAREDDAYS&&state.social&&state.social.code){
+  var _frs=(state.social.friends||[]).filter(function(f){return !f.gone;});
+  if(_frs.length){
+   h+='<label style="margin-top:10px">Log the day together</label>';
+   h+='<div class="fchips" id="shareFriendChips">'+_frs.map(function(f){return '<span class="fchip" onclick="pickFriendChip(this)" data-code="'+esc(f.code)+'" data-v="'+esc(f.name)+'">'+esc(f.name)+'</span>';}).join('')+'</div>';
+   h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share this whole day. They get a request, and once they accept, everything you both log on this date shows up for you both.</div>';
+  }
+ }
  return h;
 }
 function pickChip(el,target){
@@ -1218,6 +1226,14 @@ function pickChip(el,target){
  [].slice.call(el.parentNode.children).forEach(function(c){c.classList.remove('on');});
  if(was){inp.value='';return;}
  el.classList.add('on');inp.value=v;
+}
+function pickFriendChip(el){
+ var was=el.classList.contains('on');
+ [].slice.call(el.parentNode.children).forEach(function(c){c.classList.remove('on');});
+ if(was){window._shareFriendCode='';return;}
+ el.classList.add('on');window._shareFriendCode=el.getAttribute('data-code');
+ var inp=document.getElementById('f_with');if(inp&&!inp.value){inp.value=el.getAttribute('data-v');syncWithChips(inp.value);}
+ try{toast(el.getAttribute('data-v')+' will be asked to share this day when you save');}catch(e){}
 }
 function syncWithChips(v){var row=document.getElementById('withChips');if(!row)return;[].slice.call(row.children).forEach(function(c){c.classList.toggle('on',c.getAttribute('data-v')===v);});}
 function flexDate(v){
@@ -1242,7 +1258,7 @@ function toggleDateType(){
 }
 function setDateQuick(back){var e0=document.getElementById('f_date');if(e0&&e0.type!=='date'){try{e0.type='date';}catch(e){}}var d=new Date(Date.now()-back*86400000);var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var e=document.getElementById('f_date');if(e){e.value=v;syncVisitWith();}}
 function toggleMoreDet(){var dd=document.getElementById('moredet');var b=document.getElementById('mdbtn');if(!dd)return;var open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(b)b.innerHTML=open?'More details &#9662;':'Fewer details &#9652;';}
-function formRide(d,qa){pendingPhoto=null;d=d||today();
+function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today();
  var L=state.lastLog||{};
  var pk=parkOfDay(d)||(qa?(L.park||''):'');
  var wi=visitWith(d)||(qa?(L.with_||''):'');
@@ -1279,6 +1295,7 @@ function saveRide(again){
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
  state.lastLog={date:dd,park:val('f_park')||null,with_:val('f_with')||null,access:val('f_acc')||null};
  curDay=dd;
+ if(SHAREDDAYS&&window._shareFriendCode){try{connectDay(window._shareFriendCode,dd,val('f_park')||null);}catch(e){}window._shareFriendCode='';}
  save();closeSheet();
  if(again){quickAddRide();}else{go('visits');}
 }
@@ -2340,9 +2357,14 @@ function pullDayEntries(date){
 function pullAllSharedDays(){var so=state.social;if(!so||!so.sharedDays)return;so.sharedDays.forEach(function(x){if(x.status==='active')pullDayEntries(x.date);});}
 function connectDay(friendCode,date,park){
  var so=state.social;if(!so||!so.code)return;
+ if((so.sharedDays||[]).some(function(x){return x.date===date&&x.friend===friendCode;})){toast('Already sharing this day with '+((FRCACHE[friendCode]&&FRCACHE[friendCode].name)||friendCode));return;}
  var fr=FRCACHE[friendCode];var fuid=(fr&&fr.uid)||'';var fname=(fr&&fr.name)||friendCode;
- if(!fuid){var f2=(so.friends||[]).filter(function(x){return x.code===friendCode;})[0];if(f2)fname=f2.name;}
- if(!fuid){alert('Could not reach that friend right now. Try again when you are online.');return;}
+ if(!fuid){var f2=(so.friends||[]).filter(function(x){return x.code===friendCode;})[0];if(f2){fname=f2.name;if(f2.uid)fuid=f2.uid;}}
+ if(!fuid){
+  if(navigator.onLine===false){alert('Could not reach that friend right now. Try again when you are online.');return;}
+  fetchProfile(friendCode,function(p){if(p&&p.uid){FRCACHE[friendCode]=p;connectDay(friendCode,date,park);}else{alert('Could not start the shared day for that friend right now. Try again in a moment.');}},function(){alert('Could not reach that friend right now. Try again in a moment.');});
+  return;
+ }
  var did=sharedDayId(so.code,friendCode,date);
  fbToken(function(tk){
   fbJson(fbDayUrl(did),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
