@@ -1246,9 +1246,14 @@ function geoCandidates(){
  Object.keys(pins).forEach(function(n){if(!list.some(function(c){return c.name===n;}))list.push({name:n,lat:pins[n][0],lng:pins[n][1],park:pOf(n)});});
  return list;
 }
+function geoNorm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function geoCanonMap(){var m={};function add(n){if(!n)return;var k=geoNorm(n);if(k&&!m[k])m[k]=n;}(state.rides||[]).forEach(function(r){add(r.attraction);});((SEED&&SEED.attractions)||[]).forEach(function(a){add(a.name);});return m;}
 function geoNearest(lat,lng,maxFt){
- var out=[];geoCandidates().forEach(function(c){if(c.lat==null)return;var ft=geoDist(lat,lng,c.lat,c.lng);if(ft<=maxFt)out.push({name:c.name,park:c.park,ft:Math.round(ft)});});
- out.sort(function(a,b){return a.ft-b.ft;});return out;
+ var cm=geoCanonMap(),out=[];
+ geoCandidates().forEach(function(c){if(c.lat==null)return;var ft=geoDist(lat,lng,c.lat,c.lng);if(ft<=maxFt){var k=geoNorm(c.name);out.push({name:cm[k]||c.name,park:c.park,ft:Math.round(ft)});}});
+ out.sort(function(a,b){return a.ft-b.ft;});
+ var seen={},ded=[];out.forEach(function(o){var k=geoNorm(o.name);if(seen[k])return;seen[k]=1;ded.push(o);});
+ return ded;
 }
 function geoSampleHTML(msg){
  var samples=[['Tomorrowland',33.8113,-117.9172],['Fantasyland',33.8134,-117.9186],['New Orleans Square',33.8118,-117.9213],['Cars Land',33.8052,-117.9183],['Pixar Pier',33.8055,-117.9211]];
