@@ -1248,9 +1248,18 @@ function geoCandidates(){
 }
 function geoNorm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function geoCanonMap(){var m={};function add(n){if(!n)return;var k=geoNorm(n);if(k&&!m[k])m[k]=n;}(state.rides||[]).forEach(function(r){add(r.attraction);});((SEED&&SEED.attractions)||[]).forEach(function(a){add(a.name);});return m;}
+function geoBigrams(s){s=geoNorm(s).replace(/ /g,'');var g=[];for(var i=0;i<s.length-1;i++)g.push(s.substr(i,2));return g;}
+function geoDice(a,b){var A=geoBigrams(a),B=geoBigrams(b);if(!A.length||!B.length)return 0;var m={},hit=0;A.forEach(function(g){m[g]=(m[g]||0)+1;});B.forEach(function(g){if(m[g]>0){m[g]--;hit++;}});return 2*hit/(A.length+B.length);}
+function geoBestMatch(name,names){var best=null,bs=0,nk=geoNorm(name);names.forEach(function(cn){if(geoNorm(cn)===nk)return;var d=geoDice(name,cn);if(d>bs){bs=d;best=cn;}});return bs>=0.5?best:null;}
 function geoNearest(lat,lng,maxFt){
- var cm=geoCanonMap(),out=[];
- geoCandidates().forEach(function(c){if(c.lat==null)return;var ft=geoDist(lat,lng,c.lat,c.lng);if(ft<=maxFt){var k=geoNorm(c.name);out.push({name:cm[k]||c.name,park:c.park,ft:Math.round(ft)});}});
+ var cm=geoCanonMap(),names=[],sn={};Object.keys(cm).forEach(function(k){var v=cm[k];if(!sn[v]){sn[v]=1;names.push(v);}});
+ var out=[];
+ geoCandidates().forEach(function(c){if(c.lat==null)return;var ft=geoDist(lat,lng,c.lat,c.lng);if(ft>maxFt)return;
+  var k=geoNorm(c.name),item;
+  if(cm[k])item={name:cm[k],alt:null,park:c.park,ft:Math.round(ft)};
+  else{var bm=geoBestMatch(c.name,names);item=bm?{name:bm,alt:c.name,park:c.park,ft:Math.round(ft)}:{name:c.name,alt:null,park:c.park,ft:Math.round(ft)};}
+  out.push(item);
+ });
  out.sort(function(a,b){return a.ft-b.ft;});
  var seen={},ded=[];out.forEach(function(o){var k=geoNorm(o.name);if(seen[k])return;seen[k]=1;ded.push(o);});
  return ded;
@@ -1270,7 +1279,9 @@ function geoShowNear(lat,lng,label){
  var chips=near.slice(0,6).map(function(n,i){
   var done=(state.rides||[]).some(function(r){return r.date===td&&r.attraction===n.name;});
   var tg=parkTag(n.park);
-  return '<span class="fchip'+(i===0?' on':'')+'" onclick="pickNearby('+jsarg(n.name)+','+jsarg(n.park||'')+')">'+(done?'&#10003; ':'')+esc(shortRide(n.name)||n.name)+' <span style="opacity:.55;font-weight:700">'+n.ft+' ft'+(tg?' &middot; '+tg:'')+'</span></span>';
+  var s='<span class="fchip'+(i===0?' on':'')+'" onclick="pickNearby('+jsarg(n.name)+','+jsarg(n.park||'')+')">'+(done?'&#10003; ':'')+esc(shortRide(n.name)||n.name)+' <span style="opacity:.55;font-weight:700">'+n.ft+' ft'+(tg?' &middot; '+tg:'')+'</span></span>';
+  if(n.alt){var av=n.alt.length>20?n.alt.slice(0,18)+'…':n.alt;s+='<a class="muted" onclick="pickNearby('+jsarg(n.alt)+','+jsarg(n.park||'')+')" style="align-self:center;font-size:11px;font-weight:600;cursor:pointer;margin-right:4px" title="Use the map name instead">or &ldquo;'+esc(av)+'&rdquo;</a>';}
+  return s;
  }).join('');
  box.innerHTML='<div class="muted" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;margin:2px 2px 5px">Nearby'+(label?' &middot; '+esc(label):'')+'</div><div class="fchips">'+chips+'</div>'+geoPinLink();
 }
