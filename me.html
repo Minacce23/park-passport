@@ -1178,13 +1178,13 @@ function parkFilterOpts(sel){sel=sel||'';return '<option value="">All parks</opt
 function attrDataOpts(park){var pks=park?[park]:parksOn();var s='';pks.forEach(function(pk){SEED.attractions.filter(function(a){return a.park===pk;}).forEach(function(a){s+='<option value="'+esc(a.name)+'">';});});return s;}
 function variantDataOpts(attr){attr=String(attr||'');if(GENERIC){var aL=attr.toLowerCase();var seen={},o=[];Object.keys(state.catalogVars||{}).forEach(function(k){if(k.toLowerCase()===aL){(state.catalogVars[k]||[]).forEach(function(v){if(!seen[v.toLowerCase()]){seen[v.toLowerCase()]=1;o.push(v);}});}});state.rides.forEach(function(r){if(r.attraction&&r.attraction.toLowerCase()===aL)rideVariants(r).forEach(function(vv){if(vv&&vv!=='Standard'&&!seen[vv.toLowerCase()]){seen[vv.toLowerCase()]=1;o.push(vv);}});});o.sort();return o.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}var ow=SEED.variantOwners||{};var list=['Standard'].concat(Object.keys(ow).filter(function(v){return ow[v]===attr;}));return list.map(function(v){return '<option value="'+esc(v)+'">';}).join('');}
 function onParkChange(){var pe=document.getElementById('f_park');var pk=pe?pe.value:'';var dl=document.getElementById('dl_attr');if(dl)dl.innerHTML=attrDataOpts(pk);onAttrChange();}
-function onAttrChange(){var ae=document.getElementById('f_attr');var a=ae?ae.value:'';var dv=document.getElementById('dl_var');if(dv)dv.innerHTML=variantDataOpts(a);var cc=document.getElementById('f_coaster');if(cc)cc.checked=isCoaster(a);var pe=document.getElementById('f_park');if(pe&&a){var pk=pOf(a);if(pk&&pk!=='?'&&pk!=='Both Parks'&&(!pe.value||pe.dataset.autopark==='1')){pe.value=pk;pe.dataset.autopark='1';if(pe.tagName==='SELECT'&&typeof onParkChange==='function')onParkChange();}}}
+function onAttrChange(){var ae=document.getElementById('f_attr');var a=ae?ae.value:'';var dv=document.getElementById('dl_var');if(dv)dv.innerHTML=variantDataOpts(a);var cc=document.getElementById('f_coaster');if(cc)cc.checked=isCoaster(a);var pe=document.getElementById('f_park');if(pe&&a){var pk=pOf(a);if(pk&&pk!=='?'&&pk!=='Both Parks'&&(!pe.value||pe.value==='Both Parks'||pe.dataset.autopark==='1')){var _ch=(pe.value!==pk);pe.value=pk;pe.dataset.autopark='1';if(_ch&&pe.tagName==='SELECT'&&typeof onParkChange==='function')onParkChange();}}}
 function parkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="e.g. Magic Kingdom"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park" onchange="onParkChange()">'+parkFilterOpts(sel)+'</select>';}
 function attrField(sel,park){sel=sel||'';if(GENERIC){return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Experience name" onchange="onAttrChange()" oninput="onAttrChange()"><datalist id="dl_attr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}return '<label>Attraction</label><input id="f_attr" list="dl_attr" value="'+esc(sel)+'" placeholder="Pick or write in an experience" onchange="onAttrChange()" autocomplete="off"><datalist id="dl_attr">'+attrDataOpts(park||'')+'</datalist>';}
 function meetParkField(sel){sel=sel||'';if(GENERIC){return '<label>Park</label><input id="f_park" list="dl_park" value="'+esc(sel)+'" placeholder="Park"><datalist id="dl_park">'+allParks().map(function(p){return '<option value="'+esc(p)+'">';}).join('')+'</datalist>';}return '<label>Park</label><select id="f_park">'+opts(SEED.lists.parks,sel||SEED.lists.parks[0])+'</select>';}
 function scoreRideField(sel){sel=sel||'';if(GENERIC){return '<label>Experience</label><input id="f_attr" list="dl_sr" value="'+esc(sel)+'" placeholder="Attraction name"><datalist id="dl_sr">'+catalog().map(function(a){return '<option value="'+esc(a.name)+'">';}).join('')+'</datalist>';}var list=scoreRidesList().slice();if(sel&&list.indexOf(sel)<0)list.unshift(sel);return '<label>Experience</label><select id="f_attr">'+opts(list,sel)+'</select>';}
 function visitWith(d){var v=state.visits.find(function(x){return x.date===d;});return (v&&v.with_)?v.with_:'';}
-function syncVisitWith(){var d=val('f_date');var pe=document.getElementById('f_park');if(pe&&!pe.value){var pp=parkOfDay(d);if(pp){pe.value=pp;if(typeof onParkChange==='function'&&pe.tagName==='SELECT')onParkChange();}}var w=visitWith(d);if(!w)return;var e=document.getElementById('f_with')||document.getElementById('f_party');if(e&&!e.value)e.value=w;}
+function syncVisitWith(){var d=val('f_date');var pe=document.getElementById('f_park');if(pe&&!pe.value){var pp=parkOfDay(d);if(pp&&pp!=='Both Parks'){pe.value=pp;if(typeof onParkChange==='function'&&pe.tagName==='SELECT')onParkChange();}}var w=visitWith(d);if(!w)return;var e=document.getElementById('f_with')||document.getElementById('f_party');if(e&&!e.value)e.value=w;}
 function rideVariants(r){if(!r)return[];if(r.variants&&r.variants.length)return r.variants.slice();return r.variant?[r.variant]:[];}
 function rideVarLabel(r){var lst=rideVariants(r).filter(function(v){return v&&v!=='Standard';});return lst.length?' <span class="muted">('+lst.map(esc).join(', ')+')</span>':'';}
 function variantRowHTML(val){return '<div class="scorerow"><input class="vr_val" list="dl_var" placeholder="Standard, or write in a version" autocomplete="off" value="'+esc(val||'')+'"><button type="button" class="xbtn" onclick="this.closest(&#39;.scorerow&#39;).remove()">&times;</button></div>';}
@@ -1295,7 +1295,7 @@ function geoFindNearby(mock){
   function(err){box.innerHTML=geoSampleHTML('Could not get your location ('+esc((err&&err.message)||'permission blocked')+'). Preview with a sample spot:');},
   {enableHighAccuracy:true,timeout:9000,maximumAge:30000});
 }
-function pickNearby(name,park){var a=document.getElementById('f_attr');if(a)a.value=name;var pk=document.getElementById('f_park');if(pk&&park&&!pk.value)pk.value=park;try{toast('Filled in '+(shortRide(name)||name));}catch(e){}}
+function pickNearby(name,park){var a=document.getElementById('f_attr');if(a)a.value=name;var pk=document.getElementById('f_park');if(pk&&park&&(!pk.value||pk.value==='Both Parks')){pk.value=park;pk.dataset.autopark='1';}try{onAttrChange();}catch(e){}try{toast('Filled in '+(shortRide(name)||name));}catch(e){}}
 function geoPinStart(){
  var box=document.getElementById('nearbyBox');if(!box||!window._lastGeo)return;
  var opts=((SEED&&SEED.attractions)||[]).map(function(a){return '<option value="'+esc(a.name)+'">'+esc(a.name)+'</option>';}).join('');
@@ -1377,7 +1377,7 @@ function setDateQuick(back){var e0=document.getElementById('f_date');if(e0&&e0.t
 function toggleMoreDet(){var dd=document.getElementById('moredet');var b=document.getElementById('mdbtn');if(!dd)return;var open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(b)b.innerHTML=open?'More details &#9662;':'Fewer details &#9652;';}
 function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today();
  var L=state.lastLog||{};
- var pk=parkOfDay(d)||(qa?(L.park||''):'');
+ var pk=parkOfDay(d);if(pk==='Both Parks')pk='';var _lp=(L.park&&L.park!=='Both Parks')?L.park:'';pk=pk||(qa?_lp:'');
  var wi=visitWith(d)||(qa?(L.with_||''):'');
  var ac=qa?(L.access||'Standby'):'Standby';
  var wf=qa?{lineStart:(waitsOn()?nowHM():'')}:undefined;
@@ -1401,13 +1401,15 @@ function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today(
   '<div class="linkrow"><button onclick="saveRide(true)"><b>Save &amp; add another</b></button></div>'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveRide()">Save experience</button></div>');
 }
+function attrPark(a){var p=pOf(a);return (p&&p!=='?'&&p!=='Both Parks')?p:'';}
+function formRidePark(a){var p=attrPark(a);if(p)return p;var v=val('f_park');return (v&&v!=='Both Parks')?v:null;}
 function saveRide(again){
  const a=val('f_attr');if(!a){alert('Pick an attraction');return;}
  var po=numOrNull('f_posted');var ls=valOrUndef('f_lstart'),le=valOrUndef('f_lend');
  var lst=(ls===undefined?null:(ls||null)),len=(le===undefined?null:(le||null));
  var lmin=(lst&&len)?diffMin(lst,len):null;
  var dd=flexDate(val('f_date'))||val('f_date');
- state.rides.push({date:dd,attraction:a,park:val('f_park')||null,variant:(collectVariantRows()[0]||null),variants:(collectVariantRows().length>1?collectVariantRows():null),with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
+ state.rides.push({date:dd,attraction:a,park:formRidePark(a),variant:(collectVariantRows()[0]||null),variants:(collectVariantRows().length>1?collectVariantRows():null),with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
  collectScoreRows().forEach(function(r){state.scores.push({date:dd,attraction:a,score:r.score,with_:r.who||null,party:val('f_with')||null,rank:r.rank||null,notes:null,photo:null});});
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
@@ -1437,7 +1439,7 @@ function editRide(i){
 }
 function updateRide(i){
  var r=state.rides[i];if(!r)return;var a=val('f_attr');if(!a){alert('Pick an attraction');return;}
- r.date=flexDate(val('f_date'))||val('f_date');r.attraction=a;r.park=val('f_park')||null;var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
+ r.date=flexDate(val('f_date'))||val('f_date');r.attraction=a;r.park=formRidePark(a);var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
  save();closeSheet();renderAll();
