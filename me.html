@@ -3596,12 +3596,24 @@ function eraseEverything(){
   setTimeout(finish,2000);
  }else finish();
 }
+function fixBothParks(){
+ var bp=(state.rides||[]).filter(function(r){return r.park==='Both Parks';});
+ if(!bp.length){alert('No rides are labeled Multiple parks. Nothing to fix.');return;}
+ if(!confirm('Fix '+bp.length+' ride'+(bp.length===1?'':'s')+' labeled Multiple parks by setting each to the park the ride is actually in? Your logs are not deleted, only the park label is corrected.'))return;
+ var n=0,unk=0;
+ bp.forEach(function(r){var p=attrPark(r.attraction);if(p){r.park=p;n++;}else{unk++;}});
+ save();renderAll();
+ alert('Corrected '+n+' ride'+(n===1?'':'s')+' to their park.'+(unk?' '+unk+' could not be matched automatically and were left as they are, you can edit those by hand.':''));
+ try{openDataHub();}catch(e){}
+}
 function openDataHub(){
  var h='<h3>Import, export &amp; backups</h3>';
  if(PPERRS.length)h+='<p class="muted" style="font-size:12px;margin:4px 0 10px">Recent issues:<br>'+PPERRS.map(function(x){return esc(x.t+' '+x.w+': '+x.m);}).join('<br>')+'</p>';
  h+='';
  h+='<p class="muted" style="margin:0 0 12px;line-height:1.5">Everything you log lives on your phone. These tools move it in and out.</p>';
- h+='<h2 class="sec" style="margin-top:0">Start with the template</h2>';
+ var _bp=(state.rides||[]).filter(function(r){return r.park==='Both Parks';}).length;
+ if(_bp)h+='<h2 class="sec" style="margin-top:0">Tidy up</h2><div class="card" style="padding:14px 15px"><div style="font-weight:800;margin-bottom:3px">'+_bp+' ride'+(_bp===1?'':'s')+' labeled &ldquo;Multiple parks&rdquo;</div><div class="muted" style="font-size:13px;line-height:1.5;margin-bottom:10px">Older entries from park-hopping days. This sets each one to the park the ride is actually in. Nothing is deleted.</div><button class="btn primary" onclick="fixBothParks()">Fix park labels</button></div>';
+ h+='<h2 class="sec"'+(_bp?'':' style="margin-top:0"')+'>Start with the template</h2>';
  h+='<div class="card" style="padding:14px 15px">'+
   '<div class="step"><span class="stepn">1</span><span class="stept">Tap <b>Download the template</b> below. A small spreadsheet file (CSV) saves to your device.</span></div>'+
   '<div class="step"><span class="stepn">2</span><span class="stept">Open it in Numbers, Excel, or Google Sheets and fill in one row per experience. Already keep a list somewhere? Paste it into an AI assistant with the template and ask it to reformat your list to match the columns.</span></div>'+
