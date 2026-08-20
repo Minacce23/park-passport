@@ -3277,6 +3277,25 @@ function dayIndex(){
  (state.meets||[]).forEach(function(m){if(!m.date)return;var e=ent(m.date);e.meets++;if(m.photo){e.nphoto++;if(!e.photo)e.photo=m.photo;}});
  (state.scores||[]).forEach(function(x){if(!x.date)return;var e=ent(x.date);e.scores++;if(x.photo){e.nphoto++;if(!e.photo)e.photo=x.photo;}});
  (state.visits||[]).forEach(function(v){if(!v.date)return;var e=ent(v.date);if(v.park)e.park=v.park;});
+ if(SHAREDDAYS&&state.social&&(state.social.sharedDays||[]).length){
+  var lc=function(s){return String(s||'').toLowerCase();};
+  state.social.sharedDays.forEach(function(sd){
+   if(sd.status!=='active'||!sd.pulled||!sd.pulled.length)return;
+   var e=ent(sd.date);
+   var ownR={};state.rides.forEach(function(r){if(r.date===sd.date&&r.attraction)ownR[lc(r.attraction)]=(ownR[lc(r.attraction)]||0)+1;});
+   var pR={};sd.pulled.forEach(function(x){if(x.kind==='ride'&&x.name)pR[lc(x.name)]=(pR[lc(x.name)]||0)+1;});
+   var tot=0;Object.keys(ownR).forEach(function(k){tot+=Math.max(ownR[k],pR[k]||0);});
+   Object.keys(pR).forEach(function(k){if(!ownR[k])tot+=pR[k];});
+   e.rides=Math.max(e.rides,tot);
+   var ownM={};state.meets.forEach(function(m){if(m.date===sd.date&&m.character)ownM[lc(m.character)]=1;});
+   var addM=0,seenM={};sd.pulled.forEach(function(x){if(x.kind==='meet'&&x.name&&!ownM[lc(x.name)]&&!seenM[lc(x.name)]){seenM[lc(x.name)]=1;addM++;}});
+   e.meets+=addM;
+   var ownS=state.scores.filter(function(x){return x.date===sd.date;}).length;
+   var pS=sd.pulled.filter(function(x){return x.kind==='score';}).length;
+   e.scores=ownS+pS;
+   if(!e.park&&sd.park)e.park=sd.park;
+  });
+ }
  return Object.keys(map).sort().reverse().map(function(d){
   var e=map[d];
   if(!e.park){var pks=Object.keys(e.parks);e.park=pks.length===1?pks[0]:(pks.length?pks.join(' + '):'');}
