@@ -158,6 +158,21 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 .bpop-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:26px;}
 .bpop-conf{position:absolute;top:-16px;border-radius:2px;animation:bpop-fall linear both;}
 @keyframes bpop-fall{0%{opacity:0;transform:translateY(-30px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(620px) rotate(320deg)}}
+.badge{background:none !important;border:none !important;padding:0 !important;perspective:900px;cursor:pointer;}
+.badge .bflip{position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.9,.3,1);height:100%;}
+.badge.flip .bflip{transform:rotateY(180deg);}
+.badge .bface{backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 12px 14px;text-align:center;height:100%;box-sizing:border-box;}
+.badge .bback{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 12px;}
+.badge .bbk{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+.badge .bbv{font-weight:800;font-size:15px;color:var(--ink);line-height:1.3;}
+.badge .bbs{font-size:12px;color:var(--muted);font-weight:700;line-height:1.4;}
+body.theme-dark .badge.lock .bface{background:rgba(240,237,227,.05);}
+@media(prefers-reduced-motion:reduce){
+.badge .bflip,.badge.flip .bflip{transform:none !important;transition:none !important;}
+.badge .bback{transform:none;opacity:0;pointer-events:none;transition:opacity .3s;background:var(--card);}
+.badge.flip .bback{opacity:1;pointer-events:auto;}
+.badge.flip .bfront{opacity:0;transition:opacity .3s;}
+}
 @keyframes bpop-gentle{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes bpop-fadein{from{opacity:0}to{opacity:1}}
 @keyframes bpop-raysin{from{opacity:0}to{opacity:.55}}
@@ -1995,15 +2010,34 @@ function viewBadges(){
  var list=badgeList(), earned=list.filter(function(b){return b.earned;}).length;
  var out='<div class="hero" style="cursor:default"><div class="htop"><span class="lbl">Badges earned</span><span class="hsub">keep exploring</span></div><div class="hbig"><span class="num">'+earned+'</span> <span class="hfrac">/ '+list.length+'</span></div><div class="prog"><div style="width:'+Math.round(earned/list.length*100)+'%"></div></div></div>';
  out+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 2px 12px">'+['c','u','r','v','l'].map(function(k){return '<span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted)"><i style="width:9px;height:9px;border-radius:50%;background:'+RARCOL[k]+';border:1.5px solid '+RARDK[k]+';display:inline-block"></i>'+RARNAME[k]+'</span>';}).join('')+'</div>'+'<div class="muted" style="font-size:12px;margin:-6px 2px 12px">The wax color shows how rare a badge is.</div>';
+ var BHINTS={
+  'Worth it, apparently':'Some waits are so long you just have to go around again.',
+  'A full day of your life':'All your minutes in line, added together, become something.',
+  'Hydration status unknown':'From first light to last log, without going home.',
+  'Certified unwell':'Again. And again. And again. And again...',
+  'Structurally sound':'One true favorite, loved a hundred times over.',
+  'Suspicious activity':'How many experiences is too many for one day?',
+  'Filed without comment':'Say nothing. Keep saying nothing, a hundred times.',
+  'Clean sweep':'Leave nothing in the park unridden before the day ends.',
+  'Officially unaccounted for':'You were there. The log says otherwise.'
+ };
  out+='<div class="badgegrid">';
  list.forEach(function(b){
+  var back;
   if(b.secret&&!b.earned){
-   out+='<div class="badge lock">'+sealBadge(b.cat,false,b.rar,true)+'<div class="bt">Sealed</div><div class="bd">Not yet earned.</div></div>';
+   back='<div class="bbk">A hint</div><div class="bbs" style="color:var(--ink)">'+(BHINTS[b.t]||'Keep exploring.')+'</div>';
+   out+='<div class="badge lock" onclick="this.classList.toggle(\'flip\')"><div class="bflip"><div class="bface bfront">'+sealBadge(b.cat,false,b.rar,true)+'<div class="bt">Sealed</div><div class="bd">Not yet earned. Tap for a hint.</div></div><div class="bface bback">'+back+'</div></div></div>';
    return;
   }
-  out+='<div class="badge '+(b.earned?'':'lock')+'">'+sealBadge(b.cat,b.earned,b.rar)+'<div class="bt">'+b.t+'</div><div class="bd">'+b.d+'</div>'+
+  if(b.earned){
+   var bd=(state.badgeDates||{})[b.t];
+   back='<div class="bbk">Earned on</div><div class="bbv">'+(bd?fmt(bd):'Somewhere along the way')+'</div><div class="bbs">'+(RARNAME[b.rar]||'')+' badge</div>';
+  }else{
+   back='<div class="bbk">Progress</div><div class="bbv">'+b.val+' / '+b.need+'</div><div class="bbs">'+Math.max(0,b.need-b.val)+' to go</div>';
+  }
+  out+='<div class="badge '+(b.earned?'':'lock')+'" onclick="this.classList.toggle(\'flip\')"><div class="bflip"><div class="bface bfront">'+sealBadge(b.cat,b.earned,b.rar)+'<div class="bt">'+b.t+'</div><div class="bd">'+b.d+'</div>'+
    '<div class="bprog"><div style="width:'+(b.earned?100:Math.round(b.prog*100))+'%'+(b.earned?';background:'+(RARCOL[b.rar]||'#B388E6'):'')+'"></div></div>'+
-   (b.earned?'<div class="bdone">Earned</div>':'<div class="bd" style="margin-top:4px">'+b.val+' / '+b.need+'</div>')+'</div>';
+   (b.earned?'':'<div class="bd" style="margin-top:4px">'+b.val+' / '+b.need+'</div>')+'</div><div class="bface bback">'+back+'</div></div></div>';
  });
  return out+'</div>';
 }
@@ -4281,7 +4315,7 @@ function checkBadges(){
   _inBadge=true;try{save();}catch(e){}_inBadge=false;return;
  }
  var newly=[];
- list.forEach(function(b){if(b.earned&&!state.seenBadges[b.t]){state.seenBadges[b.t]=1;newly.push(b);}});
+ list.forEach(function(b){if(b.earned&&!state.seenBadges[b.t]){state.seenBadges[b.t]=1;state.badgeDates=state.badgeDates||{};state.badgeDates[b.t]=today();newly.push(b);}});
  if(!newly.length)return;
  _inBadge=true;try{save();}catch(e){}_inBadge=false;
  newly.forEach(function(b){BADGEQ.push(b);});
