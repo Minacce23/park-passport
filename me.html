@@ -3356,14 +3356,16 @@ function openDayPage(d){
  var lc=function(s){return String(s||'').toLowerCase();};
  var cnt={},order=[];rides.forEach(function(r){if(!(r.attraction in cnt)){cnt[r.attraction]=0;order.push(r.attraction);}cnt[r.attraction]++;});
  var mineRideLC={};order.forEach(function(a){mineRideLC[lc(a)]=1;});
- var fRideName={};pRides.forEach(function(e){if(e.name)fRideName[lc(e.name)]=1;});
+ var fRideName={},pCnt={};pRides.forEach(function(e){if(e.name){fRideName[lc(e.name)]=1;pCnt[lc(e.name)]=(pCnt[lc(e.name)]||0)+1;}});
  var fOnlyRides=[],seenR={};pRides.forEach(function(e){if(e.name&&!mineRideLC[lc(e.name)]&&!seenR[lc(e.name)]){seenR[lc(e.name)]=1;fOnlyRides.push(e.name);}});
+ var mCnt=function(a){return Math.max(cnt[a]||0,pCnt[lc(a)]||0);};
  var meetLC={};meets.forEach(function(m){if(m.character)meetLC[lc(m.character)]=1;});
  var fMeetName={};pMeets.forEach(function(e){if(e.name)fMeetName[lc(e.name)]=1;});
  var fOnlyMeets=[],seenM={};pMeets.forEach(function(e){if(e.name&&!meetLC[lc(e.name)]&&!seenM[lc(e.name)]){seenM[lc(e.name)]=1;fOnlyMeets.push(e.name);}});
  var h='<div class="dpmark">'+dayMark(d)+'</div>';
  h+='<h3 style="text-align:center;margin:0 0 2px">'+esc(park||'A park day')+'</h3>';
- var nRide=rides.length+fOnlyRides.length,nMeet=meets.length+fOnlyMeets.length,nScore=scores.length+pScores.length;
+ var nRide=0;order.forEach(function(a){nRide+=mCnt(a);});fOnlyRides.forEach(function(a){nRide+=(pCnt[lc(a)]||1);});
+ var nMeet=meets.length+fOnlyMeets.length,nScore=scores.length+pScores.length;
  var bits=[];
  if(nRide)bits.push(nRide+' experience'+(nRide===1?'':'s'));
  if(line)bits.push(Math.floor(line/60)+'h '+(line%60)+'m in line');
@@ -3373,8 +3375,8 @@ function openDayPage(d){
  if(bits.length)h+='<div class="muted" style="text-align:center;font-size:13px;font-weight:700;margin-bottom:12px">'+bits.join(' &middot; ')+'</div>';
  if(photos.length)h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 2px 14px">'+photos.map(function(u){return '<div class="pprint"><img src="'+u+'" loading="lazy"></div>';}).join('')+'</div>';
  if(order.length||fOnlyRides.length){
-  var rowsA=order.map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+(fRideName[lc(a)]?wtag(fname):'')+'</div>'+(cnt[a]>1?'<div class="cnt">&times;'+cnt[a]+'</div>':'')+'</div>';}).join('');
-  rowsA+=fOnlyRides.map(function(a){return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+wtag(fname)+'</div></div>';}).join('');
+  var rowsA=order.map(function(a){var n=mCnt(a);return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+(fRideName[lc(a)]?wtag(fname):'')+'</div>'+(n>1?'<div class="cnt">&times;'+n+'</div>':'')+'</div>';}).join('');
+  rowsA+=fOnlyRides.map(function(a){var n=pCnt[lc(a)]||1;return '<div class="checkitem" style="cursor:pointer" onclick="openAttraction('+jsarg(a)+')"><div class="nm">'+esc(a)+wtag(fname)+'</div>'+(n>1?'<div class="cnt">&times;'+n+'</div>':'')+'</div>';}).join('');
   h+='<div class="alabel" style="margin:8px 0 6px">Attractions</div><div class="card" style="margin-bottom:0">'+rowsA+'</div>';
  }
  if(meets.length||fOnlyMeets.length){
