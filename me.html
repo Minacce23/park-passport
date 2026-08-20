@@ -891,7 +891,30 @@ function openVisit(date){curDay=date;
  if(scores.length){h+='<h2 class="sec">Scores ('+scores.length+')</h2><div class="card">';
   scores.forEach(function(s){h+='<div class="row" style="cursor:pointer" onclick="editScore('+state.scores.indexOf(s)+')"><div class="main"><div class="t">'+fmtN(s.score)+'</div><div class="s">'+esc(shortRide(s.attraction))+(s.with_?' &middot; '+esc(s.with_):'')+'</div></div>'+(s.rank?'<span class="pill">'+s.rank+'</span>':'')+'</div>';});h+='</div>';}
  if(!rides.length&&!meets.length&&!scores.length)h+='<div class="muted">No rides or meets logged this day.</div>';
- h+='<div class="linkrow"><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';sheet(h);
+ h+='<div class="linkrow"><button onclick="formRideOn()">+ Experience</button><button onclick="formMeetOn()">+ Meet</button><button onclick="formScoreOn()">+ Score</button></div>';h+='<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" style="color:#A93B33;border-color:#A93B33" onclick="deleteWholeDay('+jsarg(date)+')">Delete this day</button></div>';sheet(h);
+}
+function deleteWholeDay(d){
+ var nr=state.rides.filter(function(r){return r.date===d;}).length,
+     nm=state.meets.filter(function(m){return m.date===d;}).length,
+     ns=state.scores.filter(function(x){return x.date===d;}).length;
+ var bits=[];if(nr)bits.push(nr+' experience'+(nr===1?'':'s'));if(nm)bits.push(nm+' character meet'+(nm===1?'':'s'));if(ns)bits.push(ns+' score'+(ns===1?'':'s'));
+ var so=state.social;
+ var sd=(so&&so.sharedDays||[]).filter(function(x){return x.date===d;})[0];
+ var msg=bits.length?('Delete '+fmt(d)+' and everything on it: '+bits.join(', ')+'?'):('Delete the visit day '+fmt(d)+'?');
+ if(sd)msg+=' This also stops sharing the day with '+(sd.friendName||sd.friend)+'.';
+ msg+=' This cannot be undone.';
+ if(!confirm(msg))return;
+ if(sd){
+  so.sharedDays=(so.sharedDays||[]).filter(function(x){return x.date!==d;});
+  if(sd.status==='active'){try{fbToken(function(tk){var body={fields:{}};body.fields['e_'+so.uid]={arrayValue:{values:[]}};fbJson(fbDayUrl(sd.dayId)+'?updateMask.fieldPaths=e_'+so.uid,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},body:JSON.stringify(body)}).catch(function(){});},function(){});}catch(e){}}
+  else{try{deleteFriendLink('day_'+sd.dayId+'__'+so.code);}catch(e){}}
+ }
+ state.rides=state.rides.filter(function(r){return r.date!==d;});
+ state.meets=state.meets.filter(function(m){return m.date!==d;});
+ state.scores=state.scores.filter(function(x){return x.date!==d;});
+ state.visits=(state.visits||[]).filter(function(v){return v.date!==d;});
+ save();closeSheet();renderAll();
+ try{toast('Deleted '+fmt(d));}catch(e){}
 }
 function delRideSwipe(i){
  var r=state.rides[i];if(!r)return;
@@ -1795,7 +1818,8 @@ function badgeMetrics(){
  m.unaccounted=(state.visits||[]).some(function(v){return v.date&&!byDay[v.date]&&!(state.meets||[]).some(function(x){return x.date===v.date;})&&!(state.scores||[]).some(function(x){return x.date===v.date;});})?1:0;
  m.photoN=0;['rides','meets','scores'].forEach(function(t){(state[t]||[]).forEach(function(x){if(x&&(x.photo||x.photoKey))m.photoN++;});});
  m.notesN=state.rides.filter(function(r){return r.notes;}).length;
- m.filed=(m.notesN===0)?state.rides.length:0;
+ var _fstreak=0;state.rides.slice().sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));}).forEach(function(r){if(r.notes)_fstreak=0;else _fstreak++;});
+ m.filed=_fstreak;
  m.pcSent=state.pcSent||0;
  m.noteTo=Object.keys(state.noteTo||{}).length;
  var pb=0,byAttr={};
@@ -1919,7 +1943,7 @@ function badgeList(){
   ['doc','Wish you were here','Your first postcard sent',1,m.pcSent,'c'],
   ['doc','Pen pal','Notes on three different friends&#39; postcards',3,m.noteTo,'u'],
   ['doc','Extensive documentation','25 experiences with notes',25,m.notesN,'r'],
-  ['doc','Filed without comment','100 experiences logged. Not one note.',100,m.filed,'v',1],
+  ['doc','Filed without comment','100 experiences in a row. Not one note.',100,m.filed,'v',1],
   ['cmp','One left','Exactly one attraction remaining in a park',1,m.oneLeft,'r'],
   ['cmp','Nearly','95% of a park&#39;s attractions',1,m.nearly,'v'],
   ['cmp','Cartographer','Completed a park checklist',1,m.cartographer,'l'],
