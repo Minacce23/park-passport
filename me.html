@@ -1264,21 +1264,33 @@ function accChips(sel){
  if(sel&&os.indexOf(sel)<0)os.push(sel);
  return '<label>Access</label><div class="fchips" id="accChips">'+os.map(function(a){return '<span class="fchip'+(a===sel?' on':'')+'" onclick="pickChip(this,&#39;f_acc&#39;)" data-v="'+esc(a)+'">'+esc(a)+'</span>';}).join('')+'</div><input type="hidden" id="f_acc" value="'+esc(sel||'')+'">';
 }
-function withChips(sel){
+function withChipHTML(p,sel){return '<span class="fchip'+(p===sel?' on':'')+'" onclick="pickChip(this,&#39;f_with&#39;)" data-v="'+esc(p)+'">'+esc(p)+'</span>';}
+function withChips(sel,d){
  var ppl=[];state.groups.forEach(function(g){if(g&&g.name)ppl.push(g.name);});state.people.forEach(function(p){var lp=String(p).trim().toLowerCase();if(lp!=='me'&&lp!=='myself')ppl.push(p);});
+ var last={};state.rides.forEach(function(r){if(r.with_&&r.date){if(!last[r.with_]||r.date>last[r.with_])last[r.with_]=r.date;}});
+ var ordered=ppl.slice().sort(function(a,b){return String(last[b]||'').localeCompare(String(last[a]||''));});
+ window._withAllVals=ordered;
+ var LIM=6,shown=ordered,more=false;
+ if(ordered.length>LIM+1){
+  shown=ordered.slice(0,LIM);
+  if(sel&&ordered.indexOf(sel)>=0&&shown.indexOf(sel)<0)shown=[sel].concat(shown.slice(0,LIM-1));
+  more=true;
+ }
  var h='<label>Who with</label>';
- if(ppl.length)h+='<div class="fchips" id="withChips">'+ppl.map(function(p){return '<span class="fchip'+(p===sel?' on':'')+'" onclick="pickChip(this,&#39;f_with&#39;)" data-v="'+esc(p)+'">'+esc(p)+'</span>';}).join('')+'</div>';
+ if(ppl.length)h+='<div class="fchips" id="withChips">'+shown.map(function(p){return withChipHTML(p,sel);}).join('')+(more?'<span class="fchip" style="color:var(--accent)" onclick="expandWith()">More&hellip;</span>':'')+'</div>';
  h+='<input id="f_with" value="'+esc(sel||'')+'" placeholder="Leave blank if it&#39;s just you" autocomplete="off" oninput="syncWithChips(this.value)">';
- if(SHAREDDAYS&&state.social&&state.social.code){
+ var _dayShared=d&&state.social&&(state.social.sharedDays||[]).some(function(x){return x.date===d;});
+ if(SHAREDDAYS&&state.social&&state.social.code&&!_dayShared){
   var _frs=(state.social.friends||[]).filter(function(f){return !f.gone;});
   if(_frs.length){
    h+='<label style="margin-top:10px">Log the day together</label>';
    h+='<div class="fchips" id="shareFriendChips">'+_frs.map(function(f){var dn=personForFriend(f.code)||f.name;return '<span class="fchip" onclick="pickFriendChip(this)" data-code="'+esc(f.code)+'" data-v="'+esc(dn)+'">'+esc(dn)+'</span>';}).join('')+'</div>';
-   h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share this whole day. They get a request, and once they accept, anything either of you logs on this date shows up for you both.</div>';
+   h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share the whole day with them.</div>';
   }
  }
  return h;
 }
+function expandWith(){var el=document.getElementById('withChips');if(!el)return;var sel=val('f_with');el.innerHTML=(window._withAllVals||[]).map(function(p){return withChipHTML(p,sel);}).join('');}
 function pickChip(el,target){
  var v=el.getAttribute('data-v');var inp=document.getElementById(target);if(!inp)return;
  var was=el.classList.contains('on');
@@ -1442,26 +1454,33 @@ function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today(
   (geoOn()?'<div class="linkrow" style="margin-top:2px"><button type="button" onclick="geoFindNearby()">Find rides near me</button><button type="button" onclick="geoAddPark()">Add a park</button></div><div id="nearbyBox" style="margin:2px 0 4px"></div>':'')+
   '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
   parkField(pk)+
+  (waitsOn()?'<div class="fchips" style="margin-top:12px"><span class="fchip'+(qa&&wf&&wf.lineStart?' on':'')+'" id="inlineChip" onclick="toggleInlineNow()">'+(qa&&wf&&wf.lineStart?('In line since '+wf.lineStart):'I&#39;m in line now')+'</span></div><input type="hidden" id="f_inline" value="'+(qa&&wf&&wf.lineStart?wf.lineStart:'')+'">':'')+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">More details &#9662;</button>'+
   '<div id="moredet" style="display:none">'+
-   variantRowsField([],'')+
-   extinctChk('f_ext','')+coasterChk('f_coaster','')+
-   withChips(wi)+
+   withChips(wi,d)+
    accChips(ac)+
    waitFields(wf)+
-   '<label>Scores (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
-   '<label>Notes (optional)</label><input id="f_notes">'+
-   photoField('')+
+   '<button type="button" class="mdbtn" id="exbtn" onclick="toggleExtras()" style="margin-top:12px">Extras: variant, score, notes, photo &#9662;</button>'+
+   '<div id="extras" style="display:none">'+
+    variantRowsField([],'')+
+    extinctChk('f_ext','')+coasterChk('f_coaster','')+
+    '<label>Scores (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
+    '<label>Notes (optional)</label><input id="f_notes">'+
+    photoField('')+
+   '</div>'+
   '</div>'+
   '<div class="linkrow"><button onclick="saveRide(true)"><b>Save &amp; add another</b></button></div>'+
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveRide()">Save experience</button></div>');
 }
+function toggleExtras(){var dd=document.getElementById('extras');var b=document.getElementById('exbtn');if(!dd)return;var open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(b)b.innerHTML=open?'Extras: variant, score, notes, photo &#9662;':'Extras &#9652;';}
+function toggleInlineNow(){var c=document.getElementById('inlineChip'),h=document.getElementById('f_inline');if(!c||!h)return;var on=!c.classList.contains('on');c.classList.toggle('on',on);if(on){h.value=nowHM();c.innerHTML='In line since '+h.value;}else{h.value='';c.innerHTML='I&#39;m in line now';}}
 function attrPark(a){var p=pOf(a);return (p&&p!=='?'&&p!=='Both Parks')?p:'';}
 function formRidePark(a){var p=attrPark(a);if(p)return p;var v=val('f_park');return (v&&v!=='Both Parks')?v:null;}
 function saveRide(again){
  const a=val('f_attr');if(!a){alert('Pick an attraction');return;}
  var po=numOrNull('f_posted');var ls=valOrUndef('f_lstart'),le=valOrUndef('f_lend');
  var lst=(ls===undefined?null:(ls||null)),len=(le===undefined?null:(le||null));
+ var _il=document.getElementById('f_inline');if(!lst&&_il&&_il.value)lst=_il.value;
  var lmin=(lst&&len)?diffMin(lst,len):null;
  var dd=flexDate(val('f_date'))||val('f_date');
  state.rides.push({date:dd,attraction:a,park:formRidePark(a),variant:(collectVariantRows()[0]||null),variants:(collectVariantRows().length>1?collectVariantRows():null),with_:val('f_with')||null,access:val('f_acc')||null,notes:val('f_notes')||null,photo:pendingPhoto||null,posted:po===undefined?null:po,lineStart:lst,lineEnd:len,line:lmin});
@@ -1482,11 +1501,11 @@ function editRide(i){
   parkField(pOf(r.attraction))+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">Fewer details &#9652;</button>'+
   '<div id="moredet">'+
-   variantRowsField(rideVariants(r),r.attraction)+
-   extinctChk('f_ext',r.attraction)+coasterChk('f_coaster',r.attraction)+
-   withChips(r.with_)+
+   withChips(r.with_,r.date)+
    accChips(r.access)+
    waitFields(r)+
+   variantRowsField(rideVariants(r),r.attraction)+
+   extinctChk('f_ext',r.attraction)+coasterChk('f_coaster',r.attraction)+
    '<label>Add a score (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
    '<label>Notes (optional)</label><input id="f_notes" value="'+esc(r.notes)+'">'+
    photoField(r.photo)+
@@ -3516,7 +3535,30 @@ function viewLog(){
   :'<div class="card"><span class="muted">No stops yet today. Log the first one and the day starts here.</span></div>';
  if(stops.length)h=th+tb+'<h2 class="sec">Log something</h2>'+h;
  else h=h+th+tb;
- return h;
+ var live='';
+ if(waitsOn())(state.rides||[]).forEach(function(r,i){
+  if(r.date===d&&r.lineStart&&!r.lineEnd){
+   live+='<div class="card" style="border-color:var(--accent);border-width:2px"><div style="display:flex;align-items:center;gap:11px"><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15.5px;color:var(--ink)">In line: '+esc(shortRide(r.attraction)||r.attraction)+'</div><div class="muted" style="font-size:12.5px;font-weight:700;margin-top:2px">since '+esc(r.lineStart)+(r.posted!=null?' &middot; posted '+r.posted+' min':'')+'</div></div><button class="pt-primary" style="flex:none;font-size:14px;padding:11px 17px" onclick="offRide('+i+')">Off the ride</button></div></div>';
+  }
+ });
+ return live+h;
+}
+function offRide(i){
+ var r=state.rides[i];if(!r)return;
+ r.lineEnd=nowHM();r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;
+ save();pendingPhoto=r.photo||null;
+ sheet('<h3>Off '+esc(shortRide(r.attraction)||r.attraction)+'</h3>'+
+  '<p class="muted" style="margin:0 0 12px;line-height:1.5">'+(r.line!=null?(r.line+' min in line, logged. '):'')+'Add a photo or score while it&#39;s fresh, or skip.</p>'+
+  photoField(r.photo)+
+  '<label>Scores (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
+  '<div class="btnrow"><button class="btn ghost" onclick="closeSheet();renderAll()">Skip</button><button class="btn primary" onclick="saveOffRide('+i+')">Done</button></div>');
+}
+function saveOffRide(i){
+ var r=state.rides[i];if(!r)return;
+ if(pendingPhoto)r.photo=pendingPhoto;
+ collectScoreRows().forEach(function(sr){state.scores.push({date:r.date,attraction:r.attraction,score:sr.score,with_:sr.who||null,party:r.with_||null,rank:sr.rank||null,notes:null,photo:null});});
+ save();closeSheet();renderAll();
+ try{toast('Logged. Enjoy the next one.');}catch(e){}
 }
 function viewPassport(){
  var h='<div class="actionlist" style="margin-bottom:14px">'+
