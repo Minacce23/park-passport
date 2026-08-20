@@ -158,7 +158,19 @@ input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:11px
 .bpop-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:26px;}
 .bpop-conf{position:absolute;top:-16px;border-radius:2px;animation:bpop-fall linear both;}
 @keyframes bpop-fall{0%{opacity:0;transform:translateY(-30px) rotate(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(620px) rotate(320deg)}}
-@keyframes bpop-gentle{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.bpop-conf,.bpop-shock{display:none!important;}.bpop-card{animation:bpop-gentle .5s ease both!important;}.bpop-seal,.bpop-body,.bpop-btns{animation:bpop-gentle .5s .12s ease both!important;}.bpop-rays{animation:none!important;opacity:.4!important;}}
+@keyframes bpop-gentle{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bpop-fadein{from{opacity:0}to{opacity:1}}
+@keyframes bpop-raysin{from{opacity:0}to{opacity:.55}}
+@keyframes bpop-breathe{0%,100%{opacity:.55}50%{opacity:.22}}
+@keyframes bpop-halo{0%{opacity:0}25%{opacity:.55}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){
+.bpop-conf{display:none!important;}
+.bpop-card{animation:bpop-fadein .5s ease both!important;transform:none!important;}
+.bpop-seal{animation:bpop-fadein .7s .15s ease both!important;transform:none!important;}
+.bpop-body,.bpop-btns{animation:bpop-fadein .6s .3s ease both!important;transform:none!important;}
+.bpop-rays{animation:bpop-raysin .9s .35s ease both,bpop-breathe 3.2s 1.6s ease-in-out infinite!important;transform:none!important;}
+.bpop-shock{animation:bpop-halo 1.8s .5s ease-out 2 both!important;transform:none!important;}
+}
 .hcard{background:var(--card);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;}
 .hcard-top{display:flex;gap:14px;padding:20px 18px 18px;}
 .hcard-seal{width:86px;flex:none;display:grid;gap:7px;justify-items:center;align-content:start;}
@@ -1490,6 +1502,7 @@ function saveRide(again){
  state.lastLog={date:dd,park:val('f_park')||null,with_:val('f_with')||null,access:val('f_acc')||null};
  curDay=dd;
  if(SHAREDDAYS&&window._shareFriendCode){try{connectDay(window._shareFriendCode,dd,val('f_park')||null);}catch(e){}window._shareFriendCode='';}
+ if(lst&&!len&&dd===today())ppNotifyLine('start',{ride:shortRide(a)||a,park:formRidePark(a)||'',start:lst,posted:(po==null?-1:po)});
  save();closeSheet();
  if(again){quickAddRide();}else{go('visits');}
 }
@@ -1518,9 +1531,10 @@ function updateRide(i){
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
  collectScoreRows().forEach(function(sr){state.scores.push({date:r.date,attraction:a,score:sr.score,with_:sr.who||null,party:r.with_||null,rank:sr.rank||null,notes:null,photo:null});});
+ if(r.date===today()&&r.lineEnd)ppNotifyLine('end');
  save();closeSheet();renderAll();
 }
-function delRide(i){if(!confirm('Delete this experience?'))return;state.rides.splice(i,1);save();closeSheet();renderAll();}
+function delRide(i){if(!confirm('Delete this experience?'))return;var _r=state.rides[i];if(_r&&_r.date===today()&&_r.lineStart&&!_r.lineEnd)ppNotifyLine('end');state.rides.splice(i,1);save();closeSheet();renderAll();}
 var BF={typed:[]};
 function formVisit(){
  BF={typed:[]};window.BFLIST=[];
@@ -2812,79 +2826,63 @@ function _wrapLines(g,text,maxw){
  if(cur)lines.push(cur);return lines;
 }
 function bakeBadgePostcard(b){
- var W=1080,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+ var W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;
  var g=cv.getContext('2d');
  var wax=RARCOL[b.rar]||'#B388E6',dk=RARDK[b.rar]||'#5B3E86';
- var so=state.social,who=(so&&so.name)||'Me';
- var park='';var last=null;
- (state.rides||[]).forEach(function(r){if(!last||(r.date||'')>=(last.date||'')){last=r;}});
- if(last)park=last.park||pOf(last.attraction)||'';if(park==='?')park='';
- g.fillStyle='#EAE7DE';g.fillRect(0,0,W,H);
+ // paper
+ g.fillStyle='#F4EFDE';g.fillRect(0,0,W,H);
+ g.strokeStyle='#D9D5C7';g.lineWidth=3;roundRect(g,40,40,W-80,H-80,32);g.stroke();
  // header
- g.save();g.translate(W/2-92,60);
- try{var hp=new Path2D(SEAL_PATH);g.save();g.scale(0.42,0.42);g.fillStyle=wax;g.fill(hp);g.restore();}catch(e){}
- g.restore();
- g.fillStyle='#66645B';g.font='800 22px sans-serif';g.textAlign='left';
- g.fillText('P A R K   P A S S P O R T', W/2-58, 90);
- // card
- var cx=70,cy=185,cw=W-140,ch=H-360;
- g.save();g.translate(W/2,cy+ch/2);g.rotate(-0.8*Math.PI/180);g.translate(-W/2,-(cy+ch/2));
- g.fillStyle='#F4EFDE';g.strokeStyle='#D9D5C7';g.lineWidth=2;
- roundRect(g,cx,cy,cw,ch,22);g.fill();g.stroke();
- var pad=44,lx=cx+pad,rx=cx+cw*0.62;
- // left column
- g.textAlign='left';
- g.fillStyle='#66645B';g.font='800 15px sans-serif';g.fillText('P O S T C A R D', lx, cy+52);
- g.fillStyle='#66645B';g.font='800 26px sans-serif';g.fillText('Wish you were here', lx, cy+108);
- g.fillStyle='#1B1A17';var ts=64;g.font='900 '+ts+'px sans-serif';
- while(g.measureText(b.t).width>rx-lx-20&&ts>34){ts-=4;g.font='900 '+ts+'px sans-serif';}
- g.fillText(b.t, lx, cy+108+ts+14);
- g.fillStyle='#1B1A17';g.font='400 24px sans-serif';
- var msg=b.d+(park?(' at '+park):'')+'. Sealed and stamped in the passport.';
- var lines=_wrapLines(g,msg,rx-lx-24);
- var my=cy+108+ts+62;
- lines.slice(0,5).forEach(function(ln){g.fillText(ln,lx,my);my+=34;});
- // pills bottom-left
- var py=cy+ch-52;
- [ (RARNAME[b.rar]||'Earned'), b.d ].forEach(function(pt,ix){
-  g.font='800 20px sans-serif';var pw=g.measureText(pt).width+34;
-  g.fillStyle='#FBF9F0';g.strokeStyle='#D9D5C7';g.lineWidth=1.5;
-  roundRect(g, lx+(ix===0?0:0), py, pw, 40, 20);
-  if(ix===0){g._px=lx;} 
-  var px=(ix===0)?lx:(lx+g.measureText(RARNAME[b.rar]||'Earned').width+34+12);
-  roundRect(g,px,py,pw,40,20);g.fill();g.stroke();
-  g.fillStyle='#1B1A17';g.fillText(pt,px+17,py+27);
- });
- // divider
- g.strokeStyle='#D9D5C7';g.lineWidth=1.5;g.beginPath();g.moveTo(rx-14,cy+34);g.lineTo(rx-14,cy+ch-34);g.stroke();
- // right column: postmark + stamp seal
- g.save();g.translate(rx+70,cy+80);
- g.strokeStyle='#C9433A';g.fillStyle='#C9433A';g.globalAlpha=.72;g.lineWidth=2.2;
- g.beginPath();g.arc(0,0,30,0,7);g.stroke();
- g.textAlign='center';g.font='800 11px sans-serif';g.fillText('PARK',0,-3);g.fillText('POST',0,10);
+ g.fillStyle='#66645B';g.font='800 26px sans-serif';g.textAlign='center';
+ g.fillText('B A D G E   E A R N E D', W/2, 132);
+ // postmark, upper right
+ g.save();g.translate(W-190,150);g.rotate(-5*Math.PI/180);
+ g.strokeStyle='#C9433A';g.fillStyle='#C9433A';g.globalAlpha=.72;g.lineWidth=3;
+ g.beginPath();g.arc(0,0,44,0,7);g.stroke();
+ g.font='800 15px sans-serif';g.fillText('PARK',0,-4);g.fillText('POST',0,15);
+ g.lineWidth=3;g.lineCap='round';
+ for(var i=-1;i<2;i++){g.beginPath();g.moveTo(56,i*14);g.lineTo(108,i*14);g.stroke();}
  g.globalAlpha=1;g.restore();
- // stamp: wax seal in a stamp frame
- var sx=cx+cw-pad-120,sy=cy+40;
- g.fillStyle='#FDFBF4';g.strokeStyle=dk;g.lineWidth=2;
- roundRect(g,sx,sy,120,120,6);g.fill();g.stroke();
- try{var sp=new Path2D(SEAL_PATH);g.save();g.translate(sx+60,sy+60);g.scale(1.35,1.35);g.translate(-32,-32);g.fillStyle=wax;g.fill(sp);
-  g.restore();
-  var st=new Path2D(SEAL_STAR);g.save();g.translate(sx+60,sy+62.5);g.scale(2.1,2.1);g.fillStyle=dk;g.fill(st);g.restore();
+ // rays
+ var cxx=W/2,cyy=520;
+ g.save();g.translate(cxx,cyy);g.strokeStyle=wax;g.globalAlpha=.5;g.lineWidth=13;g.lineCap='round';
+ for(var k=0;k<12;k++){var a2=k*Math.PI/6;g.beginPath();g.moveTo(Math.cos(a2)*205,Math.sin(a2)*205);g.lineTo(Math.cos(a2)*265,Math.sin(a2)*265);g.stroke();}
+ g.globalAlpha=1;g.restore();
+ // big wax seal + star
+ try{
+  var sp=new Path2D(SEAL_PATH);
+  g.save();g.translate(cxx,cyy);g.scale(4.6,4.6);g.translate(-32,-32);g.fillStyle=wax;g.fill(sp);g.restore();
+  g.save();g.translate(cxx,cyy);g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=10;g.beginPath();g.arc(4,6,96,0,7);g.stroke();
+  g.strokeStyle=dk;g.lineWidth=10;g.beginPath();g.arc(0,0,96,0,7);g.stroke();g.restore();
+  var st=new Path2D(SEAL_STAR);
+  g.save();g.translate(cxx,cyy+10);g.scale(6.4,6.4);g.fillStyle=dk;g.fill(st);g.restore();
  }catch(e){}
- // FROM + postmarked
- g.textAlign='left';
- var fy=cy+ch-150;
- g.fillStyle='#66645B';g.font='800 13px sans-serif';g.fillText('F R O M', rx+14, fy);
- g.fillStyle='#1B1A17';g.font='800 30px sans-serif';g.fillText(who.slice(0,16), rx+14, fy+34);
- g.strokeStyle='#D9D5C7';g.lineWidth=1.5;
- [0,1].forEach(function(i){g.beginPath();g.moveTo(rx+14,fy+64+i*22);g.lineTo(cx+cw-pad,fy+64+i*22);g.stroke();});
- g.fillStyle='#66645B';g.font='800 13px sans-serif';g.fillText('P O S T M A R K E D', rx+14, fy+118);
- g.fillStyle='#1B1A17';g.font='700 19px sans-serif';g.fillText(fmt(today())+(park?(' \u00b7 '+park):''), rx+14, fy+144);
- g.restore();
+ // title
+ g.fillStyle='#1B1A17';g.textAlign='center';
+ var fs=76;g.font='900 '+fs+'px sans-serif';
+ while(g.measureText(b.t).width>W-180&&fs>44){fs-=4;g.font='900 '+fs+'px sans-serif';}
+ g.fillText(b.t, W/2, 900);
+ // description, wrapped
+ g.fillStyle='#66645B';g.font='700 34px sans-serif';
+ var words=String(b.d||'').split(' '),line='',ly=960;
+ words.forEach(function(w){var t=line?line+' '+w:w;if(g.measureText(t).width>W-260){g.fillText(line,W/2,ly);ly+=46;line=w;}else line=t;});
+ if(line)g.fillText(line,W/2,ly);
+ // rarity + date chips
+ var rarname={c:'Common',u:'Uncommon',r:'Rare',v:'Very rare',l:'Legendary'}[b.rar]||'Badge';
+ var chips=[rarname.toUpperCase(), fmt(today()).toUpperCase()];
+ var chy=ly+86;g.font='800 26px sans-serif';
+ var widths=chips.map(function(c){return g.measureText(c).width+64;});
+ var totw=widths[0]+widths[1]+24, sx0=W/2-totw/2;
+ chips.forEach(function(c,i){
+  var x0=sx0+(i?widths[0]+24:0);
+  g.fillStyle='#FDFBF4';g.strokeStyle='#D9D5C7';g.lineWidth=2;
+  roundRect(g,x0,chy-38,widths[i],58,29);g.fill();g.stroke();
+  g.fillStyle='#1B1A17';g.fillText(c,x0+widths[i]/2,chy+2);
+ });
  // footer
- g.fillStyle='#66645B';g.font='400 20px sans-serif';g.textAlign='center';
- g.fillText('A keepsake from every day in the park.', W/2, H-46);
- return cv.toDataURL('image/jpeg',0.9);
+ g.fillStyle='#66645B';g.font='800 24px sans-serif';
+ g.fillText('P A R K   P A S S P O R T', W/2, H-92);
+ return cv.toDataURL('image/jpeg',0.92);
 }
 function openBadgeComposer(b){
  var so=state.social;if(!so||!so.code){go('friends');return;}
@@ -3543,10 +3541,20 @@ function viewLog(){
  });
  return live+h;
 }
+function ppNotifyLine(type,payload){try{if(window.webkit&&webkit.messageHandlers&&webkit.messageHandlers.ppLine){var m={type:type};if(payload)Object.keys(payload).forEach(function(k){m[k]=payload[k];});webkit.messageHandlers.ppLine.postMessage(m);}}catch(e){}}
+function ppNativeEndLine(hm){
+ var d=today(),best=-1;
+ (state.rides||[]).forEach(function(r,i){if(r.date===d&&r.lineStart&&!r.lineEnd)best=i;});
+ if(best<0)return;
+ var r=state.rides[best];
+ r.lineEnd=hm;r.line=(r.lineStart&&hm)?diffMin(r.lineStart,hm):null;
+ save();renderAll();
+ try{toast('Line ended: '+(shortRide(r.attraction)||r.attraction)+(r.line!=null?', '+r.line+' min':''));}catch(e){}
+}
 function offRide(i){
  var r=state.rides[i];if(!r)return;
  r.lineEnd=nowHM();r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;
- save();pendingPhoto=r.photo||null;
+ save();ppNotifyLine('end');pendingPhoto=r.photo||null;
  sheet('<h3>Off '+esc(shortRide(r.attraction)||r.attraction)+'</h3>'+
   '<p class="muted" style="margin:0 0 12px;line-height:1.5">'+(r.line!=null?(r.line+' min in line, logged. '):'')+'Add a photo or score while it&#39;s fresh, or skip.</p>'+
   photoField(r.photo)+
