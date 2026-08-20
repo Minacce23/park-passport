@@ -1245,10 +1245,12 @@ function waitsOn(){return !!(state.settings&&state.settings.trackWaits);}
 function numOrNull(id){var e=document.getElementById(id);if(!e)return undefined;var v=e.value.trim();return v===''?null:Number(v);}
 function diffMin(s,e){if(!s||!e)return null;var a=s.split(':'),b=e.split(':');if(a.length<2||b.length<2)return null;var d=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);if(isNaN(d))return null;if(d<0)d+=1440;return d;}
 function valOrUndef(id){var e=document.getElementById(id);return e?e.value:undefined;}
-function waitFields(r){r=r||{};if(!waitsOn())return '';
- return '<div class="waitrow"><div><label>Posted wait</label><input type="number" inputmode="numeric" id="f_posted" placeholder="min" value="'+(r.posted!=null?r.posted:'')+'"></div>'+
- '<div><label>Line start</label><input type="time" id="f_lstart" value="'+(r.lineStart||'')+'"></div>'+
- '<div><label>Line end</label><input type="time" id="f_lend" value="'+(r.lineEnd||'')+'"></div></div>';}
+function waitFields(r,skipPosted){r=r||{};if(!waitsOn())return '';
+ var h='<div class="waitrow"'+(skipPosted?' style="grid-template-columns:1fr 1fr"':'')+'>';
+ if(!skipPosted)h+='<div><label>Posted wait</label><input type="number" inputmode="numeric" id="f_posted" placeholder="min" value="'+(r.posted!=null?r.posted:'')+'"></div>';
+ h+='<div><label>Line start</label><input type="time" id="f_lstart" value="'+(r.lineStart||'')+'"></div>'+
+ '<div><label>Line end</label><input type="time" id="f_lend" value="'+(r.lineEnd||'')+'"></div></div>';
+ return h;}
 function waitLabel(r){if(!waitsOn())return '';var parts=[];
  var mins=(r.line!=null)?r.line:((r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null);
  if(mins!=null)parts.push('<b style="color:var(--ink)">'+mins+' min waited</b>');
@@ -1481,12 +1483,12 @@ function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today(
   (geoOn()?'<div class="linkrow" style="margin-top:2px"><button type="button" onclick="geoFindNearby()">Find rides near me</button><button type="button" onclick="geoAddPark()">Add a park</button></div><div id="nearbyBox" style="margin:2px 0 4px"></div>':'')+
   '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
   parkField(pk)+
-  (waitsOn()?'<div class="fchips" style="margin-top:12px"><span class="fchip'+(qa&&wf&&wf.lineStart?' on':'')+'" id="inlineChip" onclick="toggleInlineNow()">'+(qa&&wf&&wf.lineStart?('In line since '+wf.lineStart):'I&#39;m in line now')+'</span></div><input type="hidden" id="f_inline" value="'+(qa&&wf&&wf.lineStart?wf.lineStart:'')+'">':'')+
+  (waitsOn()?'<div style="display:flex;gap:8px;align-items:center;margin-top:12px"><span class="fchip'+(qa&&wf&&wf.lineStart?' on':'')+'" id="inlineChip" style="flex:none" onclick="toggleInlineNow()">'+(qa&&wf&&wf.lineStart?('In line since '+wf.lineStart):'I&#39;m in line now')+'</span><input type="number" inputmode="numeric" id="f_posted" placeholder="Posted wait (min)" style="flex:1;min-width:0"></div><input type="hidden" id="f_inline" value="'+(qa&&wf&&wf.lineStart?wf.lineStart:'')+'">':'')+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">More details &#9662;</button>'+
   '<div id="moredet" style="display:none">'+
    withChips(wi,d)+
    accChips(ac)+
-   waitFields(wf)+
+   waitFields(wf,true)+
    '<button type="button" class="mdbtn" id="exbtn" onclick="toggleExtras()" style="margin-top:12px">Extras: variant, score, notes, photo &#9662;</button>'+
    '<div id="extras" style="display:none">'+
     variantRowsField([],'')+
