@@ -4309,6 +4309,28 @@ document.addEventListener('click',function(e){
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 
 var _inBadge=false,BADGEQ=[];
+function backfillBadgeDates(){
+ // Replay the log oldest-to-newest and record the date each badge was first earned.
+ var SKIP={'Wish you were here':1,'Pen pal':1}; // metrics with no dates behind them
+ var O={rides:state.rides,visits:state.visits,meets:state.meets,scores:state.scores,academy:state.academy,starTours:state.starTours};
+ var ds={};['rides','visits','meets','scores','academy','starTours'].forEach(function(k){(O[k]||[]).forEach(function(x){if(x&&x.date)ds[x.date]=1;});});
+ var dates=Object.keys(ds).sort();
+ var earnedAt={};
+ try{
+  dates.forEach(function(D){
+   ['rides','visits','meets','scores','academy','starTours'].forEach(function(k){state[k]=(O[k]||[]).filter(function(x){return x&&(!x.date||x.date<=D);});});
+   badgeList().forEach(function(b){if(b.earned&&!(b.t in earnedAt))earnedAt[b.t]=D;});
+  });
+ }finally{
+  ['rides','visits','meets','scores','academy','starTours'].forEach(function(k){state[k]=O[k];});
+ }
+ state.badgeDates=state.badgeDates||{};
+ badgeList().forEach(function(b){
+  if(b.earned&&!SKIP[b.t]&&earnedAt[b.t])state.badgeDates[b.t]=earnedAt[b.t];
+ });
+ state.badgeDatesBackfilled=1;
+ _inBadge=true;try{save();}catch(e){}_inBadge=false;
+}
 function checkBadges(){
  if(_inBadge||typeof badgeList!=='function')return;
  var list;try{list=badgeList();}catch(e){return;}
@@ -4389,6 +4411,7 @@ document.addEventListener('keydown',function(e){
  if(t&&t.getAttribute&&t.getAttribute('role')==='button'){e.preventDefault();t.click();}
 });
 hydratePhotos(function(){renderAll();});
+setTimeout(function(){try{if(!state.badgeDatesBackfilled)backfillBadgeDates();}catch(e){}},1500);
 setTimeout(function(){try{if(state.social&&state.social.code&&navigator.onLine!==false){refreshFriends();checkFriendLinks();refreshFeed();}}catch(e){}},2500);
 </script>
 </body>
