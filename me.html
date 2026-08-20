@@ -1247,7 +1247,7 @@ function withChips(sel){
   if(_frs.length){
    h+='<label style="margin-top:10px">Log the day together</label>';
    h+='<div class="fchips" id="shareFriendChips">'+_frs.map(function(f){return '<span class="fchip" onclick="pickFriendChip(this)" data-code="'+esc(f.code)+'" data-v="'+esc(f.name)+'">'+esc(f.name)+'</span>';}).join('')+'</div>';
-   h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share this whole day. They get a request, and once they accept, everything you both log on this date shows up for you both.</div>';
+   h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share this whole day. They get a request, and once they accept, anything either of you logs on this date shows up for you both.</div>';
   }
  }
  return h;
@@ -1764,14 +1764,14 @@ function badgeMetrics(){
  m.totalLine=totalLine;m.maxDayLine=maxDayLine;
  m.ropeDays=Object.keys(ropeDays).length;m.lateDays=Object.keys(lateDays).length;m.bothDays=bothDays;m.hydra=hydra;
  m.maxSameDay=maxSameDay;m.maxPerDay=maxPerDay;m.fullParty=fullParty;
- var stby=0,paidish=0,single=0,otherPaid=0;
- state.rides.forEach(function(r){var a=(r.access||'').toLowerCase();
-  if(!a||a==='standby'||a==='walk-on')stby++;
+ var stby=0,paidish=0,single=0,otherPaid=0,stbyStreak=0;
+ state.rides.slice().sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));}).forEach(function(r){var a=(r.access||'').toLowerCase();
+  if(!a||a==='standby'||a==='walk-on'){stby++;stbyStreak++;}
   else if(a.indexOf('single')>-1)single++;
-  else if(/skip|lightning|genie|reserved|premier|express/.test(a))paidish++;
-  else otherPaid++;
+  else if(/skip|lightning|genie|reserved|premier|express/.test(a)){paidish++;stbyStreak=0;}
+  else {otherPaid++;stbyStreak=0;}
  });
- m.standbyPure=(paidish+otherPaid===0)?stby:0;m.paidish=paidish;m.single=single;
+ m.standbyPure=stbyStreak;m.paidish=paidish;m.single=single;
  var life={},habit={};
  state.rides.forEach(function(r){if(!r.attraction)return;life[r.attraction]=(life[r.attraction]||0)+1;(habit[r.attraction]=habit[r.attraction]||{})[r.date]=1;});
  m.lifeMax=0;Object.keys(life).forEach(function(a){if(life[a]>m.lifeMax)m.lifeMax=life[a];});
@@ -1889,7 +1889,7 @@ function badgeList(){
   ['que','Worth it, apparently','Waited 90 minutes, then rode it again the same day',1,m.worthIt,'r',1],
   ['que','The scenic route','Five cumulative hours in line in one day',300,m.maxDayLine,'r'],
   ['que','A full day of your life','Twenty-four hours in line, all together',1440,m.totalLine,'l',1],
-  ['que','Standby purist','100 standby experiences and not one paid queue',100,m.standbyPure,'v'],
+  ['que','Standby purist','100 standby experiences in a row, a paid queue resets the count',100,m.standbyPure,'v'],
   ['que','Diplomatic channel','25 skip-the-line experiences',25,m.paidish,'u'],
   ['que','Beat the system','10 single-rider experiences',10,m.single,'u'],
   ['tod','Rope drop','An experience logged before 9am',1,m.ropeDays,'c'],
@@ -2554,8 +2554,13 @@ function acceptDayInvite(dayId){
    so.dayInvites=(so.dayInvites||[]).filter(function(x){return x.dayId!==dayId;});
    so.sharedDays=so.sharedDays||[];
    if(!so.sharedDays.some(function(x){return x.dayId===dayId;}))so.sharedDays.push({dayId:dayId,date:inv.date,park:inv.park||'',friend:inv.from,friendName:inv.fromName||inv.from,status:'active',role:'to'});
-   save();renderNav();if(tab==='friends'||tab==='memories')renderAll();
-   toast('Sharing this day with '+(inv.fromName||inv.from));
+   // make sure the day exists locally so it shows up in Memories even if this person logged nothing yet
+   var _has=(state.rides||[]).some(function(r){return r.date===inv.date;})||(state.meets||[]).some(function(m){return m.date===inv.date;})||(state.scores||[]).some(function(x){return x.date===inv.date;})||(state.visits||[]).some(function(v){return v.date===inv.date;});
+   if(!_has)state.visits.push({date:inv.date,park:inv.park||null,notes:null,with_:inv.fromName||null});
+   save();renderNav();if(tab==='friends'||tab==='memories'||tab==='visits')renderAll();
+   try{pullDayEntries(inv.date);}catch(e){}
+   try{schedDaySync();}catch(e){}
+   toast('Sharing this day with '+(inv.fromName||inv.from)+'. Find it in Memories.');
   }).catch(function(){alert('Could not connect the day. Try again.');});
  },function(){});
 }
@@ -2607,6 +2612,7 @@ function checkFriendLinks(){
     }
     if(kind==='dayinvite'){
      var did=(f.dayId&&f.dayId.stringValue)||'';var ddate=(f.date&&f.date.stringValue)||'';var dpark=(f.park&&f.park.stringValue)||'';
+     if(did&&(so.sharedDays||[]).some(function(x){return x.dayId===did;})){deleteFriendLink(lid);return;}
      if(did){so.dayInvites=so.dayInvites||[];
       if(!so.dayInvites.some(function(x){return x.dayId===did;})){
        fetchProfile(from,function(p){so.dayInvites.push({dayId:did,date:ddate,park:dpark,from:from,fromUid:fromUid,fromName:(p&&p.name)||from});save();renderNav();if(tab==='friends')renderAll();},
@@ -3280,93 +3286,28 @@ function viewDays(){
  }).join('');
  return h;
 }
-function drawPostmarkCv(g,cx,cy,r,d){
- var dt=new Date(d+'T12:00:00');
- var mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][dt.getMonth()];
- g.save();g.translate(cx,cy);g.rotate(-4*Math.PI/180);
- g.strokeStyle='#C9433A';g.fillStyle='#C9433A';g.globalAlpha=.85;
- g.lineWidth=r*.085;g.beginPath();g.arc(0,0,r,0,7);g.stroke();
- g.lineWidth=r*.038;g.globalAlpha=.5;g.beginPath();g.arc(0,0,r*.8,0,7);g.stroke();
- g.globalAlpha=.85;g.textAlign='center';
- g.font='800 '+Math.round(r*.3)+'px sans-serif';g.fillText(mo,0,-r*.22);
- g.font='900 '+Math.round(r*.52)+'px sans-serif';g.fillText(dt.getDate(),0,r*.24);
- g.font='700 '+Math.round(r*.22)+'px sans-serif';g.fillText(dt.getFullYear(),0,r*.56);
- g.lineWidth=r*.06;g.lineCap='round';g.globalAlpha=.6;
- for(var i=-1;i<2;i++){g.beginPath();g.moveTo(r*1.25,i*r*.3);g.bezierCurveTo(r*1.6,i*r*.3-r*.12,r*1.95,i*r*.3+r*.12,r*2.3,i*r*.3);g.stroke();}
- g.restore();g.globalAlpha=1;
-}
-function shareDayCard(d){
- var rides=(state.rides||[]).filter(function(r){return r.date===d;});
- var meets=(state.meets||[]).filter(function(m){return m.date===d;});
- var scores=(state.scores||[]).filter(function(x){return x.date===d;});
- var v=(state.visits||[]).find(function(x){return x.date===d;})||{};
- var park=v.park||'';if(!park){var ps={};rides.forEach(function(r){var pk=r.park||pOf(r.attraction);if(pk&&pk!=='?')ps[pk]=1;});park=Object.keys(ps).join(' + ');}
- var line=0,maxLine=0;rides.forEach(function(r){if(r.line!=null){line+=r.line;if(r.line>maxLine)maxLine=r.line;}});
- var photos=[],seen={};
- rides.concat(meets).concat(scores).forEach(function(x){if(x.photo&&!seen[x.photo]&&photos.length<3){seen[x.photo]=1;photos.push(x.photo);}});
- var imgs=[];var left=photos.length;
- function go2(){
-  var W=1080,H=1920,cv=document.createElement('canvas');cv.width=W;cv.height=H;
-  var g=cv.getContext('2d');
-  g.fillStyle='#EAE7DE';g.fillRect(0,0,W,H);
-  g.fillStyle='#F4EFDE';g.strokeStyle='#D9D5C7';g.lineWidth=3;
-  roundRect(g,50,50,W-100,H-100,36);g.fill();g.stroke();
-  drawPostmarkCv(g,W/2-40,265,120,d);
-  g.fillStyle='#1B1A17';g.textAlign='center';
-  var nm=park||'A park day';var fs=76;
-  g.font='900 '+fs+'px sans-serif';
-  while(g.measureText(nm).width>W-220&&fs>40){fs-=4;g.font='900 '+fs+'px sans-serif';}
-  g.fillText(nm,W/2,510);
-  var bits=[];
-  if(rides.length)bits.push(rides.length+' experience'+(rides.length===1?'':'s'));
-  if(line)bits.push(Math.floor(line/60)+'h '+(line%60)+'m in line');
-  if(meets.length)bits.push(meets.length+' character'+(meets.length===1?'':'s'));
-  if(scores.length)bits.push(scores.length+' score'+(scores.length===1?'':'s'));
-  g.fillStyle='#66645B';g.font='700 34px sans-serif';
-  g.fillText(bits.join('  \u00b7  '),W/2,575);
-  var y=640;
-  if(imgs.length){
-   var pw=imgs.length===1?620:430,ph=pw;
-   var slots=imgs.length===1?[[W/2,y+ph/2,-2]]:(imgs.length===2?[[W/2-235,y+ph/2,-3],[W/2+235,y+ph/2+26,2.5]]:[[W/2-240,y+ph/2,-3],[W/2+240,y+ph/2+30,2.5],[W/2,y+ph+230,1.5]]);
-   slots.forEach(function(sl,i){
-    if(!imgs[i])return;
-    g.save();g.translate(sl[0],sl[1]);g.rotate(sl[2]*Math.PI/180);
-    g.shadowColor='rgba(27,26,23,.28)';g.shadowBlur=26;g.shadowOffsetY=12;
-    g.fillStyle='#FDFBF4';g.fillRect(-pw/2-14,-ph/2-14,pw+28,ph+58);
-    g.shadowColor='transparent';
-    var im=imgs[i],sc=Math.max(pw/im.width,ph/im.height);
-    g.beginPath();g.rect(-pw/2,-ph/2,pw,ph);g.clip();
-    g.drawImage(im,-im.width*sc/2,-im.height*sc/2,im.width*sc,im.height*sc);
-    g.restore();
-   });
-   y+= imgs.length===3? ph+520 : ph+160;
-  }
-  var cnt={};rides.forEach(function(r){cnt[r.attraction]=(cnt[r.attraction]||0)+1;});
-  var names=Object.keys(cnt).slice(0,8);
-  g.fillStyle='#1B1A17';g.font='700 36px sans-serif';
-  names.forEach(function(a){
-   var t=a+(cnt[a]>1?'  \u00d7'+cnt[a]:'');
-   if(g.measureText(t).width>W-260)t=t.slice(0,34)+'\u2026';
-   g.fillText(t,W/2,y);y+=56;
-  });
-  if(Object.keys(cnt).length>8){g.fillStyle='#66645B';g.font='700 32px sans-serif';g.fillText('+ '+(Object.keys(cnt).length-8)+' more',W/2,y);y+=56;}
-  g.fillStyle='#66645B';g.font='800 30px sans-serif';
-  var ftr='PARK PASSPORT';
-  g.save();g.translate(W/2,H-118);
-  var sp=ftr.split('').join('\u200a\u200a');
-  g.fillText(sp,0,0);g.restore();
-  try{var p2=new Path2D(SEAL_PATH);g.save();g.translate(W/2-16,H-215);g.scale(1.1,1.1);g.fillStyle='#B388E6';g.fill(p2);g.restore();
-   g.strokeStyle='#5B3E86';g.lineWidth=2.6;g.beginPath();g.arc(W/2+19,H-180,23,0,7);g.stroke();}catch(e){}
-  var out=cv.toDataURL('image/jpeg',0.9);
-  var fname='park-day-'+d+'.jpg';
-  fetch(out).then(function(r2){return r2.blob();}).then(function(blob){
-   var file=new File([blob],fname,{type:'image/jpeg'});
-   if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file]}).catch(function(){});}
-   else{var a=document.createElement('a');a.href=out;a.download=fname;a.click();}
-  }).catch(function(){var a=document.createElement('a');a.href=out;a.download=fname;a.click();});
- }
- if(!left)go2();
- else photos.forEach(function(u,i){var im=new Image();im.onload=function(){imgs[i]=im;left--;if(!left)go2();};im.onerror=function(){left--;if(!left)go2();};im.src=u;});
+function shareDayCSV(d){
+ var head=['Type','Date','Name','Variant','Access','Score','Player','Who with','Park','Where','Notes','Coaster'];
+ var rows=[head];
+ (state.rides||[]).forEach(function(r){if(r.date!==d)return;
+  rows.push(['Experience',d,r.attraction||'',r.variant||'',r.access||'','','',r.with_||'',r.park||pOf(r.attraction)||'','',r.notes||'',isCoaster(r.attraction)?'Yes':'']);
+ });
+ (state.meets||[]).forEach(function(m){if(m.date!==d)return;
+  rows.push(['Meet',d,m.character||'','','','','','',m.park||'',m.where||'',m.notes||'','']);
+ });
+ (state.scores||[]).forEach(function(x){if(x.date!==d)return;
+  rows.push(['Score',d,x.attraction||'','','',String(x.score!=null?x.score:''),x.with_||'',x.party||'',x.park||pOf(x.attraction)||'','',x.notes||'','']);
+ });
+ if(rows.length<2){alert('Nothing logged on this day yet.');return;}
+ var csv=rows.map(function(r){return r.map(csvCell).join(',');}).join('\r\n');
+ var fname='park-day-'+d+'.csv';
+ var blob=new Blob([csv],{type:'text/csv'});
+ try{
+  var file=new File([blob],fname,{type:'text/csv'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:'A park day from Park Passport. To add it to your passport: menu, then Import, export & backups.'}).catch(function(){});return;}
+ }catch(e){}
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+ try{toast('Day saved as a CSV file');}catch(e){}
 }
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function wtag(n){return ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap">with '+esc(n)+'</span>';}
@@ -3434,14 +3375,14 @@ function openDayPage(d){
  }
  if(SHAREDDAYS&&so&&so.code){
   if(sd){
-   h+='<div class="alabel" style="margin:14px 0 6px">Shared day</div><div class="card" style="margin-bottom:0;display:flex;align-items:center;gap:10px"><span style="flex:1;font-weight:700;font-size:13.5px;line-height:1.45">Shared with '+esc(fname)+'. Anything you both log on this day shows up here.</span><button class="xbtn" onclick="disconnectDay('+jsarg(d)+')" aria-label="Stop sharing this day">&times;</button></div>';
+   h+='<div class="alabel" style="margin:14px 0 6px">Shared day</div><div class="card" style="margin-bottom:0;display:flex;align-items:center;gap:10px"><span style="flex:1;font-weight:700;font-size:13.5px;line-height:1.45">Shared with '+esc(fname)+'. Anything either of you logs on this day shows up for both of you.</span><button class="xbtn" onclick="disconnectDay('+jsarg(d)+')" aria-label="Stop sharing this day">&times;</button></div>';
   }else{
    var pend=(so.sharedDays||[]).filter(function(x){return x.date===d&&x.status==='pending';})[0];
    if(pend)h+='<div class="alabel" style="margin:14px 0 6px">Shared day</div><div class="card" style="margin-bottom:0;display:flex;align-items:center;gap:10px"><span style="flex:1;font-weight:700;font-size:13.5px">Waiting for '+esc(pend.friendName||pend.friend)+' to accept.</span><button class="xbtn" onclick="cancelDayShare('+jsarg(d)+')" aria-label="Cancel">&times;</button></div>';
    else if((so.friends||[]).some(function(f){return !f.gone;}))h+='<button class="btn ghost" style="width:100%;margin-top:14px" onclick="openDayShare('+jsarg(d)+')">Who were you with?</button>';
   }
  }
- h+='<button class="btn primary" style="width:100%;margin-top:14px" onclick="shareDayCard('+jsarg(d)+')">Share this day</button>';
+ h+='<button class="btn primary" style="width:100%;margin-top:14px" onclick="shareDayCSV('+jsarg(d)+')">Send this day as a file</button>';
  h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn ghost" onclick="closeSheet();openVisit('+jsarg(d)+')">Edit this day</button></div>';
  sheet(h);
 }
