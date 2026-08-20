@@ -1157,7 +1157,11 @@ function viewPeople(){
  out+='<div class="linkrow"><button onclick="formGroup()">+ New group</button></div>';
  out+='<h2 class="sec">People</h2><div class="card">';
  if(!state.people.length)out+='<div class="muted">No people yet.</div>';
- state.people.forEach(function(p,i){var sc=state.scores.filter(s=>s.with_===p).length;out+='<div class="checkitem" style="cursor:pointer" onclick="openPersonScores(\''+p+'\')"><div class="nm">'+p+'</div><span class="cnt">'+(sc?sc+' scores ':'')+'&rsaquo;</span><button class="xbtn" onclick="event.stopPropagation();delPerson('+i+')">&times;</button></div>';});
+ var _soF=(state.social&&state.social.friends)||[];
+ state.people.forEach(function(p,i){var sc=state.scores.filter(s=>s.with_===p).length;
+  var lc2=friendForPerson(p);var lf=_soF.filter(function(f){return f.code===lc2;})[0];
+  var linkBtn=_soF.length?'<span class="fchip" style="flex:none;font-size:11px;padding:5px 10px;margin-right:6px'+(lf?';background:var(--ink);color:var(--bg);border-color:transparent':'')+'" onclick="event.stopPropagation();linkPerson('+jsarg(p)+')">'+(lf?('= '+esc(lf.name)):'Link to friend')+'</span>':'';
+  out+='<div class="checkitem" style="cursor:pointer" onclick="openPersonScores(\''+p+'\')"><div class="nm">'+p+'</div>'+linkBtn+'<span class="cnt">'+(sc?sc+' scores ':'')+'&rsaquo;</span><button class="xbtn" onclick="event.stopPropagation();delPerson('+i+')">&times;</button></div>';});
  out+='</div><div class="linkrow"><button onclick="formPerson()">+ Add person</button></div>';
  return out;
 }
@@ -1269,7 +1273,7 @@ function withChips(sel){
   var _frs=(state.social.friends||[]).filter(function(f){return !f.gone;});
   if(_frs.length){
    h+='<label style="margin-top:10px">Log the day together</label>';
-   h+='<div class="fchips" id="shareFriendChips">'+_frs.map(function(f){return '<span class="fchip" onclick="pickFriendChip(this)" data-code="'+esc(f.code)+'" data-v="'+esc(f.name)+'">'+esc(f.name)+'</span>';}).join('')+'</div>';
+   h+='<div class="fchips" id="shareFriendChips">'+_frs.map(function(f){var dn=personForFriend(f.code)||f.name;return '<span class="fchip" onclick="pickFriendChip(this)" data-code="'+esc(f.code)+'" data-v="'+esc(dn)+'">'+esc(dn)+'</span>';}).join('')+'</div>';
    h+='<div class="muted" style="font-size:11.5px;margin:5px 2px 0;line-height:1.4">Tap a friend to share this whole day. They get a request, and once they accept, anything either of you logs on this date shows up for you both.</div>';
   }
  }
@@ -3354,6 +3358,18 @@ function shareDayCSV(d){
 }
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function wtag(n){return ' <span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap">with '+esc(n)+'</span>';}
+function friendForPerson(name){var m=state.personLinks||{};return m[String(name||'').trim().toLowerCase()]||'';}
+function personForFriend(code){var m=state.personLinks||{};var key='';Object.keys(m).forEach(function(k){if(m[k]===code)key=key||k;});if(!key)return '';var disp='';(state.people||[]).forEach(function(p){if(String(p).trim().toLowerCase()===key)disp=p;});return disp||key;}
+function linkPerson(name){
+ var so=state.social;var fr=(so&&so.friends||[]).filter(function(f){return !f.gone;});
+ if(!fr.length){alert('Add a friend first, then you can link them to a person.');return;}
+ var cur=friendForPerson(name);
+ var h='<h3>Link '+esc(name)+' to a friend</h3><p class="muted" style="margin:0 0 10px;line-height:1.5">Linking tells the app that '+esc(name)+' in your log and a friend profile are the same person. Shared days will show '+esc(name)+' instead of their profile name, and the two never appear as separate people.</p><div class="card">';
+ h+=fr.map(function(f){return '<div class="checkitem" style="cursor:pointer" onclick="setPersonLink('+jsarg(name)+','+jsarg(f.code)+')"><div class="ck">'+(cur===f.code?'&#10003;':'')+'</div><div class="nm">'+esc(f.name)+'</div></div>';}).join('');
+ h+='</div><div class="btnrow"><button class="btn ghost" onclick="closeSheet();go(&#39;people&#39;)">Cancel</button>'+(cur?'<button class="btn ghost" style="color:#A93B33;border-color:#A93B33" onclick="setPersonLink('+jsarg(name)+',&#39;&#39;)">Unlink</button>':'')+'</div>';
+ sheet(h);
+}
+function setPersonLink(name,code){state.personLinks=state.personLinks||{};var k=String(name||'').trim().toLowerCase();if(code)state.personLinks[k]=code;else delete state.personLinks[k];save();closeSheet();go('people');try{toast(code?(name+' linked'):'Link removed');}catch(e){}}
 function openDayPage(d){
  var rides=(state.rides||[]).filter(function(r){return r.date===d;});
  var meets=(state.meets||[]).filter(function(m){return m.date===d;});
@@ -3361,7 +3377,7 @@ function openDayPage(d){
  var v=(state.visits||[]).find(function(x){return x.date===d;})||{};
  var sd=SHAREDDAYS?activeSharedDay(d):null;
  if(sd)pullDayEntries(d);
- var fname=sd?(sd.friendName||sd.friend):'';
+ var fname=sd?(personForFriend(sd.friend)||sd.friendName||sd.friend):'';
  var pulled=sd?(sd.pulled||[]):[];
  var pRides=pulled.filter(function(e){return e.kind==='ride';});
  var pMeets=pulled.filter(function(e){return e.kind==='meet';});
