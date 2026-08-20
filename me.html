@@ -1500,7 +1500,7 @@ function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today(
   '<div class="btnrow"><button class="btn ghost" onclick="closeSheet()">Cancel</button><button class="btn primary" onclick="saveRide()">Save experience</button></div>');
 }
 function toggleExtras(){var dd=document.getElementById('extras');var b=document.getElementById('exbtn');if(!dd)return;var open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(b)b.innerHTML=open?'Extras: variant, score, notes, photo &#9662;':'Extras &#9652;';}
-function toggleInlineNow(){var c=document.getElementById('inlineChip'),h=document.getElementById('f_inline');if(!c||!h)return;var on=!c.classList.contains('on');c.classList.toggle('on',on);if(on){h.value=nowHM();c.innerHTML='In line since '+h.value;}else{h.value='';c.innerHTML='I&#39;m in line now';}}
+function toggleInlineNow(){var c=document.getElementById('inlineChip'),h=document.getElementById('f_inline');if(!c||!h)return;var on=!c.classList.contains('on');c.classList.toggle('on',on);if(on){h.value=nowHM();h.dataset.ms=String(Date.now());c.innerHTML='In line since '+h.value;}else{h.value='';h.dataset.ms='';c.innerHTML='I&#39;m in line now';}}
 function attrPark(a){var p=pOf(a);return (p&&p!=='?'&&p!=='Both Parks')?p:'';}
 function formRidePark(a){var p=attrPark(a);if(p)return p;var v=val('f_park');return (v&&v!=='Both Parks')?v:null;}
 function saveRide(again){
@@ -1517,7 +1517,7 @@ function saveRide(again){
  state.lastLog={date:dd,park:val('f_park')||null,with_:val('f_with')||null,access:val('f_acc')||null};
  curDay=dd;
  if(SHAREDDAYS&&window._shareFriendCode){try{connectDay(window._shareFriendCode,dd,val('f_park')||null);}catch(e){}window._shareFriendCode='';}
- if(lst&&!len&&dd===today())ppNotifyLine('start',{ride:shortRide(a)||a,park:formRidePark(a)||'',start:lst,posted:(po==null?-1:po)});
+ if(lst&&!len&&dd===today()){var _ms=(_il&&_il.value===lst&&_il.dataset.ms)?Number(_il.dataset.ms):0;ppNotifyLine('start',{ride:shortRide(a)||a,park:formRidePark(a)||'',start:lst,startMs:_ms||0,posted:(po==null?-1:po)});}
  save();closeSheet();
  if(again){quickAddRide();}else{go('visits');}
 }
