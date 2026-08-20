@@ -1320,11 +1320,6 @@ function geoNearest(lat,lng,maxFt){
  var seen={},ded=[];out.forEach(function(o){var k=geoNorm(o.name);if(seen[k])return;seen[k]=1;ded.push(o);});
  return ded;
 }
-function geoSampleHTML(msg){
- var samples=[['Tomorrowland',33.8113,-117.9172],['Fantasyland',33.8134,-117.9186],['New Orleans Square',33.8118,-117.9213],['Cars Land',33.8052,-117.9183],['Pixar Pier',33.8055,-117.9211]];
- return '<div class="muted" style="font-size:12px;margin-bottom:6px">'+esc(msg)+'</div><div class="fchips">'+samples.map(function(s){return '<span class="fchip" onclick="geoFindNearby(['+s[1]+','+s[2]+','+jsarg(s[0])+'])">'+esc(s[0])+'</span>';}).join('')+'</div>';
-}
-function geoSamples(){var box=document.getElementById('nearbyBox');if(box)box.innerHTML=geoSampleHTML('Pick a spot to preview what nearby rides look like:');}
 function parkTag(p){return p==='Disneyland'?'DL':(p==='California Adventure'?'DCA':'');}
 function geoPinLink(){return window._lastGeo?'<div class="muted" style="font-size:11.5px;margin:7px 2px 0;line-height:1.4">A ride reading off? <a style="color:var(--accent);font-weight:700;cursor:pointer" onclick="geoPinStart()">Pin one to this spot</a></div>':'';}
 function geoShowNear(lat,lng,label){
@@ -1345,10 +1340,10 @@ function geoFindNearby(mock){
  var box=document.getElementById('nearbyBox');if(!box)return;
  if(mock){geoShowNear(mock[0],mock[1],mock[2]);return;}
  box.innerHTML='<span class="muted" style="font-size:12.5px">Finding rides near you...</span>';
- if(!navigator.geolocation){box.innerHTML=geoSampleHTML('Location is not available here. Preview with a sample spot:');return;}
+ if(!navigator.geolocation){box.innerHTML='<span class="muted" style="font-size:12.5px">Location is not available here.</span>';return;}
  navigator.geolocation.getCurrentPosition(
   function(p){geoShowNear(p.coords.latitude,p.coords.longitude,'');},
-  function(err){box.innerHTML=geoSampleHTML('Could not get your location ('+esc((err&&err.message)||'permission blocked')+'). Preview with a sample spot:');},
+  function(err){box.innerHTML='<span class="muted" style="font-size:12.5px">Could not get your location ('+esc((err&&err.message)||'permission blocked')+'). Check location access for your browser in Settings and try again.</span>';},
   {enableHighAccuracy:true,timeout:9000,maximumAge:30000});
 }
 function pickNearby(name,park){var a=document.getElementById('f_attr');if(a)a.value=name;var pk=document.getElementById('f_park');if(pk&&park&&(!pk.value||pk.value==='Both Parks')){pk.value=park;pk.dataset.autopark='1';}try{onAttrChange();}catch(e){}try{toast('Filled in '+(shortRide(name)||name));}catch(e){}}
@@ -1440,7 +1435,7 @@ function formRide(d,qa){pendingPhoto=null;window._shareFriendCode='';d=d||today(
  sheet('<h3>'+(qa?'Log another experience':'Log an experience')+'</h3>'+
   (qa?'<p class="muted" style="margin:0 0 12px;line-height:1.5">Carried over from your last experience. Just pick the attraction.'+(waitsOn()?' Line start is set to now.':'')+'</p>':'')+
   attrField('',pk)+
-  (geoOn()?'<div class="linkrow" style="margin-top:2px"><button type="button" onclick="geoFindNearby()">Find rides near me</button><button type="button" onclick="geoSamples()">Try a sample spot</button><button type="button" onclick="geoAddPark()">Add a park</button></div><div id="nearbyBox" style="margin:2px 0 4px"></div>':'')+
+  (geoOn()?'<div class="linkrow" style="margin-top:2px"><button type="button" onclick="geoFindNearby()">Find rides near me</button><button type="button" onclick="geoAddPark()">Add a park</button></div><div id="nearbyBox" style="margin:2px 0 4px"></div>':'')+
   '<label>Date</label><div class="daterow"><input type="date" id="f_date" value="'+d+'" onchange="syncVisitWith()" onblur="dateBlurNorm(this)"><span class="fchip" onclick="setDateQuick(0)">Today</span><span class="fchip" onclick="toggleDateType()" title="Type the date">Type</span></div>'+
   parkField(pk)+
   '<button type="button" class="mdbtn" id="mdbtn" onclick="toggleMoreDet()">More details &#9662;</button>'+
@@ -1488,6 +1483,7 @@ function editRide(i){
    withChips(r.with_)+
    accChips(r.access)+
    waitFields(r)+
+   '<label>Add a score (optional, one row per player)</label><div id="srows"></div><button type="button" class="addrow" onclick="addScoreRow()">+ Add a score</button>'+
    '<label>Notes (optional)</label><input id="f_notes" value="'+esc(r.notes)+'">'+
    photoField(r.photo)+
   '</div>'+
@@ -1498,6 +1494,7 @@ function updateRide(i){
  r.date=flexDate(val('f_date'))||val('f_date');r.attraction=a;r.park=formRidePark(a);var _vs=collectVariantRows();r.variant=_vs[0]||null;r.variants=_vs.length>1?_vs:null;r.with_=val('f_with')||null;r.access=val('f_acc')||null;r.notes=val('f_notes')||null;var _po=numOrNull('f_posted');if(_po!==undefined)r.posted=_po;var _ls=valOrUndef('f_lstart');if(_ls!==undefined)r.lineStart=_ls||null;var _le=valOrUndef('f_lend');if(_le!==undefined)r.lineEnd=_le||null;if(_ls!==undefined||_le!==undefined)r.line=(r.lineStart&&r.lineEnd)?diffMin(r.lineStart,r.lineEnd):null;r.photo=pendingPhoto||null;
  var _ex=document.getElementById('f_ext');if(_ex)setExtinct(a,_ex.checked);
  var _co=document.getElementById('f_coaster');if(_co)setCoaster(a,_co.checked);
+ collectScoreRows().forEach(function(sr){state.scores.push({date:r.date,attraction:a,score:sr.score,with_:sr.who||null,party:r.with_||null,rank:sr.rank||null,notes:null,photo:null});});
  save();closeSheet();renderAll();
 }
 function delRide(i){if(!confirm('Delete this experience?'))return;state.rides.splice(i,1);save();closeSheet();renderAll();}
@@ -2647,8 +2644,8 @@ function checkFriendLinks(){
     }
     if(kind==='dayaccept'){
      so.sharedDays=so.sharedDays||[];
-     so.sharedDays.forEach(function(x){if(x.friend===from&&x.status==='pending')x.status='active';});
-     save();if(tab==='memories'||tab==='friends')renderAll();
+     so.sharedDays.forEach(function(x){if(x.friend===from&&x.status==='pending'){x.status='active';try{toast((x.friendName||from)+' accepted! You are now sharing '+fmt(x.date));}catch(e){}}});
+     save();renderNav();if(tab==='memories'||tab==='friends')renderAll();
      deleteFriendLink(lid);return;
     }
     if(kind==='accept'){
@@ -2658,6 +2655,7 @@ function checkFriendLinks(){
       if(!so.friends.some(function(x){return x.code===from;}))so.friends.push({code:pd.code,name:pd.name,icon:pd.icon,color:pd.color,photo:pd.photo,fav:pd.fav});
       so.seenLast=so.seenLast||{};so.seenLast[from]='';
       save();renderNav();if(tab==='friends')renderAll();
+      try{toast((pd.name||from)+' accepted your friend request');}catch(e){}
      }
      deleteFriendLink(lid);return;
     }
@@ -2669,6 +2667,7 @@ function checkFriendLinks(){
      so.seenLast=so.seenLast||{};so.seenLast[from]='';
      save();createFriendLink(from,fromUid||pd2.uid||'','accept');
      renderNav();if(tab==='friends')renderAll();
+     try{toast((pd2.name||from)+' is now your friend');}catch(e){}
      deleteFriendLink(lid);return;
     }
     if(so.requests.some(function(x){return x.code===from;})){deleteFriendLink(lid);return;}
@@ -2677,6 +2676,7 @@ function checkFriendLinks(){
      so.requests.push({code:from,name:p.name,icon:p.icon,color:p.color,photo:p.photo,fav:p.fav,uid:p.uid||fromUid});
      FRCACHE[from]=p;
      save();renderNav();if(tab==='friends')renderAll();
+     try{toast(p.name+' sent you a friend request');}catch(e){}
      deleteFriendLink(lid);
     },function(){});
    });
@@ -3626,7 +3626,7 @@ function viewFriends(){
    var isNew=p&&p.last&&p.last.date&&p.last.date>((so.seenLast||{})[f.code]||'');
    var num=function(v){return (st&&v!=null)?v:'&ndash;';};
    return '<div class="frcard2" onclick="openFriendSheet(\''+f.code+'\')">'+
-    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div>'+(((p&&p.fav)||f.fav)?'<div class="frlast">Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b></div>':'')+'</div><button class="xbtn" onclick="event.stopPropagation();removeFriend(\''+f.code+'\')">&times;</button></div>'+
+    '<div class="frhead"><span class="frav2">'+avatarAny({icon:icon,color:(p&&p.color)||f.color||'grape',photo:(p&&p.photo)||f.photo||null})+'</span><div style="min-width:0;flex:1"><div class="frnm">'+esc(f.name)+(isNew?'<span class="frnew">New</span>':'')+'</div>'+(((p&&p.fav)||f.fav)?'<div class="frlast">Favorite: <b>'+esc((p&&p.fav)||f.fav)+'</b></div>':'')+'</div></div>'+
     (f.gone?'<div class="frstats" style="border-top:none;padding-top:2px"><span class="fst" style="color:#A93B33">No longer sharing. You can remove them, or keep the card in case they come back.</span></div>':'<div class="frstats"><span class="fst"><i style="background:var(--peri)"></i><b>'+num(st&&st.experiences)+'</b>Experiences</span><span class="fst"><i style="background:#A9C8A9"></i><b>'+num(st&&st.visits)+'</b>Visit days</span><span class="fst"><i style="background:var(--grape)"></i><b>'+num(st&&st.coasters)+'</b>Coasters</span></div>')+
    '</div>';
   }).join('');
@@ -3712,7 +3712,7 @@ function openMenu(){
   
     '<div class="alabel">Appearance</div>'+
   '<div class="swrow" onclick="toggleTheme()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#B9B3E8"/><path d="M18.6 13.8A7.2 7.2 0 1 1 10 5a5.8 5.8 0 0 0 8.6 8.8z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.8" stroke-linejoin="round"/></svg>')+'</span><b>Dark mode</b><span class="switch'+(state.settings&&state.settings.theme==='dark'?' on':'')+'" id="themesw"><span class="knob"></span></span></div>'+
-  '<button onclick="openSchemePicker()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9DB1C5"/><path d="M12 4a8 8 0 1 0 0 16c1.2 0 1.9-.9 1.9-1.9 0-.6-.3-1-.6-1.4-.3-.4-.6-.8-.6-1.4 0-1 .8-1.8 1.9-1.8H16.6A3.4 3.4 0 0 0 20 10.1 8.1 8.1 0 0 0 12 4z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.4" cy="10" r="1.15" fill="#1B1A17"/><circle cx="12" cy="7.8" r="1.15" fill="#1B1A17"/><circle cx="15.6" cy="10" r="1.15" fill="#1B1A17"/></svg>')+'</span><b>Color scheme</b><span class="muted" style="margin-left:auto;font-weight:700;font-size:12px">'+schemeName()+'</span><span class="vchev">&rsaquo;</span></button>'+
+  '<button onclick="openSchemePicker()" style="display:flex;align-items:center;gap:10px"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="6.5" ry="1.8" fill="#9DB1C5"/><path d="M12 4a8 8 0 1 0 0 16c1.2 0 1.9-.9 1.9-1.9 0-.6-.3-1-.6-1.4-.3-.4-.6-.8-.6-1.4 0-1 .8-1.8 1.9-1.8H16.6A3.4 3.4 0 0 0 20 10.1 8.1 8.1 0 0 0 12 4z" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.4" cy="10" r="1.15" fill="#1B1A17"/><circle cx="12" cy="7.8" r="1.15" fill="#1B1A17"/><circle cx="15.6" cy="10" r="1.15" fill="#1B1A17"/></svg>')+'</span><b style="flex:1">Color scheme</b><span class="muted" style="font-weight:700;font-size:12px;white-space:nowrap">'+schemeName()+'</span><span class="vchev">&rsaquo;</span></button>'+
   '<div class="alabel">Parks</div>'+
   '<button onclick="openParkToggles()"><span class="micon">'+sealIconify('<svg viewBox="0 0 24 24"><ellipse cx="12" cy="20.9" rx="7" ry="1.8" fill="#3E5A3E" opacity=".35"/><path d="M5 18.5V9.6l4-3 4 3v8.9M13 18.5v-6.4l3-2.2 3 2.2v6.4" fill="#F4EFDE" stroke="#1B1A17" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.4 18.5h17.2" fill="none" stroke="#1B1A17" stroke-width="1.7" stroke-linecap="round"/></svg>')+'</span><b>Toggle parks on / off</b><span class="vchev" style="margin-left:auto">&rsaquo;</span></button>'+
   '<div class="alabel">Logging</div>'+
